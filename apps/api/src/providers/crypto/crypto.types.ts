@@ -27,8 +27,12 @@ export interface CryptoMarketDatum {
   vsCurrency: string;
   price?: number;
   marketCap?: number;
+  marketCapRank?: number;
   volume24h?: number;
   changePercent24h?: number;
+  circulatingSupply?: number;
+  totalSupply?: number;
+  maxSupply?: number;
 }
 
 export interface CryptoMarketDataResult {

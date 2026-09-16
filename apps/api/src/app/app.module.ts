@@ -8,6 +8,8 @@ import { HealthModule } from '../health/health.module.js';
 import { ProvidersModule } from '../providers/providers.module.js';
 import { AcademicModule } from '../academic/academic.module.js';
 import { NewsModule } from '../news/news.module.js';
+import { CryptoModule } from '../crypto/crypto.module.js';
+import { FxModule } from '../fx/fx.module.js';
 import { RequestContextMiddleware } from '../common/request-context/request-context.middleware.js';
 
 import { AppLoggerService } from '../common/logging/app-logger.service.js';
@@ -22,6 +24,8 @@ import { AppLoggerService } from '../common/logging/app-logger.service.js';
     ProvidersModule,
     AcademicModule,
     NewsModule,
+    CryptoModule,
+    FxModule,
     HealthModule,
   ],
   providers: [AppLoggerService],

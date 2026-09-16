@@ -41,8 +41,12 @@ function mapCoinGeckoMarketCoin(raw: CoinGeckoMarketCoin, vsCurrency: string): C
     vsCurrency,
     price: raw.current_price,
     marketCap: raw.market_cap,
+    marketCapRank: raw.market_cap_rank,
     volume24h: raw.total_volume,
     changePercent24h: raw.price_change_percentage_24h,
+    circulatingSupply: raw.circulating_supply,
+    totalSupply: raw.total_supply,
+    maxSupply: raw.max_supply,
   };
 }
 
