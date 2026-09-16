@@ -11,6 +11,34 @@ jobs:
     name: Verify Monorepo
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: callrack
+          POSTGRES_PASSWORD: callrack_dev_password
+          POSTGRES_DB: callrack_dev
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U callrack -d callrack_dev"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://callrack:callrack_dev_password@localhost:5432/callrack_dev?schema=public
+      REDIS_URL: redis://localhost:6379
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -44,6 +72,9 @@ jobs:
 
       - name: Generate Prisma Client
         run: pnpm --filter @callrack/db run db:generate
+
+      - name: Apply database migrations
+        run: pnpm --filter @callrack/db run db:migrate:deploy
 
       - name: Run Linting
         run: pnpm lint

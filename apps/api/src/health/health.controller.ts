@@ -1,6 +1,7 @@
-import { Controller, Get, VERSION_NEUTRAL } from '@nestjs/common';
+import { Controller, Get, Res, VERSION_NEUTRAL } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import type { SystemHealthStatus } from '@callrack/types';
+import type { FastifyReply } from 'fastify';
+import type { ReadinessStatus, SystemHealthStatus } from '@callrack/types';
 import { HealthService } from './health.service.js';
 
 @ApiTags('System')
@@ -29,5 +30,24 @@ export class HealthController {
   })
   getHealth(): SystemHealthStatus {
     return this.healthService.getHealth();
+  }
+
+  @Get('ready')
+  @ApiOperation({
+    summary: 'Readiness check',
+    description: 'Verifies that required infrastructure (PostgreSQL, Redis) is reachable.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'All required infrastructure is reachable.',
+  })
+  @ApiResponse({
+    status: 503,
+    description: 'One or more required infrastructure dependencies are unreachable.',
+  })
+  async getReadiness(@Res({ passthrough: true }) reply: FastifyReply): Promise<ReadinessStatus> {
+    const readiness = await this.healthService.getReadiness();
+    reply.status(readiness.status === 'ok' ? 200 : 503);
+    return readiness;
   }
 }

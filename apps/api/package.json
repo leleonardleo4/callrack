@@ -12,6 +12,8 @@
   },
   "dependencies": {
     "@callrack/config": "workspace:*",
+    "@callrack/db": "workspace:*",
+    "@callrack/redis": "workspace:*",
     "@callrack/types": "workspace:*",
     "@fastify/cors": "^11.1.0",
     "@fastify/helmet": "^13.1.1",

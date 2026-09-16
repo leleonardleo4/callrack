@@ -1,5 +1,5 @@
 {
-  "name": "@callrack/db",
+  "name": "@callrack/redis",
   "version": "0.1.0",
   "private": true,
   "main": "./dist/index.js",
@@ -13,30 +13,19 @@
     }
   },
   "scripts": {
-    "postinstall": "prisma generate",
-    "db:generate": "prisma generate",
-    "db:push": "prisma db push",
-    "db:migrate": "prisma migrate dev",
-    "db:migrate:deploy": "prisma migrate deploy",
-    "db:seed": "prisma db seed",
-    "build": "prisma generate && tsup src/index.ts --format cjs,esm --dts",
+    "build": "tsup src/index.ts --format cjs,esm --dts",
     "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
     "lint": "eslint src/**/*.ts",
-    "typecheck": "prisma generate && tsc --noEmit",
+    "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },
   "dependencies": {
-    "@prisma/adapter-pg": "^7.0.0",
-    "@prisma/client": "^7.0.0",
-    "pg": "^8.13.3"
+    "ioredis": "^5.4.2"
   },
   "devDependencies": {
     "@types/node": "^22.13.5",
-    "@types/pg": "^8.11.11",
     "eslint": "^9.21.0",
-    "prisma": "^7.0.0",
     "tsup": "^8.4.0",
-    "tsx": "^4.19.2",
     "typescript": "^5.8.2",
     "vitest": "^3.0.7"
   }
