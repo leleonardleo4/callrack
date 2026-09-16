@@ -39,4 +39,9 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
       return false;
     }
   }
+
+  /** Cheap, synchronous readiness check so callers can skip Redis without waiting on retries. */
+  get isReady(): boolean {
+    return this.client.status === 'ready';
+  }
 }
