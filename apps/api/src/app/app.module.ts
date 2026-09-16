@@ -3,12 +3,13 @@ import { ApiConfigModule } from '../config/api-config.module.js';
 import { DatabaseModule } from '../database/database.module.js';
 import { RedisModule } from '../redis/redis.module.js';
 import { HealthModule } from '../health/health.module.js';
+import { ProvidersModule } from '../providers/providers.module.js';
 import { RequestContextMiddleware } from '../common/request-context/request-context.middleware.js';
 
 import { AppLoggerService } from '../common/logging/app-logger.service.js';
 
 @Module({
-  imports: [ApiConfigModule, DatabaseModule, RedisModule, HealthModule],
+  imports: [ApiConfigModule, DatabaseModule, RedisModule, ProvidersModule, HealthModule],
   providers: [AppLoggerService],
   exports: [AppLoggerService],
 })

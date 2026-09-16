@@ -6,9 +6,10 @@
     "build": "nest build",
     "dev": "nest start --watch",
     "start": "node dist/main.js",
-    "lint": "eslint src/**/*.ts",
+    "lint": "eslint src",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:providers": "vitest run --config vitest.smoke.config.ts"
   },
   "dependencies": {
     "@callrack/config": "workspace:*",

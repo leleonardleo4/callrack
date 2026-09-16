@@ -6,6 +6,20 @@ export const apiConfigSchema = baseEnvSchema.extend({
   CORS_ORIGIN: z.string().min(1, 'CORS_ORIGIN cannot be empty').default('http://localhost:5173'),
   SERVICE_NAME: z.string().default('callrack-api'),
   API_VERSION: z.string().default('0.1.0'),
+
+  // Provider configuration (Phase 3). Only real, currently-used settings —
+  // no invented credentials for providers that don't require them.
+  OPENALEX_MAILTO: z.string().email().optional(),
+  CROSSREF_MAILTO: z.string().email().optional(),
+  COINGECKO_API_KEY: z.string().optional(),
+  CENSUS_API_KEY: z.string().optional(),
+
+  // Self-hostable in production; default to the public hosted service for
+  // local development.
+  OPEN_METEO_BASE_URL: z.string().url().default('https://api.open-meteo.com'),
+  PHOTON_BASE_URL: z.string().url().default('https://photon.komoot.io'),
+  WIKIMEDIA_BASE_URL: z.string().url().default('https://www.wikidata.org'),
+  WIKIMEDIA_USER_AGENT: z.string().min(1).default('Callrack/0.1 (+https://callrack.dev)'),
 });
 
 export type ApiConfig = z.infer<typeof apiConfigSchema>;

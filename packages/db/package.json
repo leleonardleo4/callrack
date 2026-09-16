@@ -21,7 +21,7 @@
     "db:seed": "prisma db seed",
     "build": "prisma generate && tsup src/index.ts --format cjs,esm --dts",
     "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
-    "lint": "eslint src/**/*.ts",
+    "lint": "eslint src",
     "typecheck": "prisma generate && tsc --noEmit",
     "test": "vitest run"
   },
