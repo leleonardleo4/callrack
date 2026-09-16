@@ -1,17 +1,7 @@
 import 'reflect-metadata';
-import { NestFactory } from '@nestjs/core';
-import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
-import { AppModule } from './app.module.js';
+import { bootstrap } from './bootstrap.js';
 
-async function bootstrap() {
-  const app = await NestFactory.create<NestFastifyApplication>(
-    AppModule,
-    new FastifyAdapter(),
-  );
-
-  const port = Number(process.env.API_PORT) || 3000;
-  await app.listen(port, '0.0.0.0');
-  console.log(`Callrack API server running on http://localhost:${port}`);
-}
-
-bootstrap();
+bootstrap().catch((err) => {
+  console.error('Fatal error during application startup:', err);
+  process.exit(1);
+});

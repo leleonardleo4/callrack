@@ -4,10 +4,13 @@ packages:
 
 allowBuilds:
   '@prisma/engines': true
+  '@scarf/scarf': false
+  '@swc/core': true
   esbuild: true
   prisma: true
 
 onlyBuiltDependencies:
   - '@prisma/engines'
+  - '@swc/core'
   - 'esbuild'
   - 'prisma'
