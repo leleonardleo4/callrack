@@ -8,7 +8,6 @@ describe('ApiConfigService', () => {
       NODE_ENV: 'test',
       API_PORT: '4000',
       API_PREFIX: 'v1',
-      CORS_ORIGIN: 'http://localhost:5173,http://localhost:3000',
     });
 
     expect(config.nodeEnv).toBe('test');
@@ -16,7 +15,6 @@ describe('ApiConfigService', () => {
     expect(config.isProduction).toBe(false);
     expect(config.port).toBe(4000);
     expect(config.apiPrefix).toBe('v1');
-    expect(config.corsOrigins).toEqual(['http://localhost:5173', 'http://localhost:3000']);
     expect(config.serviceName).toBe('callrack-api');
   });
 

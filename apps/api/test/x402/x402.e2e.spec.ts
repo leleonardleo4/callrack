@@ -1,15 +1,16 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import type { NestFastifyApplication } from '@nestjs/platform-fastify';
-import { ALGORAND_TESTNET_GENESIS_HASH } from '@x402/avm';
+import { ALGORAND_MAINNET_GENESIS_HASH, ALGORAND_TESTNET_GENESIS_HASH } from '@x402/avm';
 import { decodePaymentRequiredHeader, encodePaymentSignatureHeader } from '@x402/core/http';
 import type { PaymentPayload, PaymentRequirements } from '@x402/core/types';
 import { createProtectedApp } from '../../src/bootstrap.js';
 import { jsonResponse, stubFetchAlways, stubFetchSequence } from '../providers/mock-fetch.js';
 import { createFakeFacilitatorClient, X402_PROTOCOL_VERSION, type FakeFacilitatorClient } from './fake-facilitator.js';
 
-// Matches exactly what X402ConfigService resolves for NETWORK=testnet — see
-// its toNetwork() note on why the full genesis-hash form is used.
+// Matches exactly what X402ConfigService resolves for NETWORK=testnet/mainnet
+// — see its toNetwork() note on why the full genesis-hash form is used.
 const TESTNET_NETWORK = `algorand:${ALGORAND_TESTNET_GENESIS_HASH}`;
+const MAINNET_NETWORK = `algorand:${ALGORAND_MAINNET_GENESIS_HASH}`;
 
 const RAW_OPENALEX_SEARCH = { meta: { count: 1 }, results: [{ id: 'https://openalex.org/W1', title: 'Test Work' }] };
 const RAW_FORECAST = {
@@ -131,11 +132,11 @@ describe('x402 Payment Protection (E2E)', () => {
       ['/v1/weather', { latitude: 6.5244, longitude: 3.3792 }],
       ['/v1/academic/search', { query: 'test' }],
       ['/v1/research', { query: 'renewable energy investment in Africa' }],
-    ])('carries the x402-global-challenge tag for %s', async (path, payload) => {
+    ])('never carries the x402-global-challenge tag on Testnet for %s', async (path, payload) => {
       const response = await app.inject({ method: 'POST', url: path, payload });
       expect(response.statusCode).toBe(402);
       const requirements = firstRequirementsFrom402(response);
-      expect(requirements.extra?.tag).toBe('x402-global-challenge');
+      expect(requirements.extra?.tag).toBeUndefined();
     });
 
     it.each([
@@ -156,6 +157,26 @@ describe('x402 Payment Protection (E2E)', () => {
       expect(bazaar!.info.output?.type).toBe('json');
       expect(bazaar!.info.output?.example).toBeDefined();
       expect(bazaar!.schema.properties.input.properties.body).toBeDefined();
+    });
+
+    it.each([
+      ['/v1/weather', { latitude: 6.5244, longitude: 3.3792 }],
+      ['/v1/academic/search', { query: 'test' }],
+      ['/v1/research', { query: 'renewable energy investment in Africa' }],
+    ])('carries the x402-merchant extension declaring the Callrack identity for %s', async (path, payload) => {
+      const response = await app.inject({ method: 'POST', url: path, payload });
+      expect(response.statusCode).toBe(402);
+      const paymentRequired = decode402(response);
+
+      const merchant = paymentRequired.extensions?.['x402-merchant'] as
+        | { info: { name: string; website: string; logo: string; categories: string[] }; schema: unknown }
+        | undefined;
+      expect(merchant, `expected an x402-merchant extension on ${path}`).toBeDefined();
+      expect(merchant!.info.name).toBe('Callrack');
+      expect(merchant!.info.website).toBe('https://callrack.xyz');
+      expect(merchant!.info.logo).toBe('https://callrack.xyz/favicon.svg');
+      expect(merchant!.info.categories).toContain('algorand');
+      expect(merchant!.schema).toBeDefined();
     });
 
     it('carries the route-specific description (from the capability registry) in the 402 resource info', async () => {
@@ -180,6 +201,50 @@ describe('x402 Payment Protection (E2E)', () => {
       const response = await app.inject({ method: 'GET', url: '/health' });
       expect(response.statusCode).toBe(200);
       expect(response.headers['payment-required']).toBeUndefined();
+    });
+  });
+
+  describe('Mainnet Challenge tag', () => {
+    let app: NestFastifyApplication;
+
+    beforeAll(async () => {
+      // X402ConfigService reads NETWORK once, at construction, inside
+      // createApp() — flipping process.env here and restoring it
+      // immediately after is what lets this one describe block exercise
+      // the Mainnet code path without affecting any other test file (each
+      // runs in its own worker) or any other describe block in this file
+      // (Vitest runs describe blocks in one file sequentially).
+      const originalNetwork = process.env.NETWORK;
+      process.env.NETWORK = 'mainnet';
+      try {
+        const facilitator = createFakeFacilitatorClient(MAINNET_NETWORK);
+        app = await createProtectedApp({ x402FacilitatorClient: facilitator });
+        await app.init();
+        await app.getHttpAdapter().getInstance().ready();
+      } finally {
+        process.env.NETWORK = originalNetwork;
+      }
+    });
+
+    afterAll(async () => {
+      await app.close();
+    });
+
+    it('carries the x402-global-challenge tag on Mainnet', async () => {
+      const response = await app.inject({ method: 'POST', url: '/v1/weather', payload: { latitude: 6.5244, longitude: 3.3792 } });
+      expect(response.statusCode).toBe(402);
+      const requirements = firstRequirementsFrom402(response);
+      expect(requirements.extra?.tag).toBe('x402-global-challenge');
+      expect(requirements.network).toBe(MAINNET_NETWORK);
+      // The stable Mainnet merchant address from vitest.config.ts's test env.
+      expect(requirements.payTo).toBe('V4BOVWHAQJUNZAPU4D7B4N2ALHVMHBRJ2F75EJG5E5XS5JFJZGAU4SS2UA');
+    });
+
+    it('still carries bazaar and x402-merchant extensions on Mainnet', async () => {
+      const response = await app.inject({ method: 'POST', url: '/v1/weather', payload: { latitude: 6.5244, longitude: 3.3792 } });
+      const paymentRequired = decode402(response);
+      expect(paymentRequired.extensions?.bazaar).toBeDefined();
+      expect(paymentRequired.extensions?.['x402-merchant']).toBeDefined();
     });
   });
 

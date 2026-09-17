@@ -83,14 +83,22 @@ export async function createApp(): Promise<NestFastifyApplication> {
   );
 
   // 3. CORS
+  // Callrack's paid capabilities are consumed by arbitrary x402 clients and
+  // agents, not a single fixed browser origin, and the API never uses
+  // cookies or other credentialed browser auth (payment proof travels in a
+  // request header, not a cookie). Restricting `origin` to a fixed
+  // allowlist would just break legitimate cross-origin callers — including
+  // the GoPlausible x402 Doctor's own CORS sanity checks — without
+  // protecting anything, so origin is open and `credentials` stays unset
+  // (defaults to false) rather than pairing an open origin with
+  // credentialed CORS.
   await app.register(
     fastifyCors as unknown as FastifyPluginAsync<import('@fastify/cors').FastifyCorsOptions>,
     {
-      origin: configService.corsOrigins,
+      origin: true,
       methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'Authorization', REQUEST_ID_HEADER],
       exposedHeaders: [REQUEST_ID_RESPONSE_HEADER],
-      credentials: true,
     },
   );
 
@@ -104,7 +112,15 @@ export async function createApp(): Promise<NestFastifyApplication> {
     });
   } else {
     app.setGlobalPrefix(rawPrefix, {
-      exclude: ['health', 'health/(.*)', 'docs', 'docs/(.*)'],
+      exclude: [
+        'health',
+        'health/(.*)',
+        'docs',
+        'docs/(.*)',
+        '.well-known/(.*)',
+        'llms.txt',
+        'agents.md',
+      ],
     });
     app.enableVersioning({
       type: VersioningType.URI,
@@ -152,6 +168,12 @@ export async function createApp(): Promise<NestFastifyApplication> {
       docExpansion: 'list',
     },
   });
+
+  // 8b. Standalone OpenAPI JSON at the conventional root path AI/agent
+  // tooling expects (distinct from `/docs/json`, which stays too — this
+  // never replaces `/docs`). Same already-built document, no second
+  // generation step.
+  fastifyInstance.get('/openapi.json', async () => swaggerDocument);
 
   return app;
 }

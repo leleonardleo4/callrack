@@ -1,0 +1,19 @@
+# Callrack
+
+> Callrack is a pay-per-use information infrastructure platform. Every capability on the API answers HTTP 402
+> with x402 payment requirements; pay the advertised amount in USDC on Algorand and the response is yours.
+> No accounts, no API keys, no subscriptions.
+
+This is the brand/marketing site. The API — including the current, live list of paid capabilities, their exact
+prices, and the OpenAPI contract — is served from a separate origin and generated directly from Callrack's
+capability registry, so it never goes stale:
+
+## API
+- Live capability list + prices: https://api.callrack.xyz/llms.txt
+- OpenAPI: https://api.callrack.xyz/openapi.json
+- Agent operating instructions: https://api.callrack.xyz/agents.md
+
+## Paying
+- Protocol: x402 (v2), settled by https://facilitator.goplausible.xyz
+- Network: Algorand · Asset: USDC
+- On HTTP 402, read the PAYMENT-REQUIRED response header for the exact, current price — never assume one.

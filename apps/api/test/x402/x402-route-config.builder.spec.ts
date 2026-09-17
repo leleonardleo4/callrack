@@ -109,14 +109,30 @@ describe('buildX402RoutesConfig', () => {
     expect(buildX402RoutesConfig([], ACTIVE)).toEqual({});
   });
 
-  it('attaches the x402-global-challenge tag to every route\'s payment extra', () => {
+  it('never attaches the x402-global-challenge tag on Testnet — only real, settled Mainnet traffic is Challenge traffic', () => {
     const routes = buildX402RoutesConfig(realCapabilities(), ACTIVE) as Record<
       string,
       { accepts: { extra?: Record<string, unknown> } }
     >;
     expect(X402_GLOBAL_CHALLENGE_TAG).toBe('x402-global-challenge');
     for (const [key, route] of Object.entries(routes)) {
-      expect(route.accepts.extra?.tag, `expected challenge tag on ${key}`).toBe(X402_GLOBAL_CHALLENGE_TAG);
+      expect(route.accepts.extra, `expected no extra (and so no challenge tag) on Testnet route ${key}`).toBeUndefined();
+    }
+  });
+
+  it('attaches the x402-global-challenge tag to every route\'s payment extra on Mainnet', () => {
+    const mainnetActive: ActiveX402NetworkConfig = {
+      network: 'mainnet',
+      caip2Network: 'algorand:wGHE2Pwdvd7S12BL5FaOP20EGYesN73ktiC1qzkkit8=',
+      payTo: 'V4BOVWHAQJUNZAPU4D7B4N2ALHVMHBRJ2F75EJG5E5XS5JFJZGAU4SS2UA',
+      facilitatorUrl: 'https://facilitator.goplausible.xyz',
+    };
+    const routes = buildX402RoutesConfig(realCapabilities(), mainnetActive) as Record<
+      string,
+      { accepts: { extra?: Record<string, unknown> } }
+    >;
+    for (const [key, route] of Object.entries(routes)) {
+      expect(route.accepts.extra?.tag, `expected challenge tag on Mainnet route ${key}`).toBe(X402_GLOBAL_CHALLENGE_TAG);
     }
   });
 

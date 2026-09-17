@@ -253,23 +253,40 @@ service runs, and capability services have no knowledge of x402 at all (see
 `apps/api/src/x402/` — the entire integration lives at the Fastify transport
 boundary, wired in by `createProtectedApp()` in `apps/api/src/bootstrap.ts`).
 
-### Bazaar discovery metadata
+### GoPlausible discovery & merchant metadata
 
-Every paid route also declares [x402 Bazaar](https://github.com/x402-foundation/x402)
-discovery metadata: a route description, a representative input example +
-JSON Schema, and a representative output example + schema, so an agent or
-the GoPlausible catalog can see what an endpoint does and how to call it
-*before* paying. This is generated, not hand-maintained per route:
+Callrack follows the official
+[GoPlausible x402 Facilitator discovery guide](https://facilitator.goplausible.xyz/guide/discovery),
+which has two independent layers:
+
+1. **Listing** (how a resource shows up in the Bazaar catalog at all): a
+   paid route that declares the `bazaar` extension, publicly reachable, that
+   receives a **real, successfully settled payment**. There is no manual
+   registration step and no Callrack-side "Bazaar database" — the
+   facilitator catalogs the resource itself the first time it settles a
+   payment against it. Nothing in this codebase can simulate or fake this;
+   see "Local declaration vs. real Bazaar visibility" below.
+2. **Enrichment** (optional, free, cosmetic — name/logo/description shown
+   next to a listed resource): the facilitator reads the `x402-merchant`
+   extension if present, and otherwise falls back to crawling one HTML
+   origin for `<meta>` tags and `.well-known` files.
+
+Every paid route declares both extensions, generated from one source (the
+Capability Registry) so nothing is hand-maintained per route or can drift:
 
 ```text
 Capability Registry (id, description, requestSchema, discovery.{input,output})
         ↓
 apps/api/src/x402/discovery-schema.util.ts    — reflects the live request DTO
         ↓                                       (the same @ApiProperty decorators
-        ↓                                        /docs/json already uses) into JSON Schema
+        ↓                                        /docs/json already uses) into JSON
+        ↓                                        Schema, dereferencing any
+        ↓                                        `$ref`s so each schema is
+        ↓                                        self-contained
 apps/api/src/x402/discovery-metadata.builder.ts — calls @x402/extensions/bazaar's
-        ↓                                          declareDiscoveryExtension(...)
-x402 route `extensions.bazaar`
+        ↓                                          declareDiscoveryExtension(...) and
+        ↓                                          merges in the x402-merchant extension
+x402 route `extensions` = { bazaar, "x402-merchant" }
 ```
 
 The registry itself never imports any `@x402/*` package — only the small
@@ -279,22 +296,97 @@ even if x402 were replaced later. The Bazaar resource-server extension
 `x402-resource-server.factory.ts`; each route still declares its own
 discovery info.
 
-Every paid route's payment option also carries the
+**`x402-merchant` identity.** Callrack explicitly declares the merchant
+extension (`apps/api/src/x402/merchant-extension.builder.ts`) rather than
+relying only on HTML crawling, so identity is under explicit, versioned
+control:
+
+```json
+{
+  "x402-merchant": {
+    "info": {
+      "name": "Callrack",
+      "website": "https://callrack.xyz",
+      "logo": "https://callrack.xyz/favicon.svg",
+      "categories": ["api", "information", "algorand", "x402"]
+    },
+    "schema": { "...": "JSON Schema describing the info object above" }
+  }
+}
+```
+
+`website` is deliberately `https://callrack.xyz` (the brand/root domain),
+**not** `api.callrack.xyz` (where the paid routes actually live) — the guide
+resolves the enrichment-crawl origin from `x402-merchant.website` when
+present, so this is what points the facilitator's HTML/well-known crawl at
+the right place. `apps/web`'s `index.html` carries the corresponding root
+page metadata (title, description, `og:*`, `theme-color`, favicon — every
+value points at something that actually exists in this repo; nothing is
+fabricated), and ships static `.well-known/agent.json`, `llms.txt`, and
+`agents.md` files that defer to `api.callrack.xyz` for the live,
+never-stale capability list rather than duplicating prices on two domains.
+
+**Discovery files on `api.callrack.xyz`** (`apps/api/src/discovery/`,
+registered *before* any SPA fallback so they always return real content,
+never `index.html`):
+
+| Path | Content-Type | Purpose |
+| --- | --- | --- |
+| `/.well-known/x402` | `application/json` | Static x402 discovery document: every paid resource, its network, USDC asset, base-unit amount, and `payTo` — generated from the live registry and active network config, not hand-written |
+| `/.well-known/agent-card.json` | `application/json` | A2A-style agent card listing Callrack's real capabilities (research, news, market data, weather, geocoding, knowledge) — never claims Callrack itself is an autonomous agent |
+| `/.well-known/agent.json` | `application/json` | Generic manifest: name, description, url, documentation, and the x402/Algorand/USDC payment block |
+| `/llms.txt` | `text/plain` | Markdown starting `# Callrack`; explains the pay-per-request model, current capabilities and prices, how to pay, and links to `/openapi.json` and `/agents.md` |
+| `/agents.md` | `text/markdown` | Operating instructions for agents already integrating Callrack: the 402 → pay → retry flow, and the rule that a live 402 response is always authoritative over any hardcoded price |
+| `/openapi.json` | `application/json` | The same Swagger/OpenAPI document `/docs` renders, at the conventional root path agent tooling looks for — `/docs` is unaffected |
+
+Callrack does **not** publish `.well-known/ai-plugin.json` (no real contact
+email exists in project config to put in one — publishing a fabricated
+email would be worse than omitting the file) or `.well-known/mcp.json` (no
+MCP server exists in this project). Both return a plain 404, not a fake
+manifest.
+
+Every paid route's Mainnet payment option also carries the
 `x402-global-challenge` tag required by the 2026 Algorand Global x402
-Challenge, in the route's x402 `extra` field:
+Challenge, **only when `NETWORK=mainnet`**, in the route's x402 `extra`
+field — Testnet traffic is never part of the competition/leaderboard, so
+Testnet routes never carry this tag:
 
 ```json
 { "accepts": [{ "...": "...", "extra": { "tag": "x402-global-challenge", "feePayer": "..." } }] }
 ```
 
+(`feePayer` above is added independently by `@x402/avm`'s own
+`ExactAvmScheme` enrichment, not by Callrack — Callrack's `extra.tag` is
+merged in alongside it, never overwriting it.)
+
+**Facilitator caching.** The GoPlausible facilitator caches enrichment
+results (merchant/root-page/well-known metadata) for **24 hours**. Callrack
+does not build any duplicate cache of its own for this — a metadata change
+(new logo, new description, edited `llms.txt`) needs no code change on
+Callrack's side, but will not be reflected in the facilitator's own catalog
+until that cache expires or is manually refreshed from the merchant side.
+This repository does not claim metadata updates propagate immediately.
+
 **Local declaration vs. real Bazaar visibility.** Running locally proves the
 *declaration* is correct — the 402 response really does carry a valid
-`extensions.bazaar` block, the challenge tag, and the right schemas (see
-`apps/api/test/x402/x402.e2e.spec.ts`). It does **not** prove Callrack is
-listed in the actual GoPlausible Bazaar catalog — that requires a public
-HTTPS deployment on Mainnet and a real settled payment, which is out of
-scope for this phase. Nothing in this codebase claims Callrack is currently
-in the Bazaar catalog.
+`extensions.bazaar` block, a well-formed `x402-merchant` extension, the
+Mainnet-only challenge tag, and the right schemas (see
+`apps/api/test/x402/x402.e2e.spec.ts` and `apps/api/test/discovery/discovery.e2e.spec.ts`).
+It does **not** prove Callrack is listed in the actual GoPlausible Bazaar
+catalog — that requires a public HTTPS deployment on Mainnet and a real
+settled payment, which is out of scope for this phase. Nothing in this
+codebase claims Callrack is currently in the Bazaar catalog.
+
+**Verifying with the GoPlausible x402 Doctor.** Once Callrack is deployed to
+a public HTTPS `api.callrack.xyz` (and `callrack.xyz` is live for
+enrichment crawling), run the
+[GoPlausible x402 Doctor](https://facilitator.goplausible.xyz/guide) against
+it to confirm the facilitator actually sees what this README describes:
+discovery files return 200 with correct content types, the `bazaar` and
+`x402-merchant` extensions parse, CORS headers pass its sanity checks, and
+(after a first real settled payment) the resource appears in the Bazaar
+catalog. This has not been run yet — there is no public deployment to point
+it at — and nothing in this repository claims it has passed.
 
 ### Running the x402 test suite
 
@@ -333,6 +425,14 @@ Mainnet USDC automatically.
   server.
 - `payTo`, network, and asset are always resolved from trusted server
   configuration — a client can never choose or influence any of them.
+- **CORS** is deliberately open (`origin: true`, no `Access-Control-Allow-Credentials`)
+  rather than restricted to a configured allowlist: paid capabilities are
+  meant to be called by arbitrary x402 clients/agents, not one fixed browser
+  origin, and the API never uses cookies or other credentialed browser auth
+  (payment proof travels in a request header). An open origin without
+  credentialed CORS is the standard-compliant combination for this shape of
+  API, and is what the GoPlausible x402 Doctor's CORS checks expect from a
+  public resource server (see `apps/api/test/cors.e2e.spec.ts`).
 
 Current x402 documentation: https://github.com/x402-foundation/x402 (packages
 used: `@x402/core`, `@x402/avm`, `@x402/fastify`, all `2.26.0`).

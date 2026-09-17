@@ -33,12 +33,6 @@ export class ApiConfigService {
     return this.config.API_PREFIX;
   }
 
-  get corsOrigins(): string[] {
-    return this.config.CORS_ORIGIN.split(',')
-      .map((origin) => origin.trim())
-      .filter((origin) => origin.length > 0);
-  }
-
   get serviceName(): string {
     return this.config.SERVICE_NAME;
   }

@@ -2,6 +2,7 @@ import type { NestFastifyApplication } from '@nestjs/platform-fastify';
 import { declareDiscoveryExtension } from '@x402/extensions/bazaar';
 import type { CapabilityDefinition } from '../capabilities/capability.types.js';
 import { buildRequestSchemaMap, getRequestSchemaFor, type RequestJsonSchema } from './discovery-schema.util.js';
+import { buildX402MerchantExtension } from './merchant-extension.builder.js';
 
 /**
  * Transforms one capability's registry metadata into an x402 Bazaar
@@ -30,21 +31,27 @@ export function buildBazaarDiscoveryExtension(
 }
 
 /**
- * Builds every capability's Bazaar discovery extension in one pass, keyed by
- * capability id — ready to hand to `buildX402RoutesConfig`. Reflects the
- * live Nest app's request DTOs exactly once (see `buildRequestSchemaMap`),
- * not once per capability.
+ * Builds every capability's full extensions set (Bazaar discovery +
+ * x402-merchant) in one pass, keyed by capability id — ready to hand to
+ * `buildX402RoutesConfig`. Reflects the live Nest app's request DTOs exactly
+ * once (see `buildRequestSchemaMap`), not once per capability. The
+ * x402-merchant identity is the same for every route, so it's built once
+ * and merged in, not recomputed per capability.
  */
 export function buildDiscoveryExtensionsMap(
   app: NestFastifyApplication,
   capabilities: readonly CapabilityDefinition[],
 ): ReadonlyMap<string, Record<string, unknown>> {
   const requestSchemas = buildRequestSchemaMap(app);
+  const merchantExtension = buildX402MerchantExtension();
   const extensions = new Map<string, Record<string, unknown>>();
 
   for (const capability of capabilities) {
     const requestSchema = getRequestSchemaFor(requestSchemas, capability.requestSchema);
-    extensions.set(capability.id, buildBazaarDiscoveryExtension(capability, requestSchema));
+    extensions.set(capability.id, {
+      ...buildBazaarDiscoveryExtension(capability, requestSchema),
+      ...merchantExtension,
+    });
   }
 
   return extensions;

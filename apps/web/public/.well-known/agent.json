@@ -1,0 +1,11 @@
+{
+  "name": "Callrack",
+  "description": "Callrack is a pay-per-use information infrastructure platform, paid per request in USDC on Algorand via x402.",
+  "url": "https://callrack.xyz",
+  "documentation": "https://api.callrack.xyz/llms.txt",
+  "payments": {
+    "protocol": "x402",
+    "network": "algorand",
+    "asset": "USDC"
+  }
+}

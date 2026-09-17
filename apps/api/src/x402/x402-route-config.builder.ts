@@ -6,8 +6,15 @@ const X402_SCHEME = 'exact';
 
 /**
  * Required by the 2026 Algorand Global x402 Challenge: every paid route's
- * payment option must carry this tag in its `extra` field so challenge
- * infrastructure can attribute usage to this entry.
+ * Mainnet payment option must carry this tag in its `extra` field so
+ * challenge infrastructure can classify settled Mainnet traffic under
+ * "SOURCE → X402-GLOBAL-CHALLENGE" on the GoPlausible dashboard.
+ *
+ * Only Mainnet — per the official guide, this tag is added to the Mainnet
+ * `accepts` configuration specifically. Testnet traffic is never part of
+ * the competition/leaderboard, so tagging it would be an "accidental"
+ * challenge-classification of throwaway test transactions; Testnet routes
+ * never carry this tag (see `buildX402RoutesConfig` below).
  */
 export const X402_GLOBAL_CHALLENGE_TAG = 'x402-global-challenge';
 
@@ -41,7 +48,7 @@ export function buildX402RoutesConfig(
 
   for (const capability of capabilities) {
     const routeKey = `${capability.method} ${capability.path}`;
-    const bazaarExtension = discoveryExtensions?.get(capability.id);
+    const discoveryExtension = discoveryExtensions?.get(capability.id);
 
     routes[routeKey] = {
       description: capability.description,
@@ -57,9 +64,10 @@ export function buildX402RoutesConfig(
         // Merged with (never overwriting) whatever the AVM scheme itself
         // later adds to `extra` (e.g. `feePayer`) — ExactAvmScheme.
         // enhancePaymentRequirements spreads the existing `extra` first.
-        extra: { tag: X402_GLOBAL_CHALLENGE_TAG },
+        // Mainnet only — see X402_GLOBAL_CHALLENGE_TAG's own docs.
+        ...(active.network === 'mainnet' ? { extra: { tag: X402_GLOBAL_CHALLENGE_TAG } } : {}),
       },
-      ...(bazaarExtension ? { extensions: bazaarExtension } : {}),
+      ...(discoveryExtension ? { extensions: discoveryExtension } : {}),
     };
   }
 

@@ -2,9 +2,35 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Callrack - Information Infrastructure Platform</title>
+
+    <!--
+      Root-page metadata for the GoPlausible x402 facilitator's enrichment
+      crawler (https://facilitator.goplausible.xyz/guide/discovery): it
+      fetches this page once, parses only the first 128 KB, and times out
+      after 4 seconds — so this block stays near the top of <head>, and every
+      value here is real (no fabricated logo/image references). `favicon.svg`
+      is the only brand asset currently committed to this app; there is no
+      dedicated PNG yet for `apple-touch-icon`/`og:image`/`twitter:card`, so
+      those are intentionally omitted rather than pointed at something that
+      doesn't exist — add them here once a real asset exists.
+    -->
+    <title>Callrack — pay-per-use information API, paid per request in USDC</title>
+    <meta
+      name="description"
+      content="Callrack is a pay-per-use information infrastructure platform: academic, news, market, weather, geocoding, knowledge, government, and research-aggregation endpoints, each paid per request in USDC on Algorand via x402. No accounts, no API keys, no subscriptions."
+    />
+
+    <meta property="og:site_name" content="Callrack" />
+    <meta property="og:title" content="Callrack — pay-per-use information API, paid per request in USDC" />
+    <meta
+      property="og:description"
+      content="Pay-per-use information capabilities, paid per request in USDC on Algorand via x402. No accounts, no API keys, no subscriptions."
+    />
+    <meta property="og:url" content="https://callrack.xyz" />
+
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="theme-color" content="#6366f1" />
   </head>
   <body class="bg-slate-950 text-slate-50 antialiased">
     <div id="root"></div>

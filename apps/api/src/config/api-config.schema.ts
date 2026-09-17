@@ -3,7 +3,6 @@ import { baseEnvSchema } from '@callrack/config';
 
 export const apiConfigSchema = baseEnvSchema.extend({
   API_PREFIX: z.string().min(1, 'API_PREFIX cannot be empty').default('v1'),
-  CORS_ORIGIN: z.string().min(1, 'CORS_ORIGIN cannot be empty').default('http://localhost:5173'),
   SERVICE_NAME: z.string().default('callrack-api'),
   API_VERSION: z.string().default('0.1.0'),
 
