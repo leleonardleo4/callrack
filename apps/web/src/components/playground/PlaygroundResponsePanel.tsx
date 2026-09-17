@@ -44,7 +44,7 @@ export function PlaygroundResponsePanel({ result, sending, networkName }: Playgr
         <div className="rounded-lg border border-sapphire-hairline bg-cobalt-panel p-4">
           <p className="font-heading text-sm font-medium text-quartz">Payment required</p>
           <p className="mt-1 text-sm text-mist">
-            This is the real, live payment requirement for this call — not a simulation.
+            This is the real, live payment requirement for this call, not a simulation.
           </p>
           {requirement ? (
             <dl className="mt-4 grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">

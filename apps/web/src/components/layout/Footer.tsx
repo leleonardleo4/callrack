@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { Logo } from '@/components/Logo';
 
 const PRODUCT_LINKS = [
   { to: '/capabilities', label: 'Capabilities' },
@@ -18,8 +19,8 @@ export function Footer(): React.JSX.Element {
     <footer className="border-t border-inkline">
       <div className="mx-auto flex max-w-(--page-max-width) flex-col gap-10 px-4 py-12 sm:px-6 md:flex-row md:justify-between">
         <div className="max-w-sm">
-          <Link to="/" className="font-heading text-base font-medium text-quartz">
-            Callrack
+          <Link to="/" aria-label="Callrack home" className="flex items-center">
+            <Logo className="h-5 w-auto text-foreground" />
           </Link>
           <p className="mt-3 text-sm leading-relaxed text-ash">
             Pay-per-use information infrastructure for software and AI agents. Call a capability, pay only when

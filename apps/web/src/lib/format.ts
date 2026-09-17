@@ -17,7 +17,7 @@ export function formatCategory(category: CapabilityCategory): string {
   return CATEGORY_LABELS[category] ?? category;
 }
 
-/** Humanizes a real provider slug (e.g. "academic.openalex" → "OpenAlex") — never a fabricated display name. */
+/** Humanizes a real provider slug (e.g. "academic.openalex" → "OpenAlex"), never a fabricated display name. */
 function humanizeProviderSlug(slug: string): string {
   const tail = slug.split('.').at(-1) ?? slug;
   const KNOWN_ACRONYMS: Record<string, string> = {

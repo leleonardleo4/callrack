@@ -1,7 +1,7 @@
 /**
  * Mirrors the wire shape returned by `GET /v1/capabilities`
  * (apps/api/src/capabilities/public-capability.types.ts). This is a type
- * declaration only — every value still comes from that one live endpoint at
+ * declaration only; every value still comes from that one live endpoint at
  * runtime, so there is no second source of capability data, only a second
  * place describing its shape (as any frontend consuming a REST API needs).
  */

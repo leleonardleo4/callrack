@@ -43,7 +43,7 @@ export function SchemaFieldsTable({ properties, required = [] }: SchemaFieldsTab
               </td>
               <td className="px-4 py-3 align-top font-mono text-xs text-frosted-lilac">{describeType(schema)}</td>
               <td className="px-4 py-3 align-top text-mist">
-                {schema.description ?? '—'}
+                {schema.description ?? 'No description.'}
                 {schema.enum ? (
                   <span className="mt-1 block font-mono text-xs text-ash">one of: {schema.enum.join(', ')}</span>
                 ) : null}

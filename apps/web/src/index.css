@@ -1,22 +1,69 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-@import "@fontsource-variable/inter";
-@import "@fontsource-variable/figtree";
 @import "@fontsource/ibm-plex-mono/400.css";
 
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Callrack design system — see apps/web/DESIGN.md ("AgentQL — Aurora glow
- * over a midnight terminal"). Dark is the only theme; `.dark` and `:root`
- * carry identical values so nothing depends on a theme toggle that doesn't
- * exist.
+ * Fonts:
+ * - Heading: "Wacky", a local display face (src/assets/fonts/wacky.ttf),
+ *   self-hosted, one static weight covering the whole 100-900 range so it's
+ *   always picked over the fallback stack regardless of the requested
+ *   numeric weight.
+ * - Body/buttons: "General Sans", self-hosted from Fontshare (the actual
+ *   source; it isn't on Google Fonts despite the similar-sounding name),
+ *   same @fontsource-style local-file pattern as the mono face below.
+ * - Code: IBM Plex Mono, unchanged.
+ */
+@font-face {
+  font-family: 'Wacky';
+  src: url('./assets/fonts/wacky.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'General Sans';
+  src: url('./assets/fonts/general-sans/general-sans-400.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'General Sans';
+  src: url('./assets/fonts/general-sans/general-sans-500.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'General Sans';
+  src: url('./assets/fonts/general-sans/general-sans-600.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'General Sans';
+  src: url('./assets/fonts/general-sans/general-sans-700.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/*
+ * Callrack design system, see apps/web/DESIGN.md ("AgentQL: Aurora glow
+ * over a midnight terminal"). `:root` below carries a light-mode variant of
+ * the same brand palette; `.dark` carries the original DESIGN.md values.
+ * Every brand/semantic token keeps the same NAME and ROLE across both
+ * themes, so components reference them once (e.g. `text-ash`,
+ * `bg-background`) and never need theme-specific classes.
  */
 @theme inline {
-  --font-sans: var(--font-inter);
-  --font-heading: var(--font-figtree);
-  --font-mono: var(--font-ibm-plex-mono);
+  --font-sans: 'General Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-heading: 'Wacky', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
   --color-void: var(--brand-void);
   --color-abyss: var(--brand-abyss);
@@ -71,11 +118,53 @@
   --section-gap: 80px;
 }
 
-:root,
+/* Light mode (default) */
+:root {
+  color-scheme: light;
+
+  --brand-void: #ffffff;
+  --brand-abyss: #ffffff;
+  --brand-deep-sea: #f6f7fb;
+  --brand-cobalt-panel: #eef1fb;
+  --brand-frosted-lilac: #3d4fb0;
+  --brand-signal-blue: #2862d7;
+  --brand-pulse-violet: #305fbd;
+  --brand-aurora-purple: #625fff;
+  --brand-plasma-pink: #ff7dda;
+  --brand-quartz: #0b0c0e;
+  --brand-ash: #565b68;
+  --brand-mist: #7d818c;
+  --brand-slate: #d1d5db;
+  --brand-obsidian-edge: #e2e4ea;
+  --brand-inkline: #ececf1;
+  --brand-sapphire-hairline: #d8ddf0;
+
+  --background: var(--brand-abyss);
+  --foreground: var(--brand-quartz);
+  --card: var(--brand-deep-sea);
+  --card-foreground: var(--brand-quartz);
+  --popover: var(--brand-void);
+  --popover-foreground: var(--brand-quartz);
+  --primary: var(--brand-quartz);
+  --primary-foreground: #ffffff;
+  --secondary: var(--brand-cobalt-panel);
+  --secondary-foreground: var(--brand-quartz);
+  --muted: var(--brand-deep-sea);
+  --muted-foreground: var(--brand-ash);
+  --accent: var(--brand-cobalt-panel);
+  --accent-foreground: var(--brand-quartz);
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+  --border: var(--brand-obsidian-edge);
+  --input: var(--brand-obsidian-edge);
+  --ring: var(--brand-signal-blue);
+  --radius: 12px;
+}
+
+/* Dark mode, apps/web/DESIGN.md */
 .dark {
   color-scheme: dark;
 
-  /* Brand palette — apps/web/DESIGN.md */
   --brand-void: #0b0c0e;
   --brand-abyss: #0e111b;
   --brand-deep-sea: #0d172b;
@@ -93,7 +182,6 @@
   --brand-inkline: #151e32;
   --brand-sapphire-hairline: #24375a;
 
-  /* Semantic tokens (shadcn/ui) mapped onto the brand palette */
   --background: var(--brand-abyss);
   --foreground: var(--brand-quartz);
   --card: var(--brand-deep-sea);
@@ -109,7 +197,7 @@
   --accent: var(--brand-cobalt-panel);
   --accent-foreground: var(--brand-quartz);
   --destructive: #ef4444;
-  --destructive-foreground: var(--brand-quartz);
+  --destructive-foreground: #ffffff;
   --border: var(--brand-obsidian-edge);
   --input: var(--brand-obsidian-edge);
   --ring: var(--brand-signal-blue);
@@ -124,7 +212,7 @@
     @apply font-sans scroll-smooth;
   }
   body {
-    @apply bg-background text-foreground antialiased;
+    @apply bg-background text-foreground antialiased transition-colors duration-200;
   }
   ::selection {
     background-color: var(--brand-cobalt-panel);
@@ -132,11 +220,14 @@
   }
 }
 
-@layer utilities {
-  /* Hero background glows — reserved for hero/section backgrounds only, per DESIGN.md */
-  .aurora-glow {
-    background-image:
-      radial-gradient(79.43% 95.88% at 38.94% -53.46%, rgba(98, 95, 255, 0.38) 0px, transparent 100%),
-      radial-gradient(27.99% 22.08% at 72.13% 103.46%, rgba(255, 125, 218, 0.33) 0px, transparent 100%);
-  }
+/*
+ * Deliberately outside any @layer: unlayered CSS always wins over anything
+ * in @layer utilities, so this reliably overrides `tracking-tight`/etc.
+ * wherever it's still applied alongside `font-heading`; the negative
+ * tracking was tuned for Figtree and is too cramped for Wacky, the current
+ * heading face. One rule here beats hunting down every element.
+ */
+.font-heading {
+  letter-spacing: 0.02em;
 }
+

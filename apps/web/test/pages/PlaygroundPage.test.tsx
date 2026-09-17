@@ -42,7 +42,7 @@ describe('PlaygroundPage', () => {
     expect(screen.getByLabelText(/^query/)).toBeInTheDocument();
   });
 
-  it('shows the real HTTP 402 payment requirement — never a fake success', async () => {
+  it('shows the real HTTP 402 payment requirement, never a fake success', async () => {
     const challenge = {
       x402Version: 2,
       resource: { url: 'http://localhost/v1/weather' },

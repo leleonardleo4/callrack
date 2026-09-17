@@ -12,6 +12,7 @@ import { ApiErrorState } from '@/components/ApiErrorState';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useCapabilities } from '@/hooks/useCapabilities';
 import { formatCategory, formatProvider } from '@/lib/format';
+import { categoryIcon } from '@/lib/category-icons';
 
 export function CapabilityDetailPage(): React.JSX.Element {
   const { capability: capabilityId } = useParams<{ capability: string }>();
@@ -36,6 +37,7 @@ export function CapabilityDetailPage(): React.JSX.Element {
   }
 
   const capability = state.data.capabilities.find((c) => c.id === capabilityId);
+  const Icon = capability ? categoryIcon(capability.category) : null;
 
   if (!capability) {
     return (
@@ -66,13 +68,16 @@ export function CapabilityDetailPage(): React.JSX.Element {
         </Link>
 
         <div className="mt-4 flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <div className="flex flex-wrap items-center gap-2">
-              <h1 className="font-heading text-3xl font-medium tracking-tight text-quartz">{capability.name}</h1>
-              <Badge variant="outline">{formatCategory(capability.category)}</Badge>
-              <Badge>{capability.provider.kind === 'composite' ? 'Composition' : 'Atomic'}</Badge>
+          <div className="flex items-start gap-4">
+            {Icon ? <Icon className="mt-1 size-10 shrink-0 text-frosted-lilac" aria-hidden /> : null}
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="font-heading text-4xl font-medium text-quartz">{capability.name}</h1>
+                <Badge variant="outline">{formatCategory(capability.category)}</Badge>
+                <Badge>{capability.provider.kind === 'composite' ? 'Composition' : 'Atomic'}</Badge>
+              </div>
+              <p className="mt-3 max-w-2xl text-sm leading-relaxed text-mist">{capability.description}</p>
             </div>
-            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-mist">{capability.description}</p>
           </div>
           <PriceTag amount={capability.price.amount} className="text-lg" />
         </div>
@@ -90,7 +95,7 @@ export function CapabilityDetailPage(): React.JSX.Element {
           <AlertDescription>
             An unpaid request returns <code className="font-mono">402 Payment Required</code> with the exact
             price, network, and payment destination in the <code className="font-mono">PAYMENT-REQUIRED</code>{' '}
-            header. Pay the advertised amount and retry with payment proof to receive the real response — see{' '}
+            header. Pay the advertised amount and retry with payment proof to receive the real response; see{' '}
             <Link to="/docs" className="underline underline-offset-2 hover:text-quartz">
               the docs
             </Link>

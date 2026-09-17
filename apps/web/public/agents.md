@@ -13,5 +13,5 @@ Callrack's capability registry:
 ## Payment (summary)
 Every capability endpoint under `api.callrack.xyz` is x402-paid. On HTTP 402, read the PAYMENT-REQUIRED
 response header for the exact current payment requirement, pay the advertised amount in USDC on Algorand,
-then retry the same request with a PAYMENT-SIGNATURE header. Treat the live 402 response as authoritative —
+then retry the same request with a PAYMENT-SIGNATURE header. Treat the live 402 response as authoritative:
 never hardcode or assume a price.

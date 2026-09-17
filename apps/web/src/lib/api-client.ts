@@ -21,7 +21,7 @@ export interface ApiSuccessResult<T> {
   readonly data: T;
   readonly requestId: string;
   /**
-   * The decoded `PAYMENT-RESPONSE` settlement header — present only when the
+   * The decoded `PAYMENT-RESPONSE` settlement header, present only when the
    * server actually sent one, i.e. only when a real payment was verified and
    * settled. Never populated speculatively.
    */
@@ -118,7 +118,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<ApiResult<T
       try {
         paymentResponse = decodePaymentResponseHeader(paymentResponseHeader);
       } catch {
-        // Malformed header on an otherwise-successful response — surface the
+        // Malformed header on an otherwise-successful response: surface the
         // response normally rather than failing the whole request over it.
       }
     }
@@ -149,13 +149,13 @@ export function getCapabilities(): Promise<ApiResult<PublicCapabilitiesData>> {
 
 /**
  * Calls a real Callrack capability endpoint. `path` must come from a
- * capability the caller already fetched via `getCapabilities()` — never
- * from free-form user input — so this can only ever reach known Callrack
+ * capability the caller already fetched via `getCapabilities()`, never
+ * from free-form user input, so this can only ever reach known Callrack
  * routes, never an arbitrary URL (see the Playground's safety requirement:
  * no open proxy/SSRF surface).
  *
  * `paymentSignature`, if given, is forwarded verbatim as the
- * `PAYMENT-SIGNATURE` header — Callrack never generates, signs, or holds a
+ * `PAYMENT-SIGNATURE` header. Callrack never generates, signs, or holds a
  * payment itself; a caller who already has a valid signed payment (produced
  * entirely outside this app) can attach it to see the real, paid response.
  */

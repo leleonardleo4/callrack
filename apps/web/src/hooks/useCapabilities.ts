@@ -8,7 +8,7 @@ export type UseCapabilitiesState =
   | { readonly status: 'error'; readonly message: string };
 
 /**
- * The one place the web app fetches capability metadata — every page that
+ * The one place the web app fetches capability metadata: every page that
  * shows capabilities or prices (landing, explorer, detail, playground) goes
  * through this hook rather than re-fetching or caching its own copy.
  */

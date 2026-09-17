@@ -12,17 +12,17 @@ export function CapabilitiesPage(): React.JSX.Element {
     <>
       <Seo
         title="Capabilities"
-        description="Browse every Callrack capability — academic, news, market, weather, geocoding, knowledge, government, and research — with live pricing and request schemas."
+        description="Browse every Callrack capability: academic, news, market, weather, geocoding, knowledge, government, and research, with live pricing and request schemas."
         path="/capabilities"
       />
       <Section>
         <Eyebrow>Capability explorer</Eyebrow>
-        <h1 className="mt-3 font-heading text-3xl font-medium tracking-tight text-quartz md:text-4xl">
+        <h1 className="mt-3 font-heading text-3xl font-medium text-quartz md:text-4xl">
           Every capability, live from the registry
         </h1>
         <p className="mt-4 max-w-2xl text-sm leading-relaxed text-ash">
           Names, descriptions, prices, and request schemas below come directly from{' '}
-          <code className="font-mono text-frosted-lilac">GET /v1/capabilities</code> — the same source x402's
+          <code className="font-mono text-frosted-lilac">GET /v1/capabilities</code>, the same source x402's
           Bazaar discovery metadata uses, never a hand-maintained copy.
         </p>
 

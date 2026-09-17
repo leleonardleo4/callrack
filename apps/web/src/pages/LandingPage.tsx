@@ -7,15 +7,19 @@ import { CapabilityGridSkeleton } from '@/components/capabilities/CapabilityCard
 import { ApiErrorState } from '@/components/ApiErrorState';
 import { PriceTag } from '@/components/PriceTag';
 import { Seo } from '@/components/Seo';
+import Aurora from '@/components/Aurora';
+import { useTheme } from '@/components/ThemeProvider';
 import { useCapabilities } from '@/hooks/useCapabilities';
 import type { PublicCapability } from '@/types/capability';
 
+const AURORA_COLOR_STOPS = ['#625fff', '#ff7dda', '#305fbd'] as const;
+
 const HOW_IT_WORKS_STEPS = [
   { title: 'Discover a capability', description: 'Read the request/response shape from /v1/capabilities, .well-known/x402, or the docs.' },
-  { title: 'Call the API', description: 'POST the request body — no API key, no account, no signup.' },
+  { title: 'Call the API', description: 'POST the request body: no API key, no account, no signup.' },
   { title: 'Receive HTTP 402', description: 'The response carries the exact price, network, and payment destination for this call.' },
   { title: 'Pay with x402 on Algorand', description: 'Settle the advertised USDC amount through the x402 protocol.' },
-  { title: 'Retry and receive the data', description: 'Retry the same request with payment proof — the real response comes back.' },
+  { title: 'Retry and receive the data', description: 'Retry the same request with payment proof: the real response comes back.' },
 ] as const;
 
 const AGENT_FLOW_CAPABILITY_IDS = ['academic.search', 'news.search', 'knowledge.search'] as const;
@@ -27,7 +31,7 @@ export function LandingPage(): React.JSX.Element {
     <>
       <Seo
         title="Pay-per-use information infrastructure"
-        description="Callrack lets software and AI agents call academic, news, market, weather, geocoding, and knowledge capabilities — paying only per request in USDC over x402 on Algorand."
+        description="Callrack lets software and AI agents call academic, news, market, weather, geocoding, and knowledge capabilities, paying only per request in USDC over x402 on Algorand."
         path="/"
       />
       <Hero />
@@ -42,19 +46,28 @@ export function LandingPage(): React.JSX.Element {
 }
 
 function Hero(): React.JSX.Element {
+  const { theme } = useTheme();
+
   return (
-    <div className="relative overflow-hidden border-b border-inkline">
-      <div className="aurora-glow pointer-events-none absolute inset-0" aria-hidden />
-      <Section className="relative py-20 md:py-28">
+    <div className="relative flex h-dvh flex-col justify-center overflow-hidden border-b border-inkline">
+      <Aurora
+        className="pointer-events-none absolute inset-0"
+        colorStops={AURORA_COLOR_STOPS}
+        lightMode={theme === 'light'}
+        amplitude={0.8}
+        blend={0.6}
+        speed={0.4}
+      />
+      <Section className="relative">
         <div className="mx-auto max-w-3xl text-center">
           <Eyebrow className="justify-center">Pay-per-use information infrastructure</Eyebrow>
-          <h1 className="mt-4 font-heading text-4xl font-medium tracking-tight text-quartz md:text-6xl">
+          <h1 className="mt-4 font-heading text-4xl font-medium text-quartz md:text-6xl">
             Call information. <br className="hidden md:block" />
             Pay only when you use it.
           </h1>
           <p className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-ash md:text-lg">
             Callrack gives software and AI agents a single, callable surface over academic, news, market,
-            weather, geocoding, and knowledge data — no accounts, no API keys, no subscriptions. Every call
+            weather, geocoding, and knowledge data: no accounts, no API keys, no subscriptions. Every call
             settles per request in USDC over x402 on Algorand.
           </p>
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
@@ -78,7 +91,7 @@ function HowItWorks(): React.JSX.Element {
     <Section>
       <div className="mx-auto max-w-2xl text-center">
         <Eyebrow className="justify-center">How it works</Eyebrow>
-        <h2 className="mt-3 font-heading text-3xl font-medium tracking-tight text-quartz md:text-4xl">
+        <h2 className="mt-3 font-heading text-3xl font-medium text-quartz md:text-4xl">
           Every capability speaks the same protocol
         </h2>
       </div>
@@ -110,7 +123,7 @@ function LiveCapabilities({ state }: { state: ReturnType<typeof useCapabilities>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <Eyebrow>Live capabilities</Eyebrow>
-          <h2 className="mt-3 font-heading text-3xl font-medium tracking-tight text-quartz md:text-4xl">
+          <h2 className="mt-3 font-heading text-3xl font-medium text-quartz md:text-4xl">
             Real, callable today
           </h2>
         </div>
@@ -141,7 +154,7 @@ function WhyPayPerUse(): React.JSX.Element {
     <Section className="border-t border-inkline">
       <div className="mx-auto max-w-2xl text-center">
         <Eyebrow className="justify-center">Why pay-per-use</Eyebrow>
-        <h2 className="mt-3 font-heading text-3xl font-medium tracking-tight text-quartz md:text-4xl">
+        <h2 className="mt-3 font-heading text-3xl font-medium text-quartz md:text-4xl">
           Pay for information, not access
         </h2>
       </div>
@@ -150,7 +163,7 @@ function WhyPayPerUse(): React.JSX.Element {
           <p className="font-heading text-lg font-medium text-quartz">Subscriptions</p>
           <p className="mt-2 text-sm leading-relaxed text-mist">
             Fixed monthly cost regardless of usage. Pay whether you make one call or ten thousand. Unused
-            capacity is sunk cost — a poor fit for an agent that calls a capability occasionally, or only for a
+            capacity is sunk cost: a poor fit for an agent that calls a capability occasionally, or only for a
             single task.
           </p>
         </div>
@@ -158,7 +171,7 @@ function WhyPayPerUse(): React.JSX.Element {
           <p className="font-heading text-lg font-medium text-quartz">Pay exactly when needed</p>
           <p className="mt-2 text-sm leading-relaxed text-mist">
             Each request settles its own price at the moment it's made. An agent that calls a capability once a
-            month costs the same per call as one that calls it every minute — no idle subscription, no
+            month costs the same per call as one that calls it every minute: no idle subscription, no
             provisioning ahead of usage.
           </p>
         </div>
@@ -176,11 +189,11 @@ function AgentUseCase({ state }: { state: ReturnType<typeof useCapabilities> }):
     <Section className="border-t border-inkline">
       <div className="mx-auto max-w-2xl text-center">
         <Eyebrow className="justify-center">Built for agents</Eyebrow>
-        <h2 className="mt-3 font-heading text-3xl font-medium tracking-tight text-quartz md:text-4xl">
+        <h2 className="mt-3 font-heading text-3xl font-medium text-quartz md:text-4xl">
           The intended agent workflow
         </h2>
         <p className="mt-4 text-sm leading-relaxed text-ash">
-          This is the workflow Callrack's capabilities are designed around — an agent composing several
+          This is the workflow Callrack's capabilities are designed around: an agent composing several
           capabilities to answer one question, paying only for what it actually calls. The agent client itself
           is a later phase; today, any HTTP-capable agent can already call these endpoints directly.
         </p>
@@ -240,7 +253,7 @@ function X402Explainer(): React.JSX.Element {
     <Section className="border-t border-inkline">
       <div className="mx-auto max-w-2xl text-center">
         <Eyebrow className="justify-center">The payment layer</Eyebrow>
-        <h2 className="mt-3 font-heading text-3xl font-medium tracking-tight text-quartz md:text-4xl">
+        <h2 className="mt-3 font-heading text-3xl font-medium text-quartz md:text-4xl">
           x402 and Algorand, briefly
         </h2>
       </div>
@@ -248,7 +261,7 @@ function X402Explainer(): React.JSX.Element {
         <ExplainerCard
           icon={<Coins className="size-5" aria-hidden />}
           title="HTTP 402"
-          body="A standard HTTP status code, 'Payment Required', reserved since the web's early days and never widely used — until now."
+          body="A standard HTTP status code, 'Payment Required', reserved since the web's early days and never widely used, until now."
         />
         <ExplainerCard
           icon={<Zap className="size-5" aria-hidden />}
@@ -258,12 +271,12 @@ function X402Explainer(): React.JSX.Element {
         <ExplainerCard
           icon={<Bot className="size-5" aria-hidden />}
           title="Algorand"
-          body="The blockchain Callrack settles payments on — fast, low-fee finality, well suited to many small, per-request payments."
+          body="The blockchain Callrack settles payments on: fast, low-fee finality, well suited to many small, per-request payments."
         />
         <ExplainerCard
           icon={<Coins className="size-5" aria-hidden />}
           title="USDC"
-          body="Every price on Callrack is denominated in USDC, a dollar-pegged stablecoin — prices are predictable, not exposed to crypto volatility."
+          body="Every price on Callrack is denominated in USDC, a dollar-pegged stablecoin: prices are predictable, not exposed to crypto volatility."
         />
       </div>
     </Section>
@@ -283,7 +296,7 @@ function ExplainerCard({ icon, title, body }: { icon: React.ReactNode; title: st
 function DeveloperCta(): React.JSX.Element {
   return (
     <Section className="border-t border-inkline text-center">
-      <h2 className="font-heading text-3xl font-medium tracking-tight text-quartz md:text-4xl">
+      <h2 className="font-heading text-3xl font-medium text-quartz md:text-4xl">
         Start calling capabilities
       </h2>
       <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-ash">

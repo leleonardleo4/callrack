@@ -29,16 +29,16 @@ export function PlaygroundPage(): React.JSX.Element {
     <>
       <Seo
         title="Playground"
-        description="Call a real Callrack capability directly from your browser and see the honest HTTP 402 payment requirement — no fake payment success."
+        description="Call a real Callrack capability directly from your browser and see the honest HTTP 402 payment requirement: no fake payment success."
         path="/playground"
       />
       <Section>
         <Eyebrow>Playground</Eyebrow>
-        <h1 className="mt-3 font-heading text-3xl font-medium tracking-tight text-quartz md:text-4xl">
+        <h1 className="mt-3 font-heading text-3xl font-medium text-quartz md:text-4xl">
           Try a real request
         </h1>
         <p className="mt-4 max-w-2xl text-sm leading-relaxed text-ash">
-          This calls the real Callrack API — never mock data. An unpaid request will honestly return{' '}
+          This calls the real Callrack API, never mock data. An unpaid request will honestly return{' '}
           <code className="font-mono text-frosted-lilac">402 Payment Required</code>; Callrack never fakes a
           successful payment here.
         </p>

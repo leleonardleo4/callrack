@@ -1,6 +1,6 @@
 import type { JsonSchemaProperty, RequestJsonSchema } from '@/types/capability';
 
-/** How a schema field's control is rendered — never nested forms, so every value is form-control-friendly. */
+/** How a schema field's control is rendered: never nested forms, so every value is form-control-friendly. */
 export type FieldKind = 'string' | 'number' | 'boolean' | 'string-array' | 'json';
 
 /** Form state always holds control-friendly primitives; arrays/objects are edited as text and parsed on submit. */
@@ -28,7 +28,7 @@ function stringifyExampleValue(kind: FieldKind, value: unknown): FormFieldValue 
   return value === undefined || value === null ? '' : String(value);
 }
 
-/** Seeds form state from the capability's real example request — never blank placeholders where a real example exists. */
+/** Seeds form state from the capability's real example request, never blank placeholders where a real example exists. */
 export function initFormState(
   schema: RequestJsonSchema,
   example: Record<string, unknown>,

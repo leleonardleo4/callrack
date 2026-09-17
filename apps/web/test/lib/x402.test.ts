@@ -32,11 +32,11 @@ describe('decodePaymentRequiredHeader', () => {
   it('decodes non-ASCII characters correctly (UTF-8 safe)', () => {
     const challenge: PaymentRequired = {
       x402Version: 2,
-      resource: { url: 'http://localhost/v1/news/search', description: 'Café news search — “curated”' },
+      resource: { url: 'http://localhost/v1/news/search', description: 'Café news search: "curated" résumés' },
       accepts: [],
     };
     const decoded = decodePaymentRequiredHeader(base64Encode(challenge));
-    expect(decoded.resource.description).toBe('Café news search — “curated”');
+    expect(decoded.resource.description).toBe('Café news search: "curated" résumés');
   });
 
   it('throws for malformed base64 input', () => {

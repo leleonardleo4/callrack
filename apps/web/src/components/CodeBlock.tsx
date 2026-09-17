@@ -8,7 +8,7 @@ export interface CodeBlockProps {
   readonly className?: string;
 }
 
-/** The signature devtool component per DESIGN.md — filename/label header, mono body, copy action. */
+/** The signature devtool component per DESIGN.md: filename/label header, mono body, copy action. */
 export function CodeBlock({ code, label, className }: CodeBlockProps): React.JSX.Element {
   const [copied, setCopied] = useState(false);
 
@@ -18,7 +18,7 @@ export function CodeBlock({ code, label, className }: CodeBlockProps): React.JSX
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch {
-      // Clipboard access can be denied (permissions, insecure context) — the
+      // Clipboard access can be denied (permissions, insecure context), so the
       // copy button simply stays inert; the code is still visible/selectable.
     }
   }

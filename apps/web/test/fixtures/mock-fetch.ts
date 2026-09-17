@@ -6,7 +6,7 @@ export function mockFetchOnce(response: Response): void {
 
 /**
  * Stubs `fetch` to always resolve to an equivalent response, cloning it per
- * call — a `Response` body can only be read once, and this app fetches
+ * call: a `Response` body can only be read once, and this app fetches
  * capabilities again on every page mount, so reusing one instance across
  * calls fails the second `.json()` read.
  */

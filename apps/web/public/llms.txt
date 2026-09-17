@@ -4,8 +4,8 @@
 > with x402 payment requirements; pay the advertised amount in USDC on Algorand and the response is yours.
 > No accounts, no API keys, no subscriptions.
 
-This is the brand/marketing site. The API — including the current, live list of paid capabilities, their exact
-prices, and the OpenAPI contract — is served from a separate origin and generated directly from Callrack's
+This is the brand/marketing site. The API, including the current, live list of paid capabilities, their exact
+prices, and the OpenAPI contract, is served from a separate origin and generated directly from Callrack's
 capability registry, so it never goes stale:
 
 ## API
@@ -16,4 +16,4 @@ capability registry, so it never goes stale:
 ## Paying
 - Protocol: x402 (v2), settled by https://facilitator.goplausible.xyz
 - Network: Algorand · Asset: USDC
-- On HTTP 402, read the PAYMENT-REQUIRED response header for the exact, current price — never assume one.
+- On HTTP 402, read the PAYMENT-REQUIRED response header for the exact, current price; never assume one.

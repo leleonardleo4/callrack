@@ -6,6 +6,7 @@
   "description": "Callrack - Pay-per-use information infrastructure platform",
   "scripts": {
     "dev": "turbo dev",
+    "dev:apps": "turbo dev --filter=@callrack/api --filter=@callrack/web",
     "build": "turbo build",
     "test": "turbo test",
     "test:providers": "pnpm --filter @callrack/api run test:providers",

@@ -501,7 +501,7 @@ export const CAPABILITY_METADATA: readonly CapabilityMetadata[] = [
     id: 'geocode',
     name: 'Geocode',
     description:
-      'Forward geocode a place name to coordinates, or reverse geocode coordinates to a place, via Photon — ' +
+      'Forward geocode a place name to coordinates, or reverse geocode coordinates to a place, via Photon, ' +
       'returning normalized address components.',
     category: 'geography',
     method: 'POST',
@@ -744,7 +744,7 @@ export const CAPABILITY_METADATA: readonly CapabilityMetadata[] = [
     name: 'Research Composition',
     description:
       'Aggregate information from selected Callrack research capabilities (academic, news, knowledge, and ' +
-      'optionally government) and return structured research evidence with per-source status — deterministic ' +
+      'optionally government) and return structured research evidence with per-source status; deterministic ' +
       'composition, not an AI-generated answer.',
     category: 'research',
     method: 'POST',

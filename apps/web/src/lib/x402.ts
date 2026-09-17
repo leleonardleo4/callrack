@@ -1,6 +1,6 @@
 /**
  * The x402 PAYMENT-REQUIRED challenge shape (see @x402/core/types
- * `PaymentRequired`/`PaymentRequirements` — verified directly against the
+ * `PaymentRequired`/`PaymentRequirements`, verified directly against the
  * installed `@x402/core@2.26.0` package). A 402 response body is empty; the
  * whole challenge is base64-encoded JSON in the `PAYMENT-REQUIRED` response
  * header. This is a small local decoder rather than importing `@x402/core`
@@ -11,7 +11,7 @@ export interface PaymentRequirements {
   readonly scheme: string;
   readonly network: string;
   readonly asset: string;
-  /** Atomic (base-unit) amount as a decimal string — never convert with floating point. */
+  /** Atomic (base-unit) amount as a decimal string, never convert with floating point. */
   readonly amount: string;
   readonly payTo: string;
   readonly maxTimeoutSeconds: number;
@@ -53,7 +53,7 @@ export function decodePaymentRequiredHeader(header: string): PaymentRequired {
 /**
  * Decodes the `PAYMENT-RESPONSE` settlement header that comes back on a
  * successfully paid request. Its exact field set isn't pinned down as a
- * dedicated local type (unlike `PaymentRequired`) — it's shown as raw,
+ * dedicated local type (unlike `PaymentRequired`): it's shown as raw,
  * decoded JSON rather than risk asserting a shape that hasn't been verified
  * against the installed `@x402/core` package.
  */

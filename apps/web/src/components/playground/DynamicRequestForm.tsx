@@ -33,7 +33,7 @@ export function DynamicRequestForm({ schema, values, onChange, fieldError }: Dyn
             <Label htmlFor={fieldId} className="flex items-center gap-1 text-mist">
               <span className="font-mono text-xs text-quartz">{name}</span>
               {isRequired ? <span className="text-frosted-lilac">*</span> : null}
-              {fieldSchema.description ? <span className="text-xs text-ash">— {fieldSchema.description}</span> : null}
+              {fieldSchema.description ? <span className="text-xs text-ash">: {fieldSchema.description}</span> : null}
             </Label>
 
             {kind === 'boolean' ? (
