@@ -16,6 +16,7 @@ import { HolidaysModule } from '../holidays/holidays.module.js';
 import { KnowledgeModule } from '../knowledge/knowledge.module.js';
 import { GovernmentModule } from '../government/government.module.js';
 import { ResearchModule } from '../research/research.module.js';
+import { CapabilitiesModule } from '../capabilities/capabilities.module.js';
 import { RequestContextMiddleware } from '../common/request-context/request-context.middleware.js';
 
 import { AppLoggerService } from '../common/logging/app-logger.service.js';
@@ -38,6 +39,7 @@ import { AppLoggerService } from '../common/logging/app-logger.service.js';
     KnowledgeModule,
     GovernmentModule,
     ResearchModule,
+    CapabilitiesModule,
     HealthModule,
   ],
   providers: [AppLoggerService],
