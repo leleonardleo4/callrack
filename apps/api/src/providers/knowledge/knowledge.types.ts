@@ -11,6 +11,8 @@ export interface KnowledgeEntity {
 export interface KnowledgeSearchInput {
   query: string;
   limit?: number;
+  /** ISO-style language code (e.g. "en", "fr"). Defaults to the adapter's own default. */
+  language?: string;
 }
 
 export interface KnowledgeSearchResult {

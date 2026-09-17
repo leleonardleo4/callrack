@@ -12,6 +12,7 @@ import { mapWikidataSearchResponse } from './wikimedia.mapper.js';
 import type { WikidataSearchResponse } from './wikimedia.types.js';
 
 const PROVIDER_SLUG = 'knowledge.wikimedia';
+const DEFAULT_LANGUAGE = 'en';
 
 /**
  * Wikidata entity-search adapter. Wikimedia policy requires a descriptive
@@ -49,7 +50,7 @@ export class WikimediaProvider extends BaseProviderAdapter implements KnowledgeP
       query: {
         action: 'wbsearchentities',
         search: input.query,
-        language: 'en',
+        language: input.language ?? DEFAULT_LANGUAGE,
         format: 'json',
         limit: input.limit ?? 10,
       },

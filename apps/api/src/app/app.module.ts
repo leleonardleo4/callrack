@@ -13,6 +13,8 @@ import { FxModule } from '../fx/fx.module.js';
 import { WeatherModule } from '../weather/weather.module.js';
 import { GeocodeModule } from '../geocode/geocode.module.js';
 import { HolidaysModule } from '../holidays/holidays.module.js';
+import { KnowledgeModule } from '../knowledge/knowledge.module.js';
+import { GovernmentModule } from '../government/government.module.js';
 import { RequestContextMiddleware } from '../common/request-context/request-context.middleware.js';
 
 import { AppLoggerService } from '../common/logging/app-logger.service.js';
@@ -32,6 +34,8 @@ import { AppLoggerService } from '../common/logging/app-logger.service.js';
     WeatherModule,
     GeocodeModule,
     HolidaysModule,
+    KnowledgeModule,
+    GovernmentModule,
     HealthModule,
   ],
   providers: [AppLoggerService],

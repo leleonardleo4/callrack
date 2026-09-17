@@ -11,6 +11,10 @@
  * - Geocoding results (an address's coordinates) and public holidays for a
  *   given country/year are effectively immutable, so both can be cached for
  *   a long time.
+ * - Wikidata entity labels/descriptions change infrequently, so a moderate
+ *   TTL balances freshness against load on Wikimedia's infrastructure.
+ * - Published Census estimates for a given dataset/year never change, so
+ *   they can be cached for a long time.
  */
 export const CACHE_TTL_SECONDS = {
   ACADEMIC_SEARCH: 60 * 30, // 30 minutes
@@ -24,4 +28,6 @@ export const CACHE_TTL_SECONDS = {
   WEATHER: 60 * 10, // 10 minutes
   GEOCODE: 60 * 60 * 24 * 30, // 30 days
   HOLIDAYS: 60 * 60 * 24 * 30, // 30 days
+  KNOWLEDGE_SEARCH: 60 * 60 * 6, // 6 hours
+  CENSUS: 60 * 60 * 24 * 7, // 7 days
 } as const;
