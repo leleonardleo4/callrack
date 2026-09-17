@@ -1,12 +1,142 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "@fontsource-variable/inter";
+@import "@fontsource-variable/figtree";
+@import "@fontsource/ibm-plex-mono/400.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Callrack design system — see apps/web/DESIGN.md ("AgentQL — Aurora glow
+ * over a midnight terminal"). Dark is the only theme; `.dark` and `:root`
+ * carry identical values so nothing depends on a theme toggle that doesn't
+ * exist.
+ */
+@theme inline {
+  --font-sans: var(--font-inter);
+  --font-heading: var(--font-figtree);
+  --font-mono: var(--font-ibm-plex-mono);
+
+  --color-void: var(--brand-void);
+  --color-abyss: var(--brand-abyss);
+  --color-deep-sea: var(--brand-deep-sea);
+  --color-cobalt-panel: var(--brand-cobalt-panel);
+  --color-frosted-lilac: var(--brand-frosted-lilac);
+  --color-signal-blue: var(--brand-signal-blue);
+  --color-pulse-violet: var(--brand-pulse-violet);
+  --color-aurora-purple: var(--brand-aurora-purple);
+  --color-plasma-pink: var(--brand-plasma-pink);
+  --color-quartz: var(--brand-quartz);
+  --color-ash: var(--brand-ash);
+  --color-mist: var(--brand-mist);
+  --color-slate: var(--brand-slate);
+  --color-obsidian-edge: var(--brand-obsidian-edge);
+  --color-inkline: var(--brand-inkline);
+  --color-sapphire-hairline: var(--brand-sapphire-hairline);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --radius-sm: 2px;
+  --radius-md: 8px;
+  --radius-lg: var(--radius);
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
+  --radius-full: 9999px;
+
+  --shadow-md: 0px 3px 16px 0px rgba(0, 0, 0, 0.2);
+  --shadow-xl: 0px 4px 30px 0px rgba(0, 0, 0, 0.5);
+  --shadow-xl-2: 0px 20px 35px 0px rgba(0, 0, 0, 0.34), 0px 4px 13px 0px rgba(0, 0, 0, 0.25);
+  --shadow-inner-glow: 0px 2px 14px 0px rgba(255, 255, 255, 0.35);
+
+  --page-max-width: 1200px;
+  --section-gap: 80px;
+}
+
+:root,
+.dark {
+  color-scheme: dark;
+
+  /* Brand palette — apps/web/DESIGN.md */
+  --brand-void: #0b0c0e;
+  --brand-abyss: #0e111b;
+  --brand-deep-sea: #0d172b;
+  --brand-cobalt-panel: #12244f;
+  --brand-frosted-lilac: #85a6e9;
+  --brand-signal-blue: #2862d7;
+  --brand-pulse-violet: #305fbd;
+  --brand-aurora-purple: #625fff;
+  --brand-plasma-pink: #ff7dda;
+  --brand-quartz: #ffffff;
+  --brand-ash: #abaebb;
+  --brand-mist: #c7c9d1;
+  --brand-slate: #3c3f44;
+  --brand-obsidian-edge: #172540;
+  --brand-inkline: #151e32;
+  --brand-sapphire-hairline: #24375a;
+
+  /* Semantic tokens (shadcn/ui) mapped onto the brand palette */
+  --background: var(--brand-abyss);
+  --foreground: var(--brand-quartz);
+  --card: var(--brand-deep-sea);
+  --card-foreground: var(--brand-quartz);
+  --popover: var(--brand-deep-sea);
+  --popover-foreground: var(--brand-quartz);
+  --primary: var(--brand-quartz);
+  --primary-foreground: #050606;
+  --secondary: var(--brand-cobalt-panel);
+  --secondary-foreground: var(--brand-quartz);
+  --muted: var(--brand-deep-sea);
+  --muted-foreground: var(--brand-ash);
+  --accent: var(--brand-cobalt-panel);
+  --accent-foreground: var(--brand-quartz);
+  --destructive: #ef4444;
+  --destructive-foreground: var(--brand-quartz);
+  --border: var(--brand-obsidian-edge);
+  --input: var(--brand-obsidian-edge);
+  --ring: var(--brand-signal-blue);
+  --radius: 12px;
+}
 
 @layer base {
-  :root {
-    --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply font-sans scroll-smooth;
   }
   body {
-    font-family: var(--font-sans);
-    background-color: #0b0f19;
-    color: #f8fafc;
+    @apply bg-background text-foreground antialiased;
+  }
+  ::selection {
+    background-color: var(--brand-cobalt-panel);
+    color: var(--brand-quartz);
+  }
+}
+
+@layer utilities {
+  /* Hero background glows — reserved for hero/section backgrounds only, per DESIGN.md */
+  .aurora-glow {
+    background-image:
+      radial-gradient(79.43% 95.88% at 38.94% -53.46%, rgba(98, 95, 255, 0.38) 0px, transparent 100%),
+      radial-gradient(27.99% 22.08% at 72.13% 103.46%, rgba(255, 125, 218, 0.33) 0px, transparent 100%);
   }
 }

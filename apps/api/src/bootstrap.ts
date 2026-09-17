@@ -20,7 +20,9 @@ import {
 } from './common/http/request-id.util.js';
 import { RequestContext } from './common/request-context/request-context.js';
 import { CapabilityRegistryService } from './capabilities/capability-registry.service.js';
+import { CapabilityRequestSchemaService } from './capabilities/capability-request-schema.service.js';
 import { buildHttpFacilitatorClient, installX402Middleware } from './x402/index.js';
+import { buildRequestSchemaMap } from './x402/discovery-schema.util.js';
 
 import type {
   FastifyPluginAsync,
@@ -174,6 +176,13 @@ export async function createApp(): Promise<NestFastifyApplication> {
   // never replaces `/docs`). Same already-built document, no second
   // generation step.
   fastifyInstance.get('/openapi.json', async () => swaggerDocument);
+
+  // 9. Public capability request-schema reflection for GET /v1/capabilities
+  // (CapabilitiesController). Same reflection x402's Bazaar extension uses
+  // (see discovery-schema.util.ts) — computed once, here, because it needs
+  // the fully-built `app` that isn't available at normal constructor-
+  // injection time; not a second, independent computation.
+  app.get(CapabilityRequestSchemaService).initialize(buildRequestSchemaMap(app));
 
   return app;
 }
