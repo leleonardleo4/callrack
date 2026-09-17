@@ -1,30 +1,79 @@
-import type { SystemHealthStatus } from '@callrack/types';
+export { CallrackClient, type CallrackClientOptions, type CallResult, type ListCapabilitiesOptions } from './client.js';
 
-export interface CallrackOptions {
-  baseUrl?: string;
-  apiKey?: string;
-}
+export {
+  CallrackApiError,
+  type CallrackApiErrorOptions,
+  CallrackError,
+  type CallrackErrorOptions,
+  CallrackNetworkError,
+  CallrackPaymentError,
+  CallrackPaymentPolicyError,
+  type CallrackPaymentPolicyErrorOptions,
+  CallrackPaymentRequiredError,
+  type CallrackPaymentRequiredErrorOptions,
+  CallrackTimeoutError,
+  CallrackValidationError,
+  isCallrackError,
+  type PaymentPolicyReason,
+  type PaymentRequirementSummary,
+} from './errors.js';
 
-export class CallrackClient {
-  private readonly baseUrl: string;
-  private readonly apiKey?: string;
+export {
+  convertFromTokenAmount,
+  convertToTokenAmount,
+  isAtomicAmountWithin,
+  parseAtomicAmount,
+  subtractAtomicAmount,
+  sumAtomicAmounts,
+} from './money.js';
 
-  constructor(options: CallrackOptions = {}) {
-    this.baseUrl = options.baseUrl ?? 'http://localhost:3000';
-    this.apiKey = options.apiKey;
-  }
+export { type CallrackNetwork, resolveNetwork, type ResolvedNetwork } from './network.js';
 
-  public getBaseUrl(): string {
-    return this.baseUrl;
-  }
+export type { PaymentEvent, PaymentEventListener, PaymentEventType } from './payment-events.js';
 
-  public async getHealth(): Promise<SystemHealthStatus> {
-    return {
-      status: 'ok',
-      service: 'api',
-      version: '0.1.0',
-      uptime: 0,
-      timestamp: new Date().toISOString(),
-    };
-  }
-}
+export type { CallrackPaymentSigner } from './signer.js';
+
+export {
+  type CallrackSpendPolicy,
+  defaultSpendPolicy,
+  selectAcceptablePaymentRequirement,
+  type SelectPaymentRequirementFailureReason,
+  type SelectPaymentRequirementInput,
+  type SelectPaymentRequirementResult,
+} from './spend-policy.js';
+
+export { X402PaymentClient, type X402PaymentClientOptions } from './x402-payment-client.js';
+
+export { CallrackHttpClient, type CallrackHttpClientOptions } from './http-client.js';
+
+export type {
+  AcademicSearchInput,
+  AcademicSearchOutput,
+  AcademicWork,
+  NewsArticle,
+  NewsSearchInput,
+  NewsSearchOutput,
+  WeatherCurrentConditions,
+  WeatherDailyForecast,
+  WeatherInput,
+  WeatherLocation,
+  WeatherOutput,
+} from './capability-types.js';
+
+export type {
+  ApiErrorPayload,
+  ApiErrorResponse,
+  ApiSuccessMeta,
+  ApiSuccessResponse,
+  CapabilityCategory,
+  CapabilityPricing,
+  CapabilityProviderRef,
+  JsonObjectSchema,
+  JsonSchemaProperty,
+  PublicCapabilitiesData,
+  PublicCapability,
+  PublicNetworkInfo,
+  RequestJsonSchema,
+} from './types.js';
+
+export * from './agent/index.js';

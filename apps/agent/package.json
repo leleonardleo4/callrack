@@ -1,0 +1,24 @@
+{
+  "name": "@callrack/agent",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx src/cli.ts",
+    "build": "tsup src/cli.ts --format esm --target node18",
+    "start": "node dist/cli.js",
+    "lint": "eslint src",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@callrack/config": "workspace:*",
+    "@callrack/sdk": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.5",
+    "eslint": "^9.21.0",
+    "tsup": "^8.4.0",
+    "tsx": "^4.23.13",
+    "typescript": "^5.8.2"
+  }
+}

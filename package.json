@@ -10,6 +10,7 @@
     "build": "turbo build",
     "test": "turbo test",
     "test:providers": "pnpm --filter @callrack/api run test:providers",
+    "test:agent:testnet": "pnpm --filter @callrack/sdk run test:agent:testnet",
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml}\""
