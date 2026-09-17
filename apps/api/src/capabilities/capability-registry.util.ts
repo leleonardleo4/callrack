@@ -71,6 +71,29 @@ export function validateCapabilityDefinitions(
       throw new Error(`Capability "${definition.id}" has an invalid path "${definition.path}"`);
     }
 
+    if (!definition.discovery) {
+      throw new Error(`Capability "${definition.id}" is missing discovery metadata`);
+    }
+    if (
+      !definition.discovery.inputExample ||
+      Object.keys(definition.discovery.inputExample).length === 0
+    ) {
+      throw new Error(`Capability "${definition.id}" is missing a discovery input example`);
+    }
+    if (
+      !definition.discovery.outputExample ||
+      Object.keys(definition.discovery.outputExample).length === 0
+    ) {
+      throw new Error(`Capability "${definition.id}" is missing a discovery output example`);
+    }
+    if (
+      !definition.discovery.outputSchema ||
+      !definition.discovery.outputSchema.properties ||
+      Object.keys(definition.discovery.outputSchema.properties).length === 0
+    ) {
+      throw new Error(`Capability "${definition.id}" is missing a discovery output schema`);
+    }
+
     if (definition.provider.kind === 'provider') {
       if (definition.provider.slugs.length === 0) {
         throw new Error(`Capability "${definition.id}" declares a provider reference with no slugs`);

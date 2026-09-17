@@ -253,6 +253,49 @@ service runs, and capability services have no knowledge of x402 at all (see
 `apps/api/src/x402/` — the entire integration lives at the Fastify transport
 boundary, wired in by `createProtectedApp()` in `apps/api/src/bootstrap.ts`).
 
+### Bazaar discovery metadata
+
+Every paid route also declares [x402 Bazaar](https://github.com/x402-foundation/x402)
+discovery metadata: a route description, a representative input example +
+JSON Schema, and a representative output example + schema, so an agent or
+the GoPlausible catalog can see what an endpoint does and how to call it
+*before* paying. This is generated, not hand-maintained per route:
+
+```text
+Capability Registry (id, description, requestSchema, discovery.{input,output})
+        ↓
+apps/api/src/x402/discovery-schema.util.ts    — reflects the live request DTO
+        ↓                                       (the same @ApiProperty decorators
+        ↓                                        /docs/json already uses) into JSON Schema
+apps/api/src/x402/discovery-metadata.builder.ts — calls @x402/extensions/bazaar's
+        ↓                                          declareDiscoveryExtension(...)
+x402 route `extensions.bazaar`
+```
+
+The registry itself never imports any `@x402/*` package — only the small
+adapter in `apps/api/src/x402/` does, keeping capability metadata reusable
+even if x402 were replaced later. The Bazaar resource-server extension
+(`bazaarResourceServerExtension`) is registered exactly once, in
+`x402-resource-server.factory.ts`; each route still declares its own
+discovery info.
+
+Every paid route's payment option also carries the
+`x402-global-challenge` tag required by the 2026 Algorand Global x402
+Challenge, in the route's x402 `extra` field:
+
+```json
+{ "accepts": [{ "...": "...", "extra": { "tag": "x402-global-challenge", "feePayer": "..." } }] }
+```
+
+**Local declaration vs. real Bazaar visibility.** Running locally proves the
+*declaration* is correct — the 402 response really does carry a valid
+`extensions.bazaar` block, the challenge tag, and the right schemas (see
+`apps/api/test/x402/x402.e2e.spec.ts`). It does **not** prove Callrack is
+listed in the actual GoPlausible Bazaar catalog — that requires a public
+HTTPS deployment on Mainnet and a real settled payment, which is out of
+scope for this phase. Nothing in this codebase claims Callrack is currently
+in the Bazaar catalog.
+
 ### Running the x402 test suite
 
 ```bash

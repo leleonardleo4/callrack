@@ -15,18 +15,25 @@ import type { CapabilityMetadata } from './capability.types.js';
 
 /**
  * The single authoritative list of public Callrack capabilities. Every
- * route, provider mapping, and price key is declared here exactly once —
- * Phase 7 (x402) and any future discovery layer must read from this list
- * rather than re-deriving capability metadata elsewhere.
+ * route, provider mapping, price key, and discovery declaration is declared
+ * here exactly once — Phase 7 (x402) and Phase 8 (Bazaar discovery) both
+ * read from this list rather than re-deriving capability metadata elsewhere.
  *
  * Paths are the full route as actually served (assuming the default
  * `API_PREFIX=v1` URI-versioning configuration — see `bootstrap.ts`).
+ *
+ * `discovery.outputExample`/`outputSchema` describe the actual public
+ * Callrack response envelope (`{ data, meta }`) — never a raw upstream
+ * provider payload. Every field shown is a field the endpoint genuinely
+ * returns today; update these alongside the response types if they change.
  */
 export const CAPABILITY_METADATA: readonly CapabilityMetadata[] = [
   {
     id: 'academic.search',
     name: 'Academic Search',
-    description: 'Searches scholarly literature via OpenAlex, falling back to Crossref if needed.',
+    description:
+      'Search scholarly literature via OpenAlex (falling back to Crossref) and return normalized works with ' +
+      'titles, authors, publication years, DOIs, journals, citation counts, and open-access status.',
     category: 'academic',
     method: 'POST',
     path: '/v1/academic/search',
@@ -36,11 +43,66 @@ export const CAPABILITY_METADATA: readonly CapabilityMetadata[] = [
     status: 'active',
     requestSchema: AcademicSearchRequestDto,
     responseSchemaName: 'AcademicSearchResponseData',
+    discovery: {
+      inputExample: { query: 'large language models healthcare', limit: 5 },
+      outputExample: {
+        data: {
+          results: [
+            {
+              id: 'openalex:W2741809807',
+              title: 'The state of OA',
+              authors: ['Heather Piwowar'],
+              publicationYear: 2018,
+              doi: '10.7717/peerj.4375',
+              url: 'https://doi.org/10.7717/peerj.4375',
+              journal: 'PeerJ',
+              citations: 391,
+              openAccess: true,
+              source: 'openalex',
+            },
+          ],
+          meta: { count: 1 },
+        },
+        meta: { requestId: 'req_1a2b3c...' },
+      },
+      outputSchema: {
+        properties: {
+          data: {
+            type: 'object',
+            properties: {
+              results: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    id: { type: 'string' },
+                    title: { type: 'string' },
+                    authors: { type: 'array', items: { type: 'string' } },
+                    publicationYear: { type: ['number', 'null'] },
+                    doi: { type: ['string', 'null'] },
+                    url: { type: ['string', 'null'] },
+                    journal: { type: ['string', 'null'] },
+                    citations: { type: ['number', 'null'] },
+                    openAccess: { type: 'boolean' },
+                    source: { type: 'string' },
+                  },
+                },
+              },
+              meta: { type: 'object', properties: { count: { type: 'number' } } },
+            },
+          },
+          meta: { type: 'object', properties: { requestId: { type: 'string' } } },
+        },
+        required: ['data', 'meta'],
+      },
+    },
   },
   {
     id: 'academic.work',
     name: 'Academic Work Lookup',
-    description: 'Retrieves a single scholarly work by DOI via OpenAlex, falling back to Crossref if needed.',
+    description:
+      'Retrieve a single scholarly work by DOI via OpenAlex (falling back to Crossref) and return its ' +
+      'normalized title, authors, publication year, journal, citation count, and open-access status.',
     category: 'academic',
     method: 'POST',
     path: '/v1/academic/work',
@@ -50,11 +112,52 @@ export const CAPABILITY_METADATA: readonly CapabilityMetadata[] = [
     status: 'active',
     requestSchema: AcademicWorkRequestDto,
     responseSchemaName: 'AcademicWorkResponse',
+    discovery: {
+      inputExample: { doi: '10.7717/peerj.4375' },
+      outputExample: {
+        data: {
+          id: 'openalex:W2741809807',
+          title: 'The state of OA',
+          authors: ['Heather Piwowar'],
+          publicationYear: 2018,
+          doi: '10.7717/peerj.4375',
+          url: 'https://doi.org/10.7717/peerj.4375',
+          journal: 'PeerJ',
+          citations: 391,
+          openAccess: true,
+          source: 'openalex',
+        },
+        meta: { requestId: 'req_1a2b3c...' },
+      },
+      outputSchema: {
+        properties: {
+          data: {
+            type: 'object',
+            properties: {
+              id: { type: 'string' },
+              title: { type: 'string' },
+              authors: { type: 'array', items: { type: 'string' } },
+              publicationYear: { type: ['number', 'null'] },
+              doi: { type: ['string', 'null'] },
+              url: { type: ['string', 'null'] },
+              journal: { type: ['string', 'null'] },
+              citations: { type: ['number', 'null'] },
+              openAccess: { type: 'boolean' },
+              source: { type: 'string' },
+            },
+          },
+          meta: { type: 'object', properties: { requestId: { type: 'string' } } },
+        },
+        required: ['data', 'meta'],
+      },
+    },
   },
   {
     id: 'news.search',
     name: 'News Search',
-    description: 'Searches recent news coverage via GDELT.',
+    description:
+      'Search recent news coverage via GDELT and return normalized articles with titles, URLs, source domains, ' +
+      'publish dates, languages, and countries.',
     category: 'news',
     method: 'POST',
     path: '/v1/news/search',
@@ -64,11 +167,62 @@ export const CAPABILITY_METADATA: readonly CapabilityMetadata[] = [
     status: 'active',
     requestSchema: NewsSearchRequestDto,
     responseSchemaName: 'NewsSearchResponseData',
+    discovery: {
+      inputExample: { query: 'renewable energy Africa', limit: 5 },
+      outputExample: {
+        data: {
+          results: [
+            {
+              title: 'Example headline',
+              url: 'https://example.com/article',
+              source: 'example.com',
+              publishedAt: '2026-01-15T12:00:00Z',
+              language: 'English',
+              country: 'United States',
+            },
+          ],
+        },
+        meta: {
+          requestId: 'req_1a2b3c...',
+          attribution: 'News data provided by the GDELT Project (gdeltproject.org)',
+        },
+      },
+      outputSchema: {
+        properties: {
+          data: {
+            type: 'object',
+            properties: {
+              results: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    title: { type: 'string' },
+                    url: { type: 'string' },
+                    source: { type: ['string', 'null'] },
+                    publishedAt: { type: ['string', 'null'] },
+                    language: { type: ['string', 'null'] },
+                    country: { type: ['string', 'null'] },
+                  },
+                },
+              },
+            },
+          },
+          meta: {
+            type: 'object',
+            properties: { requestId: { type: 'string' }, attribution: { type: 'string' } },
+          },
+        },
+        required: ['data', 'meta'],
+      },
+    },
   },
   {
     id: 'news.trends',
     name: 'News Trends',
-    description: 'Returns normalized news trend volume for a topic via GDELT.',
+    description:
+      'Return normalized daily news-coverage volume for a topic, entity, or event via GDELT as a time series ' +
+      'of dated volume points.',
     category: 'news',
     method: 'POST',
     path: '/v1/news/trends',
@@ -78,11 +232,45 @@ export const CAPABILITY_METADATA: readonly CapabilityMetadata[] = [
     status: 'active',
     requestSchema: NewsTrendsRequestDto,
     responseSchemaName: 'NewsTrendsResponseData',
+    discovery: {
+      inputExample: { query: 'renewable energy', timespan: '7d' },
+      outputExample: {
+        data: { term: 'renewable energy', points: [{ date: '20260101', volume: 12.3 }] },
+        meta: {
+          requestId: 'req_1a2b3c...',
+          attribution: 'News data provided by the GDELT Project (gdeltproject.org)',
+        },
+      },
+      outputSchema: {
+        properties: {
+          data: {
+            type: 'object',
+            properties: {
+              term: { type: 'string' },
+              points: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: { date: { type: 'string' }, volume: { type: 'number' } },
+                },
+              },
+            },
+          },
+          meta: {
+            type: 'object',
+            properties: { requestId: { type: 'string' }, attribution: { type: 'string' } },
+          },
+        },
+        required: ['data', 'meta'],
+      },
+    },
   },
   {
     id: 'crypto.price',
     name: 'Crypto Price',
-    description: 'Returns current price and 24h change for one or more crypto assets via CoinGecko.',
+    description:
+      'Get current price and 24-hour change for one or more cryptocurrency assets in a specified quote ' +
+      'currency via CoinGecko.',
     category: 'crypto',
     method: 'POST',
     path: '/v1/crypto/price',
@@ -92,11 +280,48 @@ export const CAPABILITY_METADATA: readonly CapabilityMetadata[] = [
     status: 'active',
     requestSchema: CryptoAssetsRequestDto,
     responseSchemaName: 'CryptoPriceResponseData',
+    discovery: {
+      inputExample: { assets: ['bitcoin', 'ethereum'], currency: 'usd' },
+      outputExample: {
+        data: {
+          assets: [{ id: 'bitcoin', symbol: 'btc', price: 104523.42, currency: 'usd', change24h: 2.31 }],
+          missing: [],
+        },
+        meta: { requestId: 'req_1a2b3c...' },
+      },
+      outputSchema: {
+        properties: {
+          data: {
+            type: 'object',
+            properties: {
+              assets: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    id: { type: 'string' },
+                    symbol: { type: 'string' },
+                    price: { type: ['number', 'null'] },
+                    currency: { type: 'string' },
+                    change24h: { type: ['number', 'null'] },
+                  },
+                },
+              },
+              missing: { type: 'array', items: { type: 'string' } },
+            },
+          },
+          meta: { type: 'object', properties: { requestId: { type: 'string' } } },
+        },
+        required: ['data', 'meta'],
+      },
+    },
   },
   {
     id: 'crypto.market',
     name: 'Crypto Market Data',
-    description: 'Returns market cap, rank, volume, and supply data for one or more crypto assets via CoinGecko.',
+    description:
+      'Get market capitalization, rank, 24h volume, and circulating/total/max supply for one or more ' +
+      'cryptocurrency assets via CoinGecko.',
     category: 'crypto',
     method: 'POST',
     path: '/v1/crypto/market',
@@ -106,11 +331,70 @@ export const CAPABILITY_METADATA: readonly CapabilityMetadata[] = [
     status: 'active',
     requestSchema: CryptoAssetsRequestDto,
     responseSchemaName: 'CryptoMarketResponseData',
+    discovery: {
+      inputExample: { assets: ['bitcoin'], currency: 'usd' },
+      outputExample: {
+        data: {
+          markets: [
+            {
+              id: 'bitcoin',
+              symbol: 'btc',
+              name: 'Bitcoin',
+              price: 104523.42,
+              currency: 'usd',
+              marketCap: 2080000000000,
+              marketCapRank: 1,
+              volume24h: 42000000000,
+              change24h: 2.31,
+              circulatingSupply: 19800000,
+              totalSupply: 21000000,
+              maxSupply: 21000000,
+            },
+          ],
+          missing: [],
+        },
+        meta: { requestId: 'req_1a2b3c...' },
+      },
+      outputSchema: {
+        properties: {
+          data: {
+            type: 'object',
+            properties: {
+              markets: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    id: { type: 'string' },
+                    symbol: { type: 'string' },
+                    name: { type: 'string' },
+                    price: { type: ['number', 'null'] },
+                    currency: { type: 'string' },
+                    marketCap: { type: ['number', 'null'] },
+                    marketCapRank: { type: ['number', 'null'] },
+                    volume24h: { type: ['number', 'null'] },
+                    change24h: { type: ['number', 'null'] },
+                    circulatingSupply: { type: ['number', 'null'] },
+                    totalSupply: { type: ['number', 'null'] },
+                    maxSupply: { type: ['number', 'null'] },
+                  },
+                },
+              },
+              missing: { type: 'array', items: { type: 'string' } },
+            },
+          },
+          meta: { type: 'object', properties: { requestId: { type: 'string' } } },
+        },
+        required: ['data', 'meta'],
+      },
+    },
   },
   {
     id: 'fx.rates',
     name: 'FX Reference Rates',
-    description: 'Returns current or historical foreign exchange reference rates via Frankfurter (ECB data).',
+    description:
+      'Get current or historical foreign exchange reference rates for a base currency against one or more ' +
+      'target currencies via Frankfurter (ECB data).',
     category: 'finance',
     method: 'POST',
     path: '/v1/fx/rates',
@@ -122,11 +406,34 @@ export const CAPABILITY_METADATA: readonly CapabilityMetadata[] = [
     status: 'active',
     requestSchema: FxRatesRequestDto,
     responseSchemaName: 'FxRatesResponseData',
+    discovery: {
+      inputExample: { base: 'USD', currencies: ['EUR', 'GBP', 'NGN'] },
+      outputExample: {
+        data: { base: 'USD', date: '2026-09-15', rates: { EUR: 0.85, GBP: 0.74, NGN: 1530.22 } },
+        meta: { requestId: 'req_1a2b3c...' },
+      },
+      outputSchema: {
+        properties: {
+          data: {
+            type: 'object',
+            properties: {
+              base: { type: 'string' },
+              date: { type: 'string' },
+              rates: { type: 'object', additionalProperties: { type: 'number' } },
+            },
+          },
+          meta: { type: 'object', properties: { requestId: { type: 'string' } } },
+        },
+        required: ['data', 'meta'],
+      },
+    },
   },
   {
     id: 'weather',
     name: 'Weather Forecast',
-    description: 'Returns current conditions and a daily forecast for a coordinate via Open-Meteo.',
+    description:
+      'Get current conditions and a multi-day daily forecast (temperature, humidity, wind, precipitation) for ' +
+      'a coordinate via Open-Meteo.',
     category: 'weather',
     method: 'POST',
     path: '/v1/weather',
@@ -136,11 +443,66 @@ export const CAPABILITY_METADATA: readonly CapabilityMetadata[] = [
     status: 'active',
     requestSchema: WeatherRequestDto,
     responseSchemaName: 'WeatherResponseData',
+    discovery: {
+      inputExample: { latitude: 6.5244, longitude: 3.3792, days: 3 },
+      outputExample: {
+        data: {
+          location: { latitude: 6.5244, longitude: 3.3792, timezone: 'Africa/Lagos' },
+          current: { time: '2026-09-16T12:00', temperature: 27.4, humidity: 80, windSpeed: 12.4, precipitation: 0, weatherCode: 3 },
+          daily: [{ date: '2026-09-16', temperatureMax: 30.1, temperatureMin: 24.0, weatherCode: 3 }],
+        },
+        meta: { requestId: 'req_1a2b3c...' },
+      },
+      outputSchema: {
+        properties: {
+          data: {
+            type: 'object',
+            properties: {
+              location: {
+                type: 'object',
+                properties: {
+                  latitude: { type: 'number' },
+                  longitude: { type: 'number' },
+                  timezone: { type: ['string', 'null'] },
+                },
+              },
+              current: {
+                type: ['object', 'null'],
+                properties: {
+                  time: { type: 'string' },
+                  temperature: { type: ['number', 'null'] },
+                  humidity: { type: ['number', 'null'] },
+                  windSpeed: { type: ['number', 'null'] },
+                  precipitation: { type: ['number', 'null'] },
+                  weatherCode: { type: ['number', 'null'] },
+                },
+              },
+              daily: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    date: { type: 'string' },
+                    temperatureMax: { type: ['number', 'null'] },
+                    temperatureMin: { type: ['number', 'null'] },
+                    weatherCode: { type: ['number', 'null'] },
+                  },
+                },
+              },
+            },
+          },
+          meta: { type: 'object', properties: { requestId: { type: 'string' } } },
+        },
+        required: ['data', 'meta'],
+      },
+    },
   },
   {
     id: 'geocode',
     name: 'Geocode',
-    description: 'Forward or reverse geocodes a place name or coordinate via Photon.',
+    description:
+      'Forward geocode a place name to coordinates, or reverse geocode coordinates to a place, via Photon — ' +
+      'returning normalized address components.',
     category: 'geography',
     method: 'POST',
     path: '/v1/geocode',
@@ -150,11 +512,68 @@ export const CAPABILITY_METADATA: readonly CapabilityMetadata[] = [
     status: 'active',
     requestSchema: GeocodeRequestDto,
     responseSchemaName: 'GeocodeResponseData',
+    discovery: {
+      inputExample: { mode: 'forward', query: 'Lagos, Nigeria', limit: 5 },
+      outputExample: {
+        data: {
+          results: [
+            {
+              id: '27565124',
+              name: 'Lagos',
+              street: null,
+              houseNumber: null,
+              city: 'Lagos',
+              state: 'Lagos',
+              country: 'Nigeria',
+              countryCode: 'NG',
+              postcode: null,
+              latitude: 6.5244,
+              longitude: 3.3792,
+              type: 'city',
+            },
+          ],
+        },
+        meta: { requestId: 'req_1a2b3c...' },
+      },
+      outputSchema: {
+        properties: {
+          data: {
+            type: 'object',
+            properties: {
+              results: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    id: { type: ['string', 'null'] },
+                    name: { type: ['string', 'null'] },
+                    street: { type: ['string', 'null'] },
+                    houseNumber: { type: ['string', 'null'] },
+                    city: { type: ['string', 'null'] },
+                    state: { type: ['string', 'null'] },
+                    country: { type: ['string', 'null'] },
+                    countryCode: { type: ['string', 'null'] },
+                    postcode: { type: ['string', 'null'] },
+                    latitude: { type: 'number' },
+                    longitude: { type: 'number' },
+                    type: { type: ['string', 'null'] },
+                  },
+                },
+              },
+            },
+          },
+          meta: { type: 'object', properties: { requestId: { type: 'string' } } },
+        },
+        required: ['data', 'meta'],
+      },
+    },
   },
   {
     id: 'holidays',
     name: 'Public Holidays',
-    description: 'Returns public holidays for a country and year via Nager.Date.',
+    description:
+      'Retrieve public holiday dates and names for a specified country and year via Nager.Date, including ' +
+      'whether each holiday is observed nationwide.',
     category: 'calendar',
     method: 'POST',
     path: '/v1/holidays',
@@ -164,11 +583,62 @@ export const CAPABILITY_METADATA: readonly CapabilityMetadata[] = [
     status: 'active',
     requestSchema: HolidaysRequestDto,
     responseSchemaName: 'HolidaysResponseData',
+    discovery: {
+      inputExample: { country: 'NG', year: 2026 },
+      outputExample: {
+        data: {
+          country: 'NG',
+          year: 2026,
+          holidays: [
+            {
+              date: '2026-10-01',
+              name: 'National Day',
+              localName: 'National Day',
+              countryCode: 'NG',
+              global: true,
+              counties: null,
+              types: ['Public'],
+            },
+          ],
+        },
+        meta: { requestId: 'req_1a2b3c...' },
+      },
+      outputSchema: {
+        properties: {
+          data: {
+            type: 'object',
+            properties: {
+              country: { type: 'string' },
+              year: { type: 'number' },
+              holidays: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    date: { type: 'string' },
+                    name: { type: 'string' },
+                    localName: { type: 'string' },
+                    countryCode: { type: 'string' },
+                    global: { type: 'boolean' },
+                    counties: { type: ['array', 'null'], items: { type: 'string' } },
+                    types: { type: ['array', 'null'], items: { type: 'string' } },
+                  },
+                },
+              },
+            },
+          },
+          meta: { type: 'object', properties: { requestId: { type: 'string' } } },
+        },
+        required: ['data', 'meta'],
+      },
+    },
   },
   {
     id: 'knowledge.search',
     name: 'Knowledge Search',
-    description: 'Searches Wikidata for entities matching a free-text query.',
+    description:
+      'Search Wikidata for entities matching a free-text query and return normalized entity names, ' +
+      'descriptions, and reference URLs.',
     category: 'knowledge',
     method: 'POST',
     path: '/v1/knowledge/search',
@@ -178,11 +648,57 @@ export const CAPABILITY_METADATA: readonly CapabilityMetadata[] = [
     status: 'active',
     requestSchema: KnowledgeSearchRequestDto,
     responseSchemaName: 'KnowledgeSearchResponseData',
+    discovery: {
+      inputExample: { query: 'Lagos', limit: 5, language: 'en' },
+      outputExample: {
+        data: {
+          results: [
+            {
+              id: 'Q8673',
+              name: 'Lagos',
+              description: 'city in Lagos State, Nigeria',
+              url: 'https://www.wikidata.org/wiki/Q8673',
+              source: 'wikimedia',
+            },
+          ],
+        },
+        meta: { requestId: 'req_1a2b3c...', attribution: 'Data from Wikidata, available under CC0' },
+      },
+      outputSchema: {
+        properties: {
+          data: {
+            type: 'object',
+            properties: {
+              results: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    id: { type: 'string' },
+                    name: { type: 'string' },
+                    description: { type: ['string', 'null'] },
+                    url: { type: 'string' },
+                    source: { type: 'string' },
+                  },
+                },
+              },
+            },
+          },
+          meta: {
+            type: 'object',
+            properties: { requestId: { type: 'string' }, attribution: { type: 'string' } },
+          },
+        },
+        required: ['data', 'meta'],
+      },
+    },
   },
   {
     id: 'government.census',
     name: 'US Census Query',
-    description: 'Queries a constrained subset of US Census Bureau statistical datasets.',
+    description:
+      'Query a constrained subset of US Census Bureau statistical datasets and return the requested variables ' +
+      'as normalized rows for the specified geography.',
     category: 'government',
     method: 'POST',
     path: '/v1/government/census',
@@ -192,13 +708,44 @@ export const CAPABILITY_METADATA: readonly CapabilityMetadata[] = [
     status: 'active',
     requestSchema: CensusQueryRequestDto,
     responseSchemaName: 'CensusQueryResponseData',
+    discovery: {
+      inputExample: { dataset: 'acs/acs1', year: 2021, variables: ['NAME', 'B01001_001E'], forGeography: 'state:*' },
+      outputExample: {
+        data: {
+          dataset: 'acs/acs1',
+          year: 2021,
+          columns: ['NAME', 'B01001_001E'],
+          rows: [{ NAME: 'California', B01001_001E: '39029342' }],
+        },
+        meta: { requestId: 'req_1a2b3c...', source: 'us-census' },
+      },
+      outputSchema: {
+        properties: {
+          data: {
+            type: 'object',
+            properties: {
+              dataset: { type: 'string' },
+              year: { type: 'number' },
+              columns: { type: 'array', items: { type: 'string' } },
+              rows: { type: 'array', items: { type: 'object', additionalProperties: { type: 'string' } } },
+            },
+          },
+          meta: {
+            type: 'object',
+            properties: { requestId: { type: 'string' }, source: { type: 'string' } },
+          },
+        },
+        required: ['data', 'meta'],
+      },
+    },
   },
   {
     id: 'research',
     name: 'Research Composition',
     description:
-      'Composes existing Callrack capabilities (academic, news, knowledge, and optionally government) into a ' +
-      'single aggregated research result. A composition capability — not backed by any single external provider.',
+      'Aggregate information from selected Callrack research capabilities (academic, news, knowledge, and ' +
+      'optionally government) and return structured research evidence with per-source status — deterministic ' +
+      'composition, not an AI-generated answer.',
     category: 'research',
     method: 'POST',
     path: '/v1/research',
@@ -208,5 +755,48 @@ export const CAPABILITY_METADATA: readonly CapabilityMetadata[] = [
     status: 'active',
     requestSchema: ResearchRequestDto,
     responseSchemaName: 'ResearchResponseData',
+    discovery: {
+      inputExample: { query: 'renewable energy investment in Africa', sources: ['academic', 'news', 'knowledge'] },
+      outputExample: {
+        data: {
+          query: 'renewable energy investment in Africa',
+          status: 'complete',
+          sources: {
+            academic: { status: 'success', data: { results: [], meta: { count: 0 } } },
+            news: { status: 'success', data: { results: [] } },
+            knowledge: { status: 'success', data: { results: [] } },
+          },
+        },
+        meta: { requestId: 'req_1a2b3c...', sourcesUsed: ['academic', 'news', 'knowledge'] },
+      },
+      outputSchema: {
+        properties: {
+          data: {
+            type: 'object',
+            properties: {
+              query: { type: 'string' },
+              status: { type: 'string', enum: ['complete', 'partial', 'failed'] },
+              sources: {
+                type: 'object',
+                properties: {
+                  academic: { type: 'object' },
+                  news: { type: 'object' },
+                  knowledge: { type: 'object' },
+                  government: { type: 'object' },
+                },
+              },
+            },
+          },
+          meta: {
+            type: 'object',
+            properties: {
+              requestId: { type: 'string' },
+              sourcesUsed: { type: 'array', items: { type: 'string' } },
+            },
+          },
+        },
+        required: ['data', 'meta'],
+      },
+    },
   },
 ] as const;

@@ -34,11 +34,27 @@ function buildFakePaymentPayload(accepted: PaymentRequirements): PaymentPayload 
   };
 }
 
+/** Decodes the full 402 PAYMENT-REQUIRED challenge. */
+function decode402(response: { headers: Record<string, unknown> }): ReturnType<typeof decodePaymentRequiredHeader> {
+  const header = response.headers['payment-required'] as string;
+  return decodePaymentRequiredHeader(header);
+}
+
 /** Decodes the 402 challenge and returns its first accepted PaymentRequirements. */
 function firstRequirementsFrom402(response: { headers: Record<string, unknown> }): PaymentRequirements {
-  const header = response.headers['payment-required'] as string;
-  const paymentRequired = decodePaymentRequiredHeader(header);
-  return paymentRequired.accepts[0];
+  return decode402(response).accepts[0];
+}
+
+interface BazaarExtension {
+  info: {
+    input: { type: string; method?: string; bodyType: string; body: Record<string, unknown> };
+    output?: { type: string; example: unknown };
+  };
+  schema: {
+    properties: {
+      input: { properties: { body: unknown } };
+    };
+  };
 }
 
 describe('x402 Payment Protection (E2E)', () => {
@@ -94,6 +110,76 @@ describe('x402 Payment Protection (E2E)', () => {
       await app.inject({ method: 'POST', url: '/v1/weather', payload: { latitude: 6.5244, longitude: 3.3792 } });
       expect(facilitator.verify).not.toHaveBeenCalled();
       expect(facilitator.settle).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('Bazaar discovery + challenge tag in the 402 response', () => {
+    let app: NestFastifyApplication;
+
+    beforeAll(async () => {
+      const facilitator = createFakeFacilitatorClient(TESTNET_NETWORK);
+      app = await createProtectedApp({ x402FacilitatorClient: facilitator });
+      await app.init();
+      await app.getHttpAdapter().getInstance().ready();
+    });
+
+    afterAll(async () => {
+      await app.close();
+    });
+
+    it.each([
+      ['/v1/weather', { latitude: 6.5244, longitude: 3.3792 }],
+      ['/v1/academic/search', { query: 'test' }],
+      ['/v1/research', { query: 'renewable energy investment in Africa' }],
+    ])('carries the x402-global-challenge tag for %s', async (path, payload) => {
+      const response = await app.inject({ method: 'POST', url: path, payload });
+      expect(response.statusCode).toBe(402);
+      const requirements = firstRequirementsFrom402(response);
+      expect(requirements.extra?.tag).toBe('x402-global-challenge');
+    });
+
+    it.each([
+      ['/v1/weather', { latitude: 6.5244, longitude: 3.3792 }],
+      ['/v1/academic/search', { query: 'test' }],
+      ['/v1/research', { query: 'renewable energy investment in Africa' }],
+    ])('carries a Bazaar discovery extension with input/output metadata for %s', async (path, payload) => {
+      const response = await app.inject({ method: 'POST', url: path, payload });
+      expect(response.statusCode).toBe(402);
+      const paymentRequired = decode402(response);
+
+      const bazaar = paymentRequired.extensions?.bazaar as BazaarExtension | undefined;
+      expect(bazaar, `expected a bazaar discovery extension on ${path}`).toBeDefined();
+      expect(bazaar!.info.input.type).toBe('http');
+      expect(bazaar!.info.input.method).toBe('POST');
+      expect(bazaar!.info.input.bodyType).toBe('json');
+      expect(Object.keys(bazaar!.info.input.body).length).toBeGreaterThan(0);
+      expect(bazaar!.info.output?.type).toBe('json');
+      expect(bazaar!.info.output?.example).toBeDefined();
+      expect(bazaar!.schema.properties.input.properties.body).toBeDefined();
+    });
+
+    it('carries the route-specific description (from the capability registry) in the 402 resource info', async () => {
+      const response = await app.inject({ method: 'POST', url: '/v1/weather', payload: { latitude: 6.5244, longitude: 3.3792 } });
+      const paymentRequired = decode402(response);
+      expect(paymentRequired.resource.description).toContain('Open-Meteo');
+      expect(paymentRequired.resource.description).toContain('forecast');
+    });
+
+    it('gives each protected route its own, distinct discovery input example', async () => {
+      const weather = await app.inject({ method: 'POST', url: '/v1/weather', payload: { latitude: 6.5244, longitude: 3.3792 } });
+      const academic = await app.inject({ method: 'POST', url: '/v1/academic/search', payload: { query: 'test' } });
+
+      const weatherBazaar = decode402(weather).extensions?.bazaar as BazaarExtension;
+      const academicBazaar = decode402(academic).extensions?.bazaar as BazaarExtension;
+
+      expect(weatherBazaar.info.input.body).toEqual({ latitude: 6.5244, longitude: 3.3792, days: 3 });
+      expect(academicBazaar.info.input.body).toEqual({ query: 'large language models healthcare', limit: 5 });
+    });
+
+    it('does not attach any discovery/payment configuration to free routes', async () => {
+      const response = await app.inject({ method: 'GET', url: '/health' });
+      expect(response.statusCode).toBe(200);
+      expect(response.headers['payment-required']).toBeUndefined();
     });
   });
 

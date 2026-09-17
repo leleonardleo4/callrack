@@ -7,14 +7,17 @@ import type { CapabilityRegistryService } from '../capabilities/capability-regis
 import type { X402ConfigService } from '../config/x402-config.service.js';
 import { buildX402ResourceServer } from './x402-resource-server.factory.js';
 import { buildX402RoutesConfig } from './x402-route-config.builder.js';
+import { buildDiscoveryExtensionsMap } from './discovery-metadata.builder.js';
 import { extractPaymentContext, setCurrentPaymentContext } from './payment-context.js';
 
 /**
  * Installs x402 payment protection on the Fastify instance underlying this
- * Nest app: builds route configuration from the capability registry, wires
- * the Algorand `exact` scheme + facilitator, and registers the payment
- * middleware. Only routes present in the registry are protected — health,
- * readiness, and docs stay free simply because they're never in the registry.
+ * Nest app: builds route configuration (payment + Bazaar discovery
+ * metadata) from the capability registry, wires the Algorand `exact` scheme
+ * + facilitator, and registers the payment middleware. Only routes present
+ * in the registry are protected — health, readiness, and docs stay free
+ * simply because they're never in the registry, so they're never given
+ * discovery metadata either.
  *
  * Awaits `httpServer.initialize()` itself (rather than relying on the SDK's
  * own fire-and-forget background init) so a broken facilitator or an invalid
@@ -27,7 +30,9 @@ export async function installX402Middleware(
   x402Config: X402ConfigService,
   facilitatorClient: FacilitatorClient,
 ): Promise<void> {
-  const routes = buildX402RoutesConfig(capabilityRegistry.list(), x402Config.activeNetworkConfig);
+  const capabilities = capabilityRegistry.list();
+  const discoveryExtensions = buildDiscoveryExtensionsMap(app, capabilities);
+  const routes = buildX402RoutesConfig(capabilities, x402Config.activeNetworkConfig, discoveryExtensions);
   const resourceServer = buildX402ResourceServer(facilitatorClient, x402Config.caip2Network);
   const httpServer = new x402HTTPResourceServer(resourceServer, routes);
 

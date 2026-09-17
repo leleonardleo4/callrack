@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ALGORAND_TESTNET_CAIP2 } from '@x402/avm';
-import { buildX402RoutesConfig } from '../../src/x402/x402-route-config.builder.js';
+import { buildX402RoutesConfig, X402_GLOBAL_CHALLENGE_TAG } from '../../src/x402/x402-route-config.builder.js';
 import { CAPABILITY_METADATA } from '../../src/capabilities/capability-definitions.js';
 import { resolveCapabilityDefinition } from '../../src/capabilities/capability-registry.util.js';
 import type { CapabilityDefinition } from '../../src/capabilities/capability.types.js';
@@ -107,5 +107,41 @@ describe('buildX402RoutesConfig', () => {
 
   it('produces an empty route set for an empty capability list', () => {
     expect(buildX402RoutesConfig([], ACTIVE)).toEqual({});
+  });
+
+  it('attaches the x402-global-challenge tag to every route\'s payment extra', () => {
+    const routes = buildX402RoutesConfig(realCapabilities(), ACTIVE) as Record<
+      string,
+      { accepts: { extra?: Record<string, unknown> } }
+    >;
+    expect(X402_GLOBAL_CHALLENGE_TAG).toBe('x402-global-challenge');
+    for (const [key, route] of Object.entries(routes)) {
+      expect(route.accepts.extra?.tag, `expected challenge tag on ${key}`).toBe(X402_GLOBAL_CHALLENGE_TAG);
+    }
+  });
+
+  it('does not include a Bazaar discovery extension when no discovery map is provided', () => {
+    const routes = buildX402RoutesConfig(realCapabilities(), ACTIVE) as Record<
+      string,
+      { extensions?: Record<string, unknown> }
+    >;
+    expect(routes['POST /v1/weather'].extensions).toBeUndefined();
+  });
+
+  it('attaches the matching Bazaar discovery extension per capability when a discovery map is provided', () => {
+    const capabilities = realCapabilities();
+    const discoveryExtensions = new Map<string, Record<string, unknown>>([
+      ['weather', { bazaar: { marker: 'weather-extension' } }],
+      ['research', { bazaar: { marker: 'research-extension' } }],
+    ]);
+    const routes = buildX402RoutesConfig(capabilities, ACTIVE, discoveryExtensions) as Record<
+      string,
+      { extensions?: Record<string, unknown> }
+    >;
+
+    expect(routes['POST /v1/weather'].extensions).toEqual({ bazaar: { marker: 'weather-extension' } });
+    expect(routes['POST /v1/research'].extensions).toEqual({ bazaar: { marker: 'research-extension' } });
+    // A capability absent from the discovery map gets no extensions field at all.
+    expect(routes['POST /v1/holidays'].extensions).toBeUndefined();
   });
 });

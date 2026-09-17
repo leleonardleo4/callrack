@@ -156,6 +156,31 @@ describe('CAPABILITY_METADATA (registration)', () => {
     const routes = CAPABILITY_METADATA.map((c) => `${c.method} ${c.path}`);
     expect(new Set(routes).size).toBe(routes.length);
   });
+
+  it('gives every capability Bazaar discovery metadata: an input example, an output example, and an output schema', () => {
+    for (const capability of CAPABILITY_METADATA) {
+      expect(capability.discovery, `missing discovery block for ${capability.id}`).toBeDefined();
+      expect(
+        Object.keys(capability.discovery.inputExample).length,
+        `empty input example for ${capability.id}`,
+      ).toBeGreaterThan(0);
+      expect(
+        Object.keys(capability.discovery.outputExample).length,
+        `empty output example for ${capability.id}`,
+      ).toBeGreaterThan(0);
+      expect(
+        Object.keys(capability.discovery.outputSchema.properties).length,
+        `empty output schema for ${capability.id}`,
+      ).toBeGreaterThan(0);
+    }
+  });
+
+  it('describes research as deterministic composition, never as using an LLM', () => {
+    const research = CAPABILITY_METADATA.find((c) => c.id === 'research')!;
+    expect(research.description.toLowerCase()).not.toContain('llm');
+    expect(research.description.toLowerCase()).not.toContain('artificial intelligence');
+    expect(research.description.toLowerCase()).toContain('deterministic');
+  });
 });
 
 describe('resolveCapabilityDefinition', () => {
@@ -251,6 +276,36 @@ describe('validateCapabilityDefinitions', () => {
       d.id === 'weather' ? { ...d, provider: { kind: 'provider' as const, slugs: [] } } : d,
     );
     expect(() => validateCapabilityDefinitions(broken, allProvidersKnown)).toThrow(/with no slugs/);
+  });
+
+  it('throws when a capability is missing discovery metadata entirely', () => {
+    const broken = definitions.map((d) => {
+      if (d.id !== 'weather') return d;
+      const { discovery: _discovery, ...rest } = d;
+      return rest as typeof d;
+    });
+    expect(() => validateCapabilityDefinitions(broken, allProvidersKnown)).toThrow(/missing discovery metadata/);
+  });
+
+  it('throws when a capability has an empty discovery input example', () => {
+    const broken = definitions.map((d) =>
+      d.id === 'weather' ? { ...d, discovery: { ...d.discovery, inputExample: {} } } : d,
+    );
+    expect(() => validateCapabilityDefinitions(broken, allProvidersKnown)).toThrow(/missing a discovery input example/);
+  });
+
+  it('throws when a capability has an empty discovery output example', () => {
+    const broken = definitions.map((d) =>
+      d.id === 'weather' ? { ...d, discovery: { ...d.discovery, outputExample: {} } } : d,
+    );
+    expect(() => validateCapabilityDefinitions(broken, allProvidersKnown)).toThrow(/missing a discovery output example/);
+  });
+
+  it('throws when a capability has an empty discovery output schema', () => {
+    const broken = definitions.map((d) =>
+      d.id === 'weather' ? { ...d, discovery: { ...d.discovery, outputSchema: { properties: {} } } } : d,
+    );
+    expect(() => validateCapabilityDefinitions(broken, allProvidersKnown)).toThrow(/missing a discovery output schema/);
   });
 });
 
