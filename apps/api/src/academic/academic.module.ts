@@ -7,5 +7,6 @@ import { AcademicService } from './academic.service.js';
   imports: [ProvidersModule],
   controllers: [AcademicController],
   providers: [AcademicService],
+  exports: [AcademicService],
 })
 export class AcademicModule {}

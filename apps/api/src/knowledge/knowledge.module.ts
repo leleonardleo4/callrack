@@ -7,5 +7,6 @@ import { KnowledgeService } from './knowledge.service.js';
   imports: [ProvidersModule],
   controllers: [KnowledgeController],
   providers: [KnowledgeService],
+  exports: [KnowledgeService],
 })
 export class KnowledgeModule {}

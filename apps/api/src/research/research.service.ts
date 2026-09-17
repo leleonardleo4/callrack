@@ -1,0 +1,199 @@
+import { HttpException, Injectable } from '@nestjs/common';
+import { buildCacheKey, CACHE_TTL_SECONDS, CapabilityCacheService } from '../common/cache/index.js';
+import { RequestTrackingService } from '../common/tracking/index.js';
+import { AcademicService } from '../academic/academic.service.js';
+import { NewsService } from '../news/news.service.js';
+import { KnowledgeService } from '../knowledge/knowledge.service.js';
+import { CensusService } from '../government/census.service.js';
+import { planResearch } from './research.planner.js';
+import type { ResearchRequestDto } from './dto/research-request.dto.js';
+import type { ResearchSourceName } from './research-sources.constants.js';
+import type {
+  ResearchOverallStatus,
+  ResearchResponseData,
+  ResearchSourceEntry,
+  ResearchSourceError,
+  ResearchSourceStatus,
+  ResearchSourcesMap,
+} from './research-response.types.js';
+
+const DEFAULT_LIMIT = 5;
+
+const RESEARCH_CAPABILITY = {
+  slug: 'research',
+  name: 'Research',
+  endpoint: 'POST /v1/research',
+};
+
+function isErrorPayload(value: unknown): value is { code: string; message: string } {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    typeof (value as Record<string, unknown>).code === 'string' &&
+    typeof (value as Record<string, unknown>).message === 'string'
+  );
+}
+
+/**
+ * Research composes existing capability *services* directly (never HTTP,
+ * never provider adapters) — see the module import for confirmation there's
+ * no way for this to call itself: "research" isn't a valid source name, and
+ * nothing here depends on an HTTP client.
+ */
+@Injectable()
+export class ResearchService {
+  constructor(
+    private readonly academic: AcademicService,
+    private readonly news: NewsService,
+    private readonly knowledge: KnowledgeService,
+    private readonly census: CensusService,
+    private readonly cache: CapabilityCacheService,
+    private readonly tracking: RequestTrackingService,
+  ) {}
+
+  async research(dto: ResearchRequestDto, requestId: string): Promise<ResearchResponseData> {
+    const plan = planResearch(dto);
+    const limit = dto.limit ?? DEFAULT_LIMIT;
+    const cacheKey = this.buildResearchCacheKey(dto, plan.sources, limit);
+    const startedAt = Date.now();
+
+    try {
+      const { value, cacheHit } = await this.cache.getOrSet(cacheKey, CACHE_TTL_SECONDS.RESEARCH, () =>
+        this.execute(dto, plan.sources, limit, requestId),
+      );
+
+      this.tracking.record({
+        requestId,
+        endpoint: RESEARCH_CAPABILITY.endpoint,
+        capabilitySlug: RESEARCH_CAPABILITY.slug,
+        capabilityName: RESEARCH_CAPABILITY.name,
+        status: 'SUCCESS',
+        durationMs: Date.now() - startedAt,
+        cacheHit,
+      });
+
+      return value;
+    } catch (error) {
+      this.tracking.record({
+        requestId,
+        endpoint: RESEARCH_CAPABILITY.endpoint,
+        capabilitySlug: RESEARCH_CAPABILITY.slug,
+        capabilityName: RESEARCH_CAPABILITY.name,
+        status: 'ERROR',
+        durationMs: Date.now() - startedAt,
+        cacheHit: false,
+      });
+      throw error;
+    }
+  }
+
+  /** Every meaningful input that changes the plan/result is folded into the key. */
+  private buildResearchCacheKey(dto: ResearchRequestDto, sources: ResearchSourceName[], limit: number): string {
+    return buildCacheKey('research', {
+      query: dto.query,
+      sources: [...sources].sort().join(','),
+      limit,
+      govDataset: dto.government?.dataset,
+      govYear: dto.government?.year,
+      govVariables: dto.government ? [...dto.government.variables].sort().join(',') : undefined,
+      govGeography: dto.government?.forGeography,
+    });
+  }
+
+  /** Runs every planned source concurrently — bounded by construction (max 4 known sources). */
+  private async execute(
+    dto: ResearchRequestDto,
+    sources: ResearchSourceName[],
+    limit: number,
+    requestId: string,
+  ): Promise<ResearchResponseData> {
+    const entries = await Promise.all(
+      sources.map(async (name) => [name, await this.runOne(name, dto, limit, requestId)] as const),
+    );
+
+    const sourcesMap: Partial<Record<ResearchSourceName, ResearchSourceEntry<unknown>>> = {};
+    for (const [name, entry] of entries) {
+      sourcesMap[name] = entry;
+    }
+
+    return {
+      query: dto.query,
+      status: this.computeOverallStatus(entries.map(([, entry]) => entry.status)),
+      sources: sourcesMap as ResearchSourcesMap,
+    };
+  }
+
+  private async runOne(
+    name: ResearchSourceName,
+    dto: ResearchRequestDto,
+    limit: number,
+    requestId: string,
+  ): Promise<ResearchSourceEntry<unknown>> {
+    switch (name) {
+      case 'academic':
+        return this.runSource(
+          () => this.academic.search({ query: dto.query, limit }, `${requestId}:academic`),
+          (data) => data.results.length > 0,
+        );
+      case 'news':
+        return this.runSource(
+          () => this.news.search({ query: dto.query, limit }, `${requestId}:news`),
+          (data) => data.results.length > 0,
+        );
+      case 'knowledge':
+        return this.runSource(
+          () => this.knowledge.search({ query: dto.query, limit }, `${requestId}:knowledge`),
+          (data) => data.results.length > 0,
+        );
+      case 'government': {
+        if (!dto.government) {
+          return {
+            status: 'failed',
+            error: {
+              code: 'INVALID_REQUEST',
+              message: 'The government source requires dataset, year, variables, and forGeography.',
+            },
+          };
+        }
+        const government = dto.government;
+        return this.runSource(
+          () => this.census.query(government, `${requestId}:government`),
+          (data) => data.rows.length > 0,
+        );
+      }
+    }
+  }
+
+  private async runSource<T>(
+    run: () => Promise<T>,
+    hasResults: (data: T) => boolean,
+  ): Promise<ResearchSourceEntry<T>> {
+    try {
+      const data = await run();
+      return { status: hasResults(data) ? 'success' : 'empty', data };
+    } catch (error) {
+      return { status: 'failed', error: this.toSourceError(error) };
+    }
+  }
+
+  private toSourceError(error: unknown): ResearchSourceError {
+    if (error instanceof HttpException) {
+      const response = error.getResponse();
+      if (isErrorPayload(response)) {
+        return { code: response.code, message: response.message };
+      }
+      return { code: 'SOURCE_UNAVAILABLE', message: error.message };
+    }
+    return { code: 'SOURCE_UNAVAILABLE', message: 'The source was temporarily unavailable.' };
+  }
+
+  private computeOverallStatus(statuses: ResearchSourceStatus[]): ResearchOverallStatus {
+    if (statuses.length > 0 && statuses.every((status) => status === 'failed')) {
+      return 'failed';
+    }
+    if (statuses.some((status) => status === 'failed')) {
+      return 'partial';
+    }
+    return 'complete';
+  }
+}

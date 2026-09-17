@@ -15,6 +15,7 @@ import { GeocodeModule } from '../geocode/geocode.module.js';
 import { HolidaysModule } from '../holidays/holidays.module.js';
 import { KnowledgeModule } from '../knowledge/knowledge.module.js';
 import { GovernmentModule } from '../government/government.module.js';
+import { ResearchModule } from '../research/research.module.js';
 import { RequestContextMiddleware } from '../common/request-context/request-context.middleware.js';
 
 import { AppLoggerService } from '../common/logging/app-logger.service.js';
@@ -36,6 +37,7 @@ import { AppLoggerService } from '../common/logging/app-logger.service.js';
     HolidaysModule,
     KnowledgeModule,
     GovernmentModule,
+    ResearchModule,
     HealthModule,
   ],
   providers: [AppLoggerService],

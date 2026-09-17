@@ -4,6 +4,8 @@ export interface ApiSuccessMeta {
   attribution?: string;
   /** Short source identifier, populated for capabilities with a single, named data source. */
   source?: string;
+  /** Which Callrack capability sources actually ran, populated by composition capabilities. */
+  sourcesUsed?: string[];
 }
 
 export interface ApiSuccessResponse<T> {

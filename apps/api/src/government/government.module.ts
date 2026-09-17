@@ -7,5 +7,6 @@ import { CensusService } from './census.service.js';
   imports: [ProvidersModule],
   controllers: [GovernmentController],
   providers: [CensusService],
+  exports: [CensusService],
 })
 export class GovernmentModule {}
