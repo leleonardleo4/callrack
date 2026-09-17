@@ -22,11 +22,19 @@ export function mapPhotonFeature(raw: PhotonFeature): GeoLocation {
   );
 
   return {
+    id: raw.properties?.osm_id !== undefined ? String(raw.properties.osm_id) : undefined,
     latitude,
     longitude,
     label: labelParts.join(', '),
+    name,
+    street: raw.properties?.street,
+    houseNumber: raw.properties?.housenumber,
     city: raw.properties?.city,
+    state: raw.properties?.state,
     country: raw.properties?.country,
+    countryCode: raw.properties?.countrycode,
+    postcode: raw.properties?.postcode,
+    type: raw.properties?.type,
   };
 }
 

@@ -49,7 +49,7 @@ export class OpenMeteoProvider extends BaseProviderAdapter implements WeatherPro
       query: {
         latitude: input.latitude,
         longitude: input.longitude,
-        current: 'temperature_2m,wind_speed_10m,precipitation,weather_code',
+        current: 'temperature_2m,relative_humidity_2m,wind_speed_10m,precipitation,weather_code',
         daily: 'temperature_2m_max,temperature_2m_min,weather_code',
         forecast_days: input.days ?? 3,
         timezone: 'auto',

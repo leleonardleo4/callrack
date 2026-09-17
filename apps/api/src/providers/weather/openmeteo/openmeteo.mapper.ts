@@ -38,6 +38,7 @@ export function mapOpenMeteoForecast(raw: OpenMeteoForecastResponse): WeatherDat
       ? {
           time: raw.current.time,
           temperatureC: raw.current.temperature_2m,
+          humidityPercent: raw.current.relative_humidity_2m,
           windSpeedKph: raw.current.wind_speed_10m,
           precipitationMm: raw.current.precipitation,
           weatherCode: raw.current.weather_code,

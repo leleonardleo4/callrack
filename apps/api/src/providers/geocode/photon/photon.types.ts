@@ -1,7 +1,14 @@
 export interface PhotonProperties {
+  osm_id?: number;
+  type?: string;
   name?: string;
-  country?: string;
+  street?: string;
+  housenumber?: string;
+  postcode?: string;
   city?: string;
+  state?: string;
+  country?: string;
+  countrycode?: string;
 }
 
 export interface PhotonFeature {

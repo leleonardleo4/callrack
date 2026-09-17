@@ -1,11 +1,19 @@
 import type { ProviderAdapter } from '../common/index.js';
 
 export interface GeoLocation {
+  id?: string;
   latitude: number;
   longitude: number;
   label: string;
-  country?: string;
+  name?: string;
+  street?: string;
+  houseNumber?: string;
   city?: string;
+  state?: string;
+  country?: string;
+  countryCode?: string;
+  postcode?: string;
+  type?: string;
 }
 
 export interface ForwardGeocodeInput {

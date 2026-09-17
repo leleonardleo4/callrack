@@ -6,6 +6,8 @@ export interface Holiday {
   name: string;
   countryCode: string;
   global: boolean;
+  counties?: string[] | null;
+  types?: string[];
 }
 
 export interface HolidaysInput {

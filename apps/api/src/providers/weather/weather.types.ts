@@ -4,6 +4,7 @@ export interface WeatherObservation {
   time: string;
   temperatureC?: number;
   temperatureMinC?: number;
+  humidityPercent?: number;
   windSpeedKph?: number;
   precipitationMm?: number;
   weatherCode?: number;

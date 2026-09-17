@@ -25,6 +25,8 @@ export function mapNagerHoliday(raw: NagerHoliday): Holiday {
     name: raw.name,
     countryCode: raw.countryCode,
     global: raw.global ?? false,
+    counties: raw.counties,
+    types: raw.types,
   };
 }
 

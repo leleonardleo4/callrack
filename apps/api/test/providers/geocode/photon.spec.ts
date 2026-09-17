@@ -17,6 +17,7 @@ describe('Photon mapper', () => {
       latitude: 52.5,
       longitude: 13.4,
       label: 'Berlin, Germany',
+      name: 'Berlin',
       city: 'Berlin',
       country: 'Germany',
     });
