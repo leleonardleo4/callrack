@@ -1,5 +1,6 @@
 import { type MiddlewareConsumer, Module, type NestModule } from '@nestjs/common';
 import { ApiConfigModule } from '../config/api-config.module.js';
+import { X402ConfigModule } from '../config/x402-config.module.js';
 import { DatabaseModule } from '../database/database.module.js';
 import { RedisModule } from '../redis/redis.module.js';
 import { CacheModule } from '../common/cache/index.js';
@@ -24,6 +25,7 @@ import { AppLoggerService } from '../common/logging/app-logger.service.js';
 @Module({
   imports: [
     ApiConfigModule,
+    X402ConfigModule,
     DatabaseModule,
     RedisModule,
     CacheModule,

@@ -5,3 +5,6 @@ export * from './money.js';
 export * from './pricing.schema.js';
 export * from './pricing-config.service.js';
 export * from './pricing-config.module.js';
+export * from './x402.schema.js';
+export * from './x402-config.service.js';
+export * from './x402-config.module.js';

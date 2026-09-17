@@ -8,6 +8,7 @@ import fastifyCors from '@fastify/cors';
 
 import { AppModule } from './app/app.module.js';
 import { ApiConfigService } from './config/api-config.service.js';
+import { X402ConfigService } from './config/x402-config.service.js';
 import { ApiExceptionFilter } from './common/errors/api-exception.filter.js';
 import { createValidationException } from './common/validation/validation-exception.factory.js';
 import { HttpLoggingInterceptor } from './common/logging/http-logging.interceptor.js';
@@ -18,6 +19,8 @@ import {
   resolveRequestId,
 } from './common/http/request-id.util.js';
 import { RequestContext } from './common/request-context/request-context.js';
+import { CapabilityRegistryService } from './capabilities/capability-registry.service.js';
+import { buildHttpFacilitatorClient, installX402Middleware } from './x402/index.js';
 
 import type {
   FastifyPluginAsync,
@@ -25,6 +28,7 @@ import type {
   FastifyRequest,
   HookHandlerDoneFunction,
 } from 'fastify';
+import type { FacilitatorClient } from '@x402/core/server';
 
 export async function createApp(): Promise<NestFastifyApplication> {
   const adapter = new FastifyAdapter({
@@ -152,8 +156,45 @@ export async function createApp(): Promise<NestFastifyApplication> {
   return app;
 }
 
-export async function bootstrap(): Promise<NestFastifyApplication> {
+export interface CreateProtectedAppOptions {
+  /**
+   * Overrides the x402 facilitator client. Used only by the dedicated x402
+   * test suite to inject a deterministic in-memory facilitator instead of
+   * the real, network-calling GoPlausible client — never set in production.
+   * Every other test file uses plain `createApp()`, which never touches
+   * x402 at all, so none of them need to know this option exists.
+   */
+  x402FacilitatorClient?: FacilitatorClient;
+}
+
+/**
+ * Builds the same app as `createApp()`, then layers x402 payment protection
+ * on top — the "x402 sits around the app" architecture from the Phase 7
+ * spec. This is the ONLY function that installs x402; `createApp()` itself
+ * never does, which is why every capability e2e test written before x402
+ * existed keeps working unpaid and unmodified. The real server (`bootstrap`,
+ * below) always calls this; only the x402-specific test suite calls it
+ * directly with a mocked facilitator.
+ */
+export async function createProtectedApp(
+  options: CreateProtectedAppOptions = {},
+): Promise<NestFastifyApplication> {
   const app = await createApp();
+  const x402Config = app.get(X402ConfigService);
+  const capabilityRegistry = app.get(CapabilityRegistryService);
+  const facilitatorClient =
+    options.x402FacilitatorClient ?? buildHttpFacilitatorClient(x402Config.facilitatorUrl);
+
+  // Fails application startup (not a customer's first request) on a broken
+  // facilitator or an invalid route/scheme combination — see
+  // installX402Middleware's own docs for why this is awaited here.
+  await installX402Middleware(app, capabilityRegistry, x402Config, facilitatorClient);
+
+  return app;
+}
+
+export async function bootstrap(): Promise<NestFastifyApplication> {
+  const app = await createProtectedApp();
   const configService = app.get(ApiConfigService);
   const logger = new AppLoggerService();
 

@@ -185,6 +185,117 @@ integration tests to actually execute.
 
 ---
 
+## 💳 x402 Payment Protection
+
+Every paid Callrack capability (academic search/work, news search/trends,
+crypto price/market, FX rates, weather, geocode, holidays, knowledge search,
+government census, and research) is protected by the
+[x402 payment protocol](https://github.com/x402-foundation/x402) over
+Algorand. A request without a valid payment gets `402 Payment Required`
+instead of running the capability; a request with a verified payment runs
+normally and settles afterward. `GET /health`, `GET /health/ready`, and
+`GET /docs` are never protected.
+
+Prices come from the capability registry (`apps/api/src/capabilities/`),
+which itself reads `PRICE_*` environment variables — x402 never hardcodes or
+duplicates a price. All paid endpoints share one configured `payTo` address
+per network (the Composite-challenge requirement of one payment destination
+across every Callrack endpoint).
+
+### Required environment variables
+
+```env
+NETWORK=testnet                    # or "mainnet" — selects which pair below is active
+
+TESTNET_PAY_TO=<algorand-address>
+MAINNET_PAY_TO=<algorand-address>
+
+TESTNET_FACILITATOR_URL=https://facilitator.goplausible.xyz
+MAINNET_FACILITATOR_URL=https://facilitator.goplausible.xyz
+```
+
+Only the *active* network's `_PAY_TO` / `_FACILITATOR_URL` pair needs to be
+valid — you don't need Mainnet credentials to develop against Testnet. All of
+this is validated at application startup (`X402ConfigService`); a missing or
+malformed value fails startup with a clear error, never a customer's first
+request. USDC (Testnet ASA `10458941`, Mainnet ASA `31566704`) is resolved
+automatically by `@x402/avm` from the network — Callrack never hardcodes an
+asset ID.
+
+### Testnet setup
+
+1. Copy `.env.example` to `.env` (already includes structurally-valid but
+   **non-spendable placeholder** `TESTNET_PAY_TO`/`MAINNET_PAY_TO` values —
+   replace them with a real Algorand address you control before accepting
+   any real payment).
+2. Leave `NETWORK=testnet` (the default for local development).
+3. Start the API normally (`pnpm --filter @callrack/api dev`).
+
+### How unpaid requests behave
+
+```
+POST /v1/weather   (no payment)
+        ↓
+    402 Payment Required
+        ↓  (PAYMENT-REQUIRED header, decodable via @x402/core/http)
+Client signs a payment and retries with a Payment-Signature header
+        ↓
+    x402 verifies with the GoPlausible facilitator
+        ↓
+    WeatherService runs (exactly as it would unprotected)
+        ↓
+    x402 settles, then returns the normal 200 response
+```
+
+The capability provider is never called for an unpaid or invalid-payment
+request — payment verification happens entirely before the capability
+service runs, and capability services have no knowledge of x402 at all (see
+`apps/api/src/x402/` — the entire integration lives at the Fastify transport
+boundary, wired in by `createProtectedApp()` in `apps/api/src/bootstrap.ts`).
+
+### Running the x402 test suite
+
+```bash
+pnpm --filter @callrack/api test              # includes deterministic x402 tests (mocked facilitator, no network calls)
+pnpm --filter @callrack/api test:x402:testnet # real Testnet payment — see below
+```
+
+The default suite never hits a real facilitator or blockchain: `apps/api/test/x402/fake-facilitator.ts`
+provides a deterministic in-memory `FacilitatorClient`, while everything else
+in the pipeline (the real x402 resource server, Algorand `exact` scheme, and
+Fastify middleware) runs unmodified.
+
+`test:x402:testnet` (`apps/api/test/x402/testnet-smoke.ts`) makes a **real**
+Testnet payment end-to-end (unpaid request → 402 → sign → retry → paid
+response → settlement). It requires a funded Testnet Algorand account with
+Testnet USDC, supplied via `TESTNET_TEST_PAYER_PRIVATE_KEY` (a base64-encoded
+private key, never a mnemonic or file in this repo — export it in your own
+shell only). It is never run as part of `pnpm test` or CI.
+
+### Switching between Testnet and Mainnet
+
+Change `NETWORK` and ensure the corresponding `MAINNET_PAY_TO` /
+`MAINNET_FACILITATOR_URL` (or `TESTNET_*`) pair is set — no code changes are
+needed. `NETWORK=mainnet` resolves Algorand Mainnet's CAIP-2 identifier and
+Mainnet USDC automatically.
+
+### ⚠️ Security
+
+- Never commit a private key, mnemonic, or `.env` file. `.env` is
+  git-ignored; `.env.example` only ever contains non-spendable placeholders.
+- The resource server (this API) only ever *receives* payments — it never
+  holds or needs a payer's private key. `TESTNET_TEST_PAYER_PRIVATE_KEY` is a
+  **test-only, funded-with-testnet-only** credential you provide yourself
+  when running the Testnet smoke script; it is never read by the running
+  server.
+- `payTo`, network, and asset are always resolved from trusted server
+  configuration — a client can never choose or influence any of them.
+
+Current x402 documentation: https://github.com/x402-foundation/x402 (packages
+used: `@x402/core`, `@x402/avm`, `@x402/fastify`, all `2.26.0`).
+
+---
+
 ## 📜 Development Conventions
 
 1. **TypeScript First**: Strict mode enabled (`noImplicitAny`, `strictNullChecks`).
