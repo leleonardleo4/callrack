@@ -82,6 +82,7 @@ request.
 | `MAINNET_FACILITATOR_URL` | Yes, when `NETWORK=mainnet` | `https://facilitator.goplausible.xyz` |
 | `TESTNET_PAY_TO` / `TESTNET_FACILITATOR_URL` | Yes, when `NETWORK=testnet` | |
 | `PRICE_*` (13 vars) | Yes | Every paid capability's price - see root `.env.example` |
+| `TESTNET_REFUND_MNEMONIC` / `MAINNET_REFUND_MNEMONIC` | No, but see below | Enables automatic on-chain refunds for the active network - see §8b |
 | Provider vars (`OPENALEX_MAILTO`, `COINGECKO_API_KEY`, etc.) | No | Optional; see root `.env.example` |
 | `VITE_API_BASE_URL` (web, build-time) | Yes | `https://api.callrack.xyz` for a production web build |
 
@@ -89,8 +90,11 @@ request.
 secret/environment-variable store (every mainstream host - container
 platforms and static hosts alike - has one), never by committing a file or
 baking them into the Docker image. The API resource server never needs a
-signing key (see §"Mainnet wallet readiness" - it only ever *receives*
-payments), so there is no private key to manage server-side at all.
+signing key to *receive* payments (see §"Mainnet wallet readiness"). The
+one exception is the refund signer (§8b): if `*_REFUND_MNEMONIC` is set, it
+is the only private key material this server ever holds, and it must be
+treated with the same care as `MAINNET_PAY_TO` itself, since it controls
+that exact same account.
 
 ## 3. Mainnet `payTo` validation
 
@@ -208,6 +212,43 @@ forget to turn off.
 - **SSL/TLS**: configured via `DATABASE_URL`'s `sslmode` query parameter
   (see §2), which `pg` parses automatically - no code change needed per
   provider.
+
+## 8b. Automatic refunds
+
+Failed paid requests can trigger an automatic on-chain USDC refund (see
+`docs/REFUNDS.md` for the full design). Deployment-relevant points:
+
+- **Migration**: `packages/db/prisma/migrations/20260918221622_add_refunds`
+  adds the `Refund` table. Included automatically by the same
+  `db:migrate:deploy` step as every other migration (§8) - no separate
+  step needed.
+- **Refund signer**: set `TESTNET_REFUND_MNEMONIC` or
+  `MAINNET_REFUND_MNEMONIC` (whichever matches the active `NETWORK`) to
+  enable submission. It must be the mnemonic of the exact same account as
+  the network's `*_PAY_TO` - `RefundConfigService` verifies this at
+  startup and **fails fast** if it does not match. Leaving it unset is a
+  valid, non-fatal deployment state: a failed paid request still gets a
+  durable `PENDING` refund row, it simply cannot be submitted until the
+  mnemonic is configured and the API restarted.
+- **No new infrastructure required**: refund retry is database-polled
+  (`RefundReconcilerService`, every 15s), not queue-backed - nothing new to
+  provision. Safe to run multiple API replicas; the claim is an atomic
+  database compare-and-swap (see `RefundService.attemptProcessing`).
+- **On-chain calls**: `AlgorandRefundClient` uses
+  `@algorandfoundation/algokit-utils`'s public AlgoNode endpoints
+  (`AlgorandClient.testNet()` / `.mainNet()`) - no additional algod/indexer
+  URL to configure.
+- **Verified this phase**: a packaged production build
+  (`NODE_ENV=production`, `node apps/api/dist/main.js`) with no refund
+  mnemonic configured starts cleanly, logs a clear warning
+  (`RefundConfigService`) instead of crashing, and serves `/health`
+  normally.
+- **Not verified this phase**: an actual refund signer/mnemonic against a
+  real deployment - do this once a funded Testnet refund wallet exists, as
+  part of §31's Testnet round trip (force a paid `/v1/research` call with
+  every source failing, confirm the response reports `refund_pending` then
+  `refunded`, and check the transaction on
+  [Lora](https://lora.algokit.io)).
 
 ## 9. Database backup strategy
 
@@ -445,15 +486,22 @@ docker run --rm -p 3000:3000 --env-file .env callrack-api
 Every build step (the `turbo prune` command sequence, the
 `--ignore-scripts` dependency layer, `prisma generate`, the build, and the
 final `--prod` reinstall) was manually replicated and verified working
-outside Docker in this session - including starting the resulting
-`apps/api/dist/main.js` with only production dependencies present and
-confirming `/health`, `/health/ready`, `/.well-known/x402`, `/llms.txt`,
-`/openapi.json`, and an unpaid `POST /v1/weather` (→ `402`) all behaved
-correctly. **The actual `docker build`/`docker run` were not executed in
-this session** - the Docker daemon was not available in this sandbox
-(Docker Desktop's daemon did not come up). `apps/api/Dockerfile` is
-additionally built (not run) on every push/PR via CI (see §27) - treat the
-first real `docker build` + `docker run` against a live Postgres/Redis as
+outside Docker, including a packaged, `NODE_ENV=production` boot of the
+resulting `apps/api/dist/main.js` with the refund feature (§8b) present -
+`/health`, `/health/ready`, `/.well-known/x402`, `/llms.txt`,
+`/openapi.json`, an unpaid `POST /v1/weather` (→ `402`), and
+`RefundConfigService`'s clean self-disable (no mnemonic configured) all
+behaved correctly. **The actual `docker build`/`docker run` still have not
+been executed against this exact codebase** - Docker CLI 29.1.3 is
+installed on this machine, but Docker Desktop's backend fails to start
+(`cannot find registry key "SOFTWARE\Docker Inc.\Docker Desktop"` - a
+broken local Docker Desktop install/registry state, unrelated to this
+repository) - re-run `docker build -f apps/api/Dockerfile -t callrack-api .`
+once Docker Desktop is reinstalled or repaired, or from any machine/CI
+runner with a working daemon. `apps/api/Dockerfile` is additionally built
+(not run) on every push/PR via CI (see §27), which does have a working
+daemon - treat the first real local `docker build` + `docker run` against a
+live Postgres/Redis as
 an outstanding verification step before relying on it for a real
 deployment.
 
@@ -521,7 +569,11 @@ watch: `/health`/`/health/ready` status over time, error-rate from
 counts on paid routes (visible in `HttpLoggingInterceptor`'s log lines and
 the `Request` table). No private payment data (amounts tied to a specific
 payer identity beyond what's already public on-chain) is exposed by any of
-this.
+this. Also watch `refund.created`/`refund.confirmed`/`refund.failed`
+structured log lines from `RefundService` (§8b) - a sustained rate of
+`refund.failed` or `refund.eligibility_check_failed` after a deploy is a
+real signal something is wrong upstream of the refund system itself (a
+provider outage, a facilitator issue), not just a refund-code problem.
 
 ## 27. CI/CD
 
@@ -813,9 +865,15 @@ facilitator unavailable, invalid payment, malformed request.
 [x] Mainnet configuration validated (schema-level, no live Mainnet round trip)
 [ ] Mainnet payTo verified (needs a real, project-controlled Mainnet wallet)
 [ ] Mainnet USDC opt-in verified (needs that same real wallet, on-chain)
+[x] Refund migration + startup behavior verified (packaged build, no refund signer configured)
+[ ] Refund signer verified against a live deployment (needs a funded refund wallet - see §8b)
+[ ] Docker image actually built/run (Docker Desktop broken on this dev machine - see §22; CI's docker-build job has a working daemon)
 ```
 
-Unchecked items all share the same real blocker: **no public HTTPS
-deployment and no funded Testnet/Mainnet wallet exist yet** - both are
-genuinely outside what a code-hardening phase can produce by itself. They
-are the concrete work for Phase 12.
+Unchecked items share one of two real blockers: **no public HTTPS
+deployment and no funded Testnet/Mainnet wallet exist yet** (genuinely
+outside what a code-hardening phase can produce by itself - the concrete
+work for the next phase), or **this specific development machine's Docker
+Desktop install is broken** (a local environment issue, not a repository
+issue - re-run on a working Docker host or rely on CI's own docker-build
+job, which uses a different runner).
