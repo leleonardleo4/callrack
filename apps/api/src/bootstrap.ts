@@ -24,7 +24,13 @@ import {
 import { RequestContext } from './common/request-context/request-context.js';
 import { CapabilityRegistryService } from './capabilities/capability-registry.service.js';
 import { CapabilityRequestSchemaService } from './capabilities/capability-request-schema.service.js';
-import { buildHttpFacilitatorClient, installX402Middleware } from './x402/index.js';
+import {
+  buildHttpFacilitatorClient,
+  installX402Middleware,
+  PAYMENT_REQUIRED_HEADER,
+  PAYMENT_RESPONSE_HEADER,
+  PAYMENT_SIGNATURE_HEADER,
+} from './x402/index.js';
 import { buildRequestSchemaMap } from './x402/discovery-schema.util.js';
 
 import type {
@@ -116,8 +122,20 @@ export async function createApp(): Promise<NestFastifyApplication> {
     {
       origin: true,
       methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization', REQUEST_ID_HEADER],
-      exposedHeaders: [REQUEST_ID_RESPONSE_HEADER],
+      // PAYMENT-SIGNATURE is the request header a payer attaches to retry a
+      // request with proof of payment (see @x402/core's exact/client
+      // scheme) — without it in `allowedHeaders`, a real cross-origin
+      // browser (e.g. the Playground) would have that header stripped by
+      // CORS preflight before it ever reached the API.
+      allowedHeaders: ['Content-Type', 'Authorization', REQUEST_ID_HEADER, PAYMENT_SIGNATURE_HEADER],
+      // PAYMENT-REQUIRED (the 402 challenge) and PAYMENT-RESPONSE (the paid
+      // settlement receipt) must be exposed the same way: browsers only let
+      // JS read response headers listed here for a cross-origin request —
+      // curl/server-to-server callers were never affected (no CORS
+      // enforcement outside a browser), but any browser-based x402 client,
+      // including the Playground, could see 402s and paid responses over
+      // the wire yet never actually read either header without this.
+      exposedHeaders: [REQUEST_ID_RESPONSE_HEADER, PAYMENT_REQUIRED_HEADER, PAYMENT_RESPONSE_HEADER],
     },
   );
 

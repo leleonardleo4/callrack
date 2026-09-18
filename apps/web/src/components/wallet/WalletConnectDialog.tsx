@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useWallet } from '@txnlab/use-wallet-react';
 import { Loader2, Wallet as WalletIcon } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ConnectTimeoutError, withConnectTimeout } from '@/wallet/connect-timeout';
 import { cn } from 'cn';
 
 export interface WalletConnectDialogProps {
@@ -25,13 +26,16 @@ export function WalletConnectDialog({ open, onOpenChange }: WalletConnectDialogP
     setError(undefined);
     setConnectingId(walletId);
     try {
-      await connect();
+      await withConnectTimeout(connect());
       onOpenChange(false);
     } catch (cause) {
-      setError({
-        walletId,
-        message: cause instanceof Error ? cause.message : 'This wallet is not available in the current browser or device context.',
-      });
+      const message =
+        cause instanceof ConnectTimeoutError
+          ? 'This wallet is not available in the current browser or device context — it may not be installed, or the request may still be pending there.'
+          : cause instanceof Error
+            ? cause.message
+            : 'This wallet is not available in the current browser or device context.';
+      setError({ walletId, message });
     } finally {
       setConnectingId(undefined);
     }

@@ -29,7 +29,7 @@ export default defineConfig({
     // actually resolves the resulting `ReferenceError: global is not
     // defined` (from crypto-browserify's `randombytes`, pulled in by the
     // xhd-wallet-api chain above).
-    nodePolyfills({ include: ['crypto', 'util'], globals: { Buffer: false, global: false, process: false } }),
+    nodePolyfills({ include: ['crypto', 'util'], globals: { Buffer: false, global: false, process: true } }),
   ],
   resolve: {
     alias: {

@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { WalletConnectDialog } from '@/components/wallet/WalletConnectDialog';
+import { ConnectTimeoutError } from '@/wallet/connect-timeout';
 
 let mockWallets: { walletKey: string; metadata: { name: string; icon: string }; connect: () => Promise<unknown> }[] = [];
 
@@ -71,6 +72,24 @@ describe('WalletConnectDialog', () => {
     await user.click(screen.getByText('Lute'));
 
     expect(await screen.findByText('Lute is not available in this browser.')).toBeInTheDocument();
+    expect(onOpenChange).not.toHaveBeenCalled();
+  });
+
+  it('shows an "unavailable" message — not the raw timeout error — when connect() never settles (e.g. no extension installed)', async () => {
+    // withConnectTimeout itself (test/wallet/connect-timeout.test.ts) is what
+    // actually proves a never-settling connect() eventually rejects; this
+    // only needs to prove the dialog picks the right user-facing message for
+    // that specific rejection, so the wallet's connect() rejects with it
+    // directly rather than the test waiting out a real 20s timeout.
+    const connect = vi.fn().mockRejectedValue(new ConnectTimeoutError('Timed out waiting for a response.'));
+    mockWallets = [{ walletKey: 'lute', metadata: { name: 'Lute', icon: '' }, connect }];
+    const onOpenChange = vi.fn();
+    const user = userEvent.setup();
+    render(<WalletConnectDialog open onOpenChange={onOpenChange} />);
+
+    await user.click(screen.getByText('Lute'));
+
+    expect(await screen.findByText(/not available in the current browser/i)).toBeInTheDocument();
     expect(onOpenChange).not.toHaveBeenCalled();
   });
 });

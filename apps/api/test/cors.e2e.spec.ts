@@ -53,4 +53,45 @@ describe('CORS (E2E)', () => {
 
     expect(response.headers['access-control-allow-credentials']).toBeUndefined();
   });
+
+  it('exposes PAYMENT-REQUIRED and PAYMENT-RESPONSE so a real browser can read x402 headers cross-origin', async () => {
+    // A browser only lets JS read response headers listed here for a
+    // cross-origin request — curl/server-to-server callers were never
+    // affected by this (no CORS enforcement outside a browser), but any
+    // browser-based x402 client (the Playground included) could see a 402
+    // or a paid response over the wire yet never actually read either
+    // header without both listed. Regression coverage for that exact bug.
+    const response = await app.inject({
+      method: 'GET',
+      url: '/health',
+      headers: { origin: 'https://another-example-client.test' },
+    });
+
+    const exposedHeaders = (response.headers['access-control-expose-headers'] as string)
+      .split(',')
+      .map((header) => header.trim().toUpperCase());
+    expect(exposedHeaders).toContain('PAYMENT-REQUIRED');
+    expect(exposedHeaders).toContain('PAYMENT-RESPONSE');
+  });
+
+  it('allows the PAYMENT-SIGNATURE request header on a preflight request', async () => {
+    // Without this, a real cross-origin browser retrying a paid request
+    // would have PAYMENT-SIGNATURE stripped by CORS preflight before it
+    // ever reached the API.
+    const response = await app.inject({
+      method: 'OPTIONS',
+      url: '/health',
+      headers: {
+        origin: 'https://some-third-party-agent.example',
+        'access-control-request-method': 'POST',
+        'access-control-request-headers': 'payment-signature',
+      },
+    });
+
+    expect(response.statusCode).toBeLessThan(300);
+    const allowedHeaders = (response.headers['access-control-allow-headers'] as string)
+      .split(',')
+      .map((header) => header.trim().toUpperCase());
+    expect(allowedHeaders).toContain('PAYMENT-SIGNATURE');
+  });
 });
