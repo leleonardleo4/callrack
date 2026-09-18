@@ -2,7 +2,39 @@ packages:
   - 'apps/*'
   - 'packages/*'
 
+# Phase 11 security audit (pnpm audit --prod): forces two hard-pinned
+# transitive dependencies up to their patched versions, since neither
+# upstream package (@nestjs/platform-fastify, prisma) has updated its own
+# exact pin as of the versions this repo currently uses.
+#   - fastify: @nestjs/platform-fastify@11.2.5 (latest 11.x) still hard-pins
+#     fastify@5.11.3, vulnerable to schema-validation bypass and, more
+#     relevantly, X-Forwarded-* spoofing under TRUST_PROXY hop-count
+#     (GHSA-w2qp-rph6-63g4, GHSA-3m5p-2c4r-xxw2) — directly relevant since
+#     this phase turned trustProxy on for rate limiting. 5.12.5 is a same-
+#     major patch release; NestJS's Fastify adapter only uses Fastify's
+#     stable public API, so this is a safe override.
+#   - mysql2: prisma@7.10.0 hard-pins mysql2@3.15.3 (its own CLI-only MySQL
+#     introspection dependency — Callrack's schema is postgresql-only, so
+#     this code path is never exercised, but the override is free and
+#     closes it anyway).
+#   - deepmerge-ts: prisma@7.10.0's own @prisma/config dependency, used only
+#     while loading prisma.config.ts at CLI/build time — never part of the
+#     running API's request path. Same rationale as mysql2: free, closes a
+#     real advisory even though it's not reachable from outside a build.
+overrides:
+  fastify: 5.12.5
+  mysql2: 3.24.4
+  deepmerge-ts: 8.0.2
+
 allowBuilds:
+  # First-party workspace package; its only postinstall script is
+  # `prisma generate` (packages/db/package.json) — allowed so a plain
+  # `pnpm install` runs it automatically instead of leaving it in the
+  # "ignored builds" list (apps/api/Dockerfile's build stage instead calls
+  # `pnpm --filter=@callrack/db run db:generate` explicitly, which doesn't
+  # need this approval at all, but this keeps ordinary local/CI installs
+  # from needing a manual `pnpm approve-builds` step for our own package).
+  '@callrack/db@file:packages/db': true
   '@prisma/engines': true
   '@scarf/scarf': false
   '@swc/core': true
@@ -10,7 +42,11 @@ allowBuilds:
   prisma: true
 
 onlyBuiltDependencies:
+  - '@callrack/db'
   - '@prisma/engines'
   - '@swc/core'
   - 'esbuild'
   - 'prisma'
+
+minimumReleaseAgeExclude:
+  - '@fastify/static@10.1.4'

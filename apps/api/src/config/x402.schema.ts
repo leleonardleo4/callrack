@@ -67,6 +67,26 @@ export const x402ConfigSchema = rawX402ConfigSchema.superRefine((data, ctx) => {
       message: `${facilitatorKey} must be a valid URL`,
     });
   }
+
+  // Production safety net: catches the specific copy-paste mistake of
+  // carrying a Testnet address over as MAINNET_PAY_TO (a real Mainnet
+  // deployment must receive real USDC at an address the project actually
+  // controls for that purpose, never the throwaway Testnet one). Only
+  // checked when both are actually configured — Testnet development
+  // legitimately runs with no MAINNET_PAY_TO set at all.
+  if (
+    data.NETWORK === 'mainnet' &&
+    data.TESTNET_PAY_TO &&
+    data.MAINNET_PAY_TO &&
+    data.TESTNET_PAY_TO === data.MAINNET_PAY_TO
+  ) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['MAINNET_PAY_TO'],
+      message:
+        'MAINNET_PAY_TO must not be the same address as TESTNET_PAY_TO — a Mainnet deployment must receive real USDC at a stable, project-controlled Mainnet address, never a Testnet/development address.',
+    });
+  }
 });
 
 export type X402Config = z.infer<typeof rawX402ConfigSchema>;

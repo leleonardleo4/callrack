@@ -1,0 +1,19 @@
+# Never let a real .env (or any dotenv variant) into a build context or
+# image layer — Docker COPY does not respect .gitignore, only this file.
+.env
+.env.*
+!.env.example
+
+node_modules
+**/node_modules
+**/dist
+**/build
+**/.turbo
+.git
+.github
+docker
+*.log
+
+# Web app isn't part of the API image; excluding it keeps the build context
+# (and therefore `turbo prune`'s COPY . . step) smaller.
+apps/web

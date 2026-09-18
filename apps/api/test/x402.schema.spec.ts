@@ -75,6 +75,16 @@ describe('validateX402Config', () => {
     );
   });
 
+  it('rejects MAINNET_PAY_TO equal to TESTNET_PAY_TO on a mainnet deployment', () => {
+    expect(() =>
+      validateX402Config({ ...VALID_ENV, NETWORK: 'mainnet', MAINNET_PAY_TO: VALID_TESTNET_ADDR }),
+    ).toThrow(/MAINNET_PAY_TO must not be the same address as TESTNET_PAY_TO/);
+  });
+
+  it('allows MAINNET_PAY_TO equal to TESTNET_PAY_TO when NETWORK=testnet (not the deployment that would spend it)', () => {
+    expect(() => validateX402Config({ ...VALID_ENV, NETWORK: 'testnet', MAINNET_PAY_TO: VALID_TESTNET_ADDR })).not.toThrow();
+  });
+
   it('does not silently default a missing network selection', () => {
     let thrown = false;
     try {

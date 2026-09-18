@@ -44,4 +44,14 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
   get isReady(): boolean {
     return this.client.status === 'ready';
   }
+
+  /**
+   * The raw ioredis client, for infrastructure that needs to hand its own
+   * client to a library (e.g. `@fastify/rate-limit`'s `redis` option, for
+   * counters shared across replicas) rather than go through `cache`'s
+   * get/set/delete abstraction. Capability code must keep using `cache`.
+   */
+  get rawClient(): RedisClientType {
+    return this.client;
+  }
 }

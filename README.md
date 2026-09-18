@@ -25,14 +25,19 @@ callrack/
 ├── docker/
 │   └── docker-compose.yml  # Local PostgreSQL & Redis infrastructure
 │
-├── .github/
-│   └── workflows/    # CI workflow (install, lint, typecheck, test, build)
+├── docs/
+│   └── DEPLOYMENT.md # Production deployment, hardening, and release checklist (see below)
 │
+├── .github/
+│   └── workflows/    # CI workflow (install, lint, typecheck, test, build, Docker image build)
+│
+├── apps/api/Dockerfile  # Production API image (see docs/DEPLOYMENT.md)
 ├── package.json
 ├── pnpm-workspace.yaml
 ├── turbo.json
 ├── tsconfig.json
 ├── .gitignore
+├── .dockerignore
 ├── .env.example
 └── README.md
 ```
@@ -436,6 +441,17 @@ Mainnet USDC automatically.
 
 Current x402 documentation: https://github.com/x402-foundation/x402 (packages
 used: `@x402/core`, `@x402/avm`, `@x402/fastify`, all `2.26.0`).
+
+---
+
+## 🚢 Production Deployment
+
+See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for the full production
+hardening and deployment guide: environment separation, required
+production environment variables, Mainnet `payTo`/USDC opt-in validation,
+database/Redis production safety, rate limiting, `apps/api/Dockerfile`,
+the web production build, backup/rollback procedures, and the release
+candidate checklist.
 
 ---
 

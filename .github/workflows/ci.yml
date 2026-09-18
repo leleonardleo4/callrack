@@ -5,6 +5,17 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  # Deployment is never automatic — see the `deploy` job below. It only
+  # exists as a manually-triggered workflow_dispatch target, never on push
+  # or pull_request, so a routine merge can never deploy anything, let
+  # alone with Mainnet configuration.
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'Environment to deploy (must match a configured GitHub Environment with its own secrets/protection rules)'
+        type: choice
+        options: [testnet, production]
+        required: true
 
 jobs:
   verify:
@@ -87,3 +98,43 @@ jobs:
 
       - name: Run Production Build
         run: pnpm build
+
+  docker-build:
+    name: Build production API image
+    runs-on: ubuntu-latest
+    needs: verify
+    # Runs on every push/PR too (build-only, no push/registry credentials
+    # needed) so a Dockerfile regression is caught before merge, not
+    # discovered at deploy time.
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build apps/api production image
+        run: docker build -f apps/api/Dockerfile -t callrack-api:ci .
+
+  deploy:
+    name: Deploy (manual, environment-gated)
+    runs-on: ubuntu-latest
+    needs: [verify, docker-build]
+    if: github.event_name == 'workflow_dispatch'
+    # Binds to a GitHub Environment named "testnet" or "production" — each
+    # must be configured in the repo's Settings → Environments with its own
+    # secrets (DATABASE_URL, REDIS_URL, MAINNET_PAY_TO, etc. — see
+    # docs/DEPLOYMENT.md) and, for `production`, required reviewers so a
+    # Mainnet deploy needs an explicit human approval every time, not just
+    # picking the right dropdown option.
+    environment: ${{ inputs.target }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy placeholder
+        run: |
+          echo "No hosting platform has been selected for Callrack yet (see docs/DEPLOYMENT.md)."
+          echo "This job intentionally stops here rather than fabricate a deploy step for a"
+          echo "platform this repository isn't actually wired to. Replace this step with the"
+          echo "chosen host's real deploy command (and its migration-release step — see"
+          echo "docs/DEPLOYMENT.md's 'Database migration deployment' section) before this"
+          echo "workflow_dispatch target is used for a real deployment."
+          exit 1

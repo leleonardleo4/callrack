@@ -5,10 +5,13 @@ import { FastifyAdapter, type NestFastifyApplication } from '@nestjs/platform-fa
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import fastifyHelmet from '@fastify/helmet';
 import fastifyCors from '@fastify/cors';
+import fastifyRateLimit from '@fastify/rate-limit';
 
 import { AppModule } from './app/app.module.js';
 import { ApiConfigService } from './config/api-config.service.js';
+import { validateApiConfig } from './config/api-config.schema.js';
 import { X402ConfigService } from './config/x402-config.service.js';
+import { RedisService } from './redis/redis.service.js';
 import { ApiExceptionFilter } from './common/errors/api-exception.filter.js';
 import { createValidationException } from './common/validation/validation-exception.factory.js';
 import { HttpLoggingInterceptor } from './common/logging/http-logging.interceptor.js';
@@ -33,12 +36,26 @@ import type {
 import type { FacilitatorClient } from '@x402/core/server';
 
 export async function createApp(): Promise<NestFastifyApplication> {
+  // Read directly from process.env, once, before the Nest app (and its
+  // DI-provided ApiConfigService) exists — trustProxy/bodyLimit are Fastify
+  // instance-construction options, so they can't wait for `app.get(...)`.
+  // Uses the exact same schema/defaults `ApiConfigService` uses per-request,
+  // so there is only one definition of these defaults, not two.
+  const bootConfig = validateApiConfig(process.env);
+
   const adapter = new FastifyAdapter({
     requestIdHeader: REQUEST_ID_HEADER,
     genReqId: (req: { headers: Record<string, string | string[] | undefined> }) => {
       const incoming = req?.headers?.[REQUEST_ID_HEADER];
       return resolveRequestId(incoming);
     },
+    // Honors X-Forwarded-* from a reverse proxy/load balancer so
+    // request.ip (used by rate limiting) and req.protocol/hostname (used by
+    // discovery's resolveRequestOrigin) reflect the real client/origin
+    // rather than the proxy's. Safe to leave on in local dev (no proxy in
+    // front, so headers are simply absent and ignored).
+    trustProxy: bootConfig.TRUST_PROXY,
+    bodyLimit: bootConfig.BODY_LIMIT_BYTES,
   });
 
   const app = await NestFactory.create<NestFastifyApplication>(AppModule, adapter, {
@@ -101,6 +118,28 @@ export async function createApp(): Promise<NestFastifyApplication> {
       methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'Authorization', REQUEST_ID_HEADER],
       exposedHeaders: [REQUEST_ID_RESPONSE_HEADER],
+    },
+  );
+
+  // 3b. Rate limiting. Global, per-client-IP (via `request.ip`, correct
+  // once `trustProxy` above is honored). Backed by Redis so limits are
+  // shared across replicas when Redis is reachable; `skipOnError: true`
+  // means a Redis outage fails OPEN (requests proceed unlimited) rather
+  // than taking the whole API down the way a fail-closed limiter would —
+  // consistent with how CapabilityCacheService treats Redis. Health checks
+  // are exempt so orchestrator liveness/readiness polling is never
+  // throttled. Paid (x402) requests are intentionally NOT exempted or
+  // given a separate, larger budget here: the per-payment cost already
+  // deters abusive volume far more than a request-count limit could, and a
+  // shared budget is simpler to reason about than a second policy.
+  await app.register(
+    fastifyRateLimit as unknown as FastifyPluginAsync<import('@fastify/rate-limit').RateLimitPluginOptions>,
+    {
+      max: bootConfig.RATE_LIMIT_MAX,
+      timeWindow: bootConfig.RATE_LIMIT_WINDOW_MS,
+      redis: app.get(RedisService).rawClient,
+      skipOnError: true,
+      allowList: (req: FastifyRequest) => req.url === '/health' || req.url.startsWith('/health/'),
     },
   );
 
@@ -228,6 +267,17 @@ export async function bootstrap(): Promise<NestFastifyApplication> {
   const app = await createProtectedApp();
   const configService = app.get(ApiConfigService);
   const logger = new AppLoggerService();
+
+  // Only the real production entrypoint listens for OS termination signals
+  // — deliberately not enabled inside createApp()/createProtectedApp(),
+  // which the test suite also calls (many times per run) and already
+  // manages its own app.close() in teardown; registering process-wide
+  // signal listeners there would leak/duplicate across every test file.
+  // On SIGTERM/SIGINT: Fastify stops accepting new connections and lets
+  // in-flight requests finish, then Nest calls onModuleDestroy on every
+  // provider (DatabaseService disconnects Prisma, RedisService disconnects
+  // ioredis) before the process exits — see their own onModuleDestroy.
+  app.enableShutdownHooks();
 
   await app.listen(configService.port, '0.0.0.0');
   logger.log(`Callrack API server listening on http://0.0.0.0:${configService.port}`, 'Bootstrap');
