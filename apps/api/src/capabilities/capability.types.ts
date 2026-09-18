@@ -12,7 +12,8 @@ export type CapabilityCategory =
   | 'calendar'
   | 'knowledge'
   | 'government'
-  | 'research';
+  | 'research'
+  | 'information';
 
 /**
  * How a capability is actually served: one or more provider adapters

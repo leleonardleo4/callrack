@@ -2,6 +2,7 @@ import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import type { ApiSuccessResponse } from '../common/http/api-response.interface.js';
 import { RequestContext } from '../common/request-context/request-context.js';
+import { CapabilityRegistryService } from '../capabilities/capability-registry.service.js';
 import { ResearchService } from './research.service.js';
 import { ResearchRequestDto } from './dto/research-request.dto.js';
 import { SUPPORTED_RESEARCH_SOURCES } from './research-sources.constants.js';
@@ -26,7 +27,10 @@ const SOURCE_ENTRY_SCHEMA = {
 @ApiTags('Research')
 @Controller('research')
 export class ResearchController {
-  constructor(private readonly researchService: ResearchService) {}
+  constructor(
+    private readonly researchService: ResearchService,
+    private readonly registry: CapabilityRegistryService,
+  ) {}
 
   @Post()
   @HttpCode(HttpStatus.OK)
@@ -62,6 +66,22 @@ export class ResearchController {
                 government: SOURCE_ENTRY_SCHEMA,
               },
             },
+            findings: {
+              type: 'array',
+              description: 'academic/news/knowledge results normalized into provenance-preserving evidence items (government is excluded — see composition.sourcesRequested for whether it ran).',
+              items: { type: 'object' },
+            },
+            disagreements: { type: 'array', items: { type: 'object' } },
+            composition: {
+              type: 'object',
+              properties: {
+                sourcesRequested: { type: 'array', items: { type: 'string' } },
+                sourcesSucceeded: { type: 'array', items: { type: 'string' } },
+                sourcesEmpty: { type: 'array', items: { type: 'string' } },
+                sourcesFailed: { type: 'array', items: { type: 'string' } },
+                retrievedAt: { type: 'string', format: 'date-time' },
+              },
+            },
           },
         },
         meta: {
@@ -69,6 +89,11 @@ export class ResearchController {
           properties: {
             requestId: { type: 'string', example: 'req_1a2b3c...' },
             sourcesUsed: { type: 'array', items: { type: 'string' }, example: ['academic', 'news', 'knowledge'] },
+            price: {
+              type: 'object',
+              nullable: true,
+              properties: { amount: { type: 'string' }, currency: { type: 'string', example: 'USDC' } },
+            },
           },
         },
       },
@@ -83,6 +108,7 @@ export class ResearchController {
   async research(@Body() dto: ResearchRequestDto): Promise<ApiSuccessResponse<ResearchResponseData>> {
     const requestId = RequestContext.requestId ?? 'unknown';
     const data = await this.researchService.research(dto, requestId);
-    return { data, meta: { requestId, sourcesUsed: Object.keys(data.sources) } };
+    const price = this.registry.getById('research')?.price;
+    return { data, meta: { requestId, sourcesUsed: Object.keys(data.sources), ...(price ? { price } : {}) } };
   }
 }

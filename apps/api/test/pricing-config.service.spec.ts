@@ -15,6 +15,9 @@ const VALID_ENV: Record<string, string> = {
   PRICE_KNOWLEDGE_SEARCH: '0.005',
   PRICE_GOVERNMENT_CENSUS: '0.01',
   PRICE_RESEARCH: '0.05',
+  PRICE_INFORMATION_VERIFY: '0.05',
+  PRICE_INFORMATION_EVIDENCE: '0.05',
+  PRICE_INFORMATION_COMPARE: '0.10',
 };
 
 describe('PricingConfigService', () => {

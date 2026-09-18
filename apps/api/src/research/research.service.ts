@@ -5,6 +5,11 @@ import { AcademicService } from '../academic/academic.service.js';
 import { NewsService } from '../news/news.service.js';
 import { KnowledgeService } from '../knowledge/knowledge.service.js';
 import { CensusService } from '../government/census.service.js';
+import { academicToEvidence, detectDisagreements, knowledgeToEvidence, newsToEvidence } from '../information/evidence.util.js';
+import type { AcademicSearchResponseData } from '../academic/academic-response.types.js';
+import type { NewsSearchResponseData } from '../news/news-response.types.js';
+import type { KnowledgeSearchResponseData } from '../knowledge/knowledge-response.types.js';
+import type { EvidenceItem } from '../information/information.types.js';
 import { planResearch } from './research.planner.js';
 import type { ResearchRequestDto } from './dto/research-request.dto.js';
 import type { ResearchSourceName } from './research-sources.constants.js';
@@ -107,6 +112,7 @@ export class ResearchService {
     limit: number,
     requestId: string,
   ): Promise<ResearchResponseData> {
+    const retrievedAt = new Date().toISOString();
     const entries = await Promise.all(
       sources.map(async (name) => [name, await this.runOne(name, dto, limit, requestId)] as const),
     );
@@ -116,11 +122,54 @@ export class ResearchService {
       sourcesMap[name] = entry;
     }
 
+    const findings = this.deriveFindings(entries, retrievedAt);
+
     return {
       query: dto.query,
       status: this.computeOverallStatus(entries.map(([, entry]) => entry.status)),
       sources: sourcesMap as ResearchSourcesMap,
+      findings,
+      disagreements: detectDisagreements(findings),
+      composition: {
+        sourcesRequested: sources,
+        sourcesSucceeded: entries.filter(([, entry]) => entry.status === 'success').map(([name]) => name),
+        sourcesEmpty: entries.filter(([, entry]) => entry.status === 'empty').map(([name]) => name),
+        sourcesFailed: entries.filter(([, entry]) => entry.status === 'failed').map(([name]) => name),
+        retrievedAt,
+      },
     };
+  }
+
+  /**
+   * Normalizes academic/news/knowledge results into provenance-preserving
+   * evidence items, reusing the exact same mapping `verify`/`evidence`/
+   * `compare` use (`information/evidence.util.ts`) — never a second,
+   * divergent normalization. `government`'s tabular row data has no natural
+   * title/excerpt shape to normalize into, so it's deliberately excluded
+   * here; it remains fully represented in `sources.government`.
+   */
+  private deriveFindings(
+    entries: readonly (readonly [ResearchSourceName, ResearchSourceEntry<unknown>])[],
+    retrievedAt: string,
+  ): EvidenceItem[] {
+    const findings: EvidenceItem[] = [];
+    for (const [name, entry] of entries) {
+      if (entry.status !== 'success' || !entry.data) continue;
+      switch (name) {
+        case 'academic':
+          findings.push(...academicToEvidence(entry.data as AcademicSearchResponseData, retrievedAt));
+          break;
+        case 'news':
+          findings.push(...newsToEvidence(entry.data as NewsSearchResponseData, retrievedAt));
+          break;
+        case 'knowledge':
+          findings.push(...knowledgeToEvidence(entry.data as KnowledgeSearchResponseData, retrievedAt));
+          break;
+        case 'government':
+          break;
+      }
+    }
+    return findings;
   }
 
   private async runOne(

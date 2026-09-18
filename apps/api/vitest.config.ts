@@ -26,6 +26,9 @@ export default defineConfig({
       PRICE_KNOWLEDGE_SEARCH: '0.005',
       PRICE_GOVERNMENT_CENSUS: '0.01',
       PRICE_RESEARCH: '0.05',
+      PRICE_INFORMATION_VERIFY: '0.05',
+      PRICE_INFORMATION_EVIDENCE: '0.05',
+      PRICE_INFORMATION_COMPARE: '0.10',
       // x402 config (Phase 7) has no defaults either — X402ConfigModule is
       // wired into AppModule, so even createApp() (which never installs the
       // x402 middleware itself) still constructs X402ConfigService.

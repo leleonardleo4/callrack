@@ -1,8 +1,21 @@
 # Callrack Monorepo
 
-Callrack is a pay-per-use information infrastructure platform delivering structured capabilities (academic research, news, market data, FX, weather, geocoding, public holidays, knowledge, government data, and research synthesis).
+Callrack lets software and AI agents acquire, verify, compare, and compose
+information as paid, machine-readable capabilities with source provenance.
+It is a pay-per-use information infrastructure platform, not another
+general-purpose chatbot: every response traces back to a real provider, a
+real retrieval timestamp, and (for the higher-level `verify`/`evidence`/
+`compare`/`research` capabilities) explicit source-level provenance —
+never a synthesized or fabricated answer.
 
-This repository contains the Phase 0 foundational monorepo setup powered by **pnpm workspaces**, **Turborepo**, **NestJS + Fastify**, **React + Vite**, and **Prisma 7**.
+Atomic capabilities: academic search/work, news search/trends, crypto
+price/market, FX rates, weather, geocoding, public holidays, knowledge
+search, and government (Census) data. Composed, higher-value capabilities
+built on top of those: `research` (an evidence-backed research packet),
+`verify` (deterministic claim verification), `evidence` (a machine-readable
+evidence pack), and `compare` (structured cross-source comparison).
+
+This repository is powered by **pnpm workspaces**, **Turborepo**, **NestJS + Fastify**, **React + Vite**, and **Prisma 7**.
 
 ---
 
@@ -190,11 +203,59 @@ integration tests to actually execute.
 
 ---
 
+## 🔍 Information Capabilities
+
+Beyond the atomic capabilities (one query, one provider-backed result),
+Callrack composes existing capabilities into higher-value, provenance-rich
+information capabilities — deterministic composition, never an LLM, never
+a fabricated fact or citation. All four reuse the exact same underlying
+capability *services* (academic/news/knowledge) that back their atomic
+counterparts (`apps/api/src/information/`) — never a duplicate HTTP client,
+never a second registry.
+
+| Capability | ID | Endpoint | Purpose |
+|---|---|---|---|
+| Verify | `information.verify` | `POST /v1/verify` | Verify a claim against real evidence and return a deterministic verdict (`supported` / `contradicted` / `mixed` / `insufficient`) with confidence and the evidence itself. |
+| Evidence | `information.evidence` | `POST /v1/evidence` | A machine-readable evidence pack for a query — findings with full provenance, never a narrative answer. |
+| Compare | `information.compare` | `POST /v1/compare` | Structured comparison across whatever distinct subjects the underlying capabilities actually return — real attribute values, real detected disagreements. |
+| Research | `research` | `POST /v1/research` | The original research composition, upgraded: alongside its existing per-source results, it now also returns `findings` (normalized evidence), `disagreements`, and `composition` metadata (which sources succeeded/were empty/failed, and when). |
+
+```bash
+curl -X POST https://api.callrack.xyz/v1/verify \
+  -H "content-type: application/json" \
+  -d '{"claim": "Nigeria is the most populous country in Africa."}'
+# → 402 Payment Required (pay, then retry — see the x402 section below)
+```
+
+**How `verify` actually works.** It gathers real evidence from academic,
+news, and knowledge search (the same composition pattern `research` uses),
+then classifies each *relevant* item as affirming or denying the claim
+using explainable lexical heuristics — term overlap against the claim's
+significant words, and a small set of negation cue words ("debunked",
+"denied", "false", ...). This is **not** semantic fact-checking or an LLM
+judgment: it is a deterministic, reproducible signal over the evidence
+Callrack actually returns, and the API description says so. `sourcesChecked: 0`
+(verdict `"insufficient"`) means no relevant evidence was found — never
+that the claim is false.
+
+**Never fabricated.** `evidence`/`compare` return empty arrays, not
+invented values, when the underlying providers don't have enough
+information — the same "no fabrication" rule that already governed
+`research`. A `compare` subject with only one attribute, or zero detected
+disagreements, is a correct, common result.
+
+All four are configurable via `PRICE_INFORMATION_VERIFY`,
+`PRICE_INFORMATION_EVIDENCE`, `PRICE_INFORMATION_COMPARE`, and
+`PRICE_RESEARCH` (see `.env.example`) — prices are never hardcoded, and
+x402 resolves the exact same registry price automatically for every route.
+
+---
+
 ## 💳 x402 Payment Protection
 
 Every paid Callrack capability (academic search/work, news search/trends,
 crypto price/market, FX rates, weather, geocode, holidays, knowledge search,
-government census, and research) is protected by the
+government census, research, verify, evidence, and compare) is protected by the
 [x402 payment protocol](https://github.com/x402-foundation/x402) over
 Algorand. A request without a valid payment gets `402 Payment Required`
 instead of running the capability; a request with a verified payment runs

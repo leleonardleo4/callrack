@@ -30,6 +30,9 @@ export const pricingConfigSchema = z.object({
   PRICE_KNOWLEDGE_SEARCH: moneyAmountSchema,
   PRICE_GOVERNMENT_CENSUS: moneyAmountSchema,
   PRICE_RESEARCH: moneyAmountSchema,
+  PRICE_INFORMATION_VERIFY: moneyAmountSchema,
+  PRICE_INFORMATION_EVIDENCE: moneyAmountSchema,
+  PRICE_INFORMATION_COMPARE: moneyAmountSchema,
 });
 
 export type PricingConfig = z.infer<typeof pricingConfigSchema>;

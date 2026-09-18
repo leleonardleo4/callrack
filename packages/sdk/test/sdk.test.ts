@@ -23,7 +23,14 @@ describe('CallrackClient', () => {
     );
     const client = new CallrackClient({ baseUrl: 'http://localhost:3000' });
     const capabilities = await client.listCapabilities();
-    expect(capabilities.map((capability) => capability.id)).toEqual(['academic.search', 'news.search']);
+    expect(capabilities.map((capability) => capability.id)).toEqual([
+      'academic.search',
+      'news.search',
+      'information.verify',
+      'information.evidence',
+      'information.compare',
+      'research',
+    ]);
     vi.unstubAllGlobals();
   });
 
@@ -66,5 +73,72 @@ describe('CallrackClient', () => {
     expect(result.data).toEqual({ results: [] });
     expect(result.meta.requestId).toBe('req_2');
     vi.unstubAllGlobals();
+  });
+
+  describe('typed information capability methods', () => {
+    function stubDiscoveryThen(path: string, data: unknown): ReturnType<typeof vi.fn> {
+      const fetchImpl = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+        const url = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
+        if (url.endsWith('/v1/capabilities')) {
+          return jsonResponse(200, { data: CAPABILITIES_DATA, meta: { requestId: 'req_1' } });
+        }
+        expect(url.endsWith(path)).toBe(true);
+        expect(init?.method).toBe('POST');
+        return jsonResponse(200, { data, meta: { requestId: 'req_2' } });
+      });
+      vi.stubGlobal('fetch', fetchImpl);
+      return fetchImpl;
+    }
+
+    it('verify() posts to /v1/verify and returns typed data', async () => {
+      const verdictData = { claim: 'x', verdict: 'insufficient', confidence: 0, evidence: [], agreementCount: 0, contradictionCount: 0, sourcesChecked: 0 };
+      stubDiscoveryThen('/v1/verify', verdictData);
+      const client = new CallrackClient({ baseUrl: 'http://localhost:3000' });
+
+      const result = await client.verify({ claim: 'Nigeria is the most populous country in Africa.' });
+
+      expect(result.data.verdict).toBe('insufficient');
+      vi.unstubAllGlobals();
+    });
+
+    it('evidence() posts to /v1/evidence and returns typed data', async () => {
+      const evidenceData = { query: 'x', findings: [], sources: [], retrievedAt: '2026-01-15T12:00:00Z' };
+      stubDiscoveryThen('/v1/evidence', evidenceData);
+      const client = new CallrackClient({ baseUrl: 'http://localhost:3000' });
+
+      const result = await client.evidence({ query: 'renewable energy' });
+
+      expect(result.data.findings).toEqual([]);
+      vi.unstubAllGlobals();
+    });
+
+    it('compare() posts to /v1/compare and returns typed data', async () => {
+      const compareData = { query: 'x', subjects: [], attributes: [], sources: [], disagreements: [] };
+      stubDiscoveryThen('/v1/compare', compareData);
+      const client = new CallrackClient({ baseUrl: 'http://localhost:3000' });
+
+      const result = await client.compare({ query: 'Tesla' });
+
+      expect(result.data.subjects).toEqual([]);
+      vi.unstubAllGlobals();
+    });
+
+    it('research() posts to /v1/research and returns typed data', async () => {
+      const researchData = {
+        query: 'x',
+        status: 'complete',
+        sources: {},
+        findings: [],
+        disagreements: [],
+        composition: { sourcesRequested: [], sourcesSucceeded: [], sourcesEmpty: [], sourcesFailed: [], retrievedAt: '2026-01-15T12:00:00Z' },
+      };
+      stubDiscoveryThen('/v1/research', researchData);
+      const client = new CallrackClient({ baseUrl: 'http://localhost:3000' });
+
+      const result = await client.research({ query: 'renewable energy investment in Africa' });
+
+      expect(result.data.status).toBe('complete');
+      vi.unstubAllGlobals();
+    });
   });
 });

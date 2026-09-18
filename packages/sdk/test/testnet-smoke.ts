@@ -20,10 +20,17 @@
  * 402 -> policy check -> sign a real Testnet payment -> retry -> result ->
  * budget accounting.
  */
+import { loadRootEnv } from '@callrack/config';
 import { CallrackAgentRuntime } from '../src/agent/runtime.js';
 import { testnetSignerFromEnv } from '../src/testnet-signer.js';
 
 async function main(): Promise<void> {
+  // tsx does not load .env files itself; this walks up to the monorepo
+  // root and loads it, same as apps/api/src/main.ts and apps/agent/src/cli.ts,
+  // so AVM_MNEMONIC (and the other variables below) are actually populated
+  // regardless of which directory this script is invoked from.
+  loadRootEnv();
+
   const signer = testnetSignerFromEnv();
   if (!signer) {
     console.log(

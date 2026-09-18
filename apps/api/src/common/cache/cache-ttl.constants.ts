@@ -19,6 +19,8 @@
  *   alongside stable knowledge/academic data), so it uses one conservative,
  *   moderate TTL for the whole aggregated result rather than the longer TTL
  *   any single contributing source might otherwise get on its own.
+ * - Verify/evidence/compare compose the same academic/news/knowledge mix as
+ *   research, so they use the same moderate TTL for the same reason.
  */
 export const CACHE_TTL_SECONDS = {
   ACADEMIC_SEARCH: 60 * 30, // 30 minutes
@@ -35,4 +37,7 @@ export const CACHE_TTL_SECONDS = {
   KNOWLEDGE_SEARCH: 60 * 60 * 6, // 6 hours
   CENSUS: 60 * 60 * 24 * 7, // 7 days
   RESEARCH: 60 * 15, // 15 minutes
+  INFORMATION_VERIFY: 60 * 15, // 15 minutes
+  INFORMATION_EVIDENCE: 60 * 15, // 15 minutes
+  INFORMATION_COMPARE: 60 * 15, // 15 minutes
 } as const;

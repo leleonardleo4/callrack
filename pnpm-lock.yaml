@@ -341,6 +341,9 @@ importers:
         specifier: 2.26.0
         version: 2.26.0
     devDependencies:
+      '@callrack/config':
+        specifier: workspace:*
+        version: link:../config
       '@types/node':
         specifier: ^22.13.5
         version: 22.20.2

@@ -32,6 +32,7 @@
     "@x402/fetch": "2.26.0"
   },
   "devDependencies": {
+    "@callrack/config": "workspace:*",
     "@types/node": "^22.13.5",
     "eslint": "^9.21.0",
     "tsup": "^8.4.0",

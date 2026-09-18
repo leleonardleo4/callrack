@@ -25,6 +25,9 @@ const VALID_ENV: Record<string, string> = {
   PRICE_KNOWLEDGE_SEARCH: '0.005',
   PRICE_GOVERNMENT_CENSUS: '0.01',
   PRICE_RESEARCH: '0.05',
+  PRICE_INFORMATION_VERIFY: '0.05',
+  PRICE_INFORMATION_EVIDENCE: '0.05',
+  PRICE_INFORMATION_COMPARE: '0.10',
 };
 
 // Derived directly from each capability's controller (one route per file):
@@ -38,6 +41,9 @@ const VALID_ENV: Record<string, string> = {
 // knowledge.controller.ts -> knowledge.search
 // government.controller.ts -> government.census
 // research.controller.ts -> research
+// verify.controller.ts -> information.verify
+// evidence.controller.ts -> information.evidence
+// compare.controller.ts -> information.compare
 const EXPECTED_CAPABILITY_IDS = [
   'academic.search',
   'academic.work',
@@ -52,6 +58,9 @@ const EXPECTED_CAPABILITY_IDS = [
   'knowledge.search',
   'government.census',
   'research',
+  'information.verify',
+  'information.evidence',
+  'information.compare',
 ].sort();
 
 const KNOWN_PROVIDER_SLUGS = [

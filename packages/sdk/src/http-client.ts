@@ -3,6 +3,7 @@ import type { PaymentRequirements } from '@x402/core/types';
 import {
   CallrackApiError,
   CallrackNetworkError,
+  CallrackPaymentError,
   CallrackPaymentRequiredError,
   CallrackTimeoutError,
   CallrackValidationError,
@@ -17,6 +18,15 @@ export interface CallrackHttpClientOptions {
   /** The fetch implementation to use — a plain fetch for discovery, or an X402PaymentClient's payment-aware fetch for paid capability calls. */
   readonly fetchImpl: typeof fetch;
   readonly timeoutMs?: number;
+  /**
+   * True when `fetchImpl` is payment-aware (an `X402PaymentClient.fetch`).
+   * Changes how a final `402` is classified: without a signer it genuinely
+   * means "this endpoint is paid and nothing tried to pay for it yet"; with
+   * one, `X402PaymentClient` already attempted a real payment and the
+   * server still rejected the retried request — a payment failure, not a
+   * missing-signer situation.
+   */
+  readonly hasSigner?: boolean;
 }
 
 function toRequirementSummary(requirement: PaymentRequirements): PaymentRequirementSummary {
@@ -44,12 +54,14 @@ export class CallrackHttpClient {
   private readonly baseUrl: string;
   private readonly fetchImpl: typeof fetch;
   private readonly timeoutMs: number;
+  private readonly hasSigner: boolean;
   private readonly parser = new x402HTTPClient(new x402Client());
 
   constructor(options: CallrackHttpClientOptions) {
     this.baseUrl = options.baseUrl;
     this.fetchImpl = options.fetchImpl;
     this.timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+    this.hasSigner = options.hasSigner ?? false;
   }
 
   resolveUrl(path: string): string {
@@ -87,6 +99,17 @@ export class CallrackHttpClient {
 
     if (response.status === 402) {
       const paymentRequired = this.parser.getPaymentRequiredResponse((name) => response.headers.get(name), body);
+
+      if (this.hasSigner) {
+        // A signer was configured, so X402PaymentClient already attempted a
+        // real payment before this request ever reached here — a 402 at
+        // this point means the server rejected it (e.g. the payTo address
+        // isn't opted in to the asset, insufficient funds, facilitator
+        // settlement failure), not that nothing tried to pay.
+        const reason = paymentRequired.error ? `: ${paymentRequired.error}` : '';
+        throw new CallrackPaymentError(`Payment for ${path} was rejected by the server${reason}`, { requestId });
+      }
+
       throw new CallrackPaymentRequiredError(
         `${path} requires payment and this client has no signer configured — see CallrackClient's \`signer\` option`,
         {

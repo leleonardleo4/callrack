@@ -11,6 +11,9 @@ import { HolidaysRequestDto } from '../holidays/dto/holidays-request.dto.js';
 import { KnowledgeSearchRequestDto } from '../knowledge/dto/knowledge-search-request.dto.js';
 import { CensusQueryRequestDto } from '../government/dto/census-query-request.dto.js';
 import { ResearchRequestDto } from '../research/dto/research-request.dto.js';
+import { VerifyRequestDto } from '../information/dto/verify-request.dto.js';
+import { EvidenceRequestDto } from '../information/dto/evidence-request.dto.js';
+import { CompareRequestDto } from '../information/dto/compare-request.dto.js';
 import type { CapabilityMetadata } from './capability.types.js';
 
 /**
@@ -766,6 +769,15 @@ export const CAPABILITY_METADATA: readonly CapabilityMetadata[] = [
             news: { status: 'success', data: { results: [] } },
             knowledge: { status: 'success', data: { results: [] } },
           },
+          findings: [],
+          disagreements: [],
+          composition: {
+            sourcesRequested: ['academic', 'news', 'knowledge'],
+            sourcesSucceeded: ['academic', 'news', 'knowledge'],
+            sourcesEmpty: [],
+            sourcesFailed: [],
+            retrievedAt: '2026-01-15T12:00:00Z',
+          },
         },
         meta: { requestId: 'req_1a2b3c...', sourcesUsed: ['academic', 'news', 'knowledge'] },
       },
@@ -785,6 +797,18 @@ export const CAPABILITY_METADATA: readonly CapabilityMetadata[] = [
                   government: { type: 'object' },
                 },
               },
+              findings: { type: 'array', items: { type: 'object' } },
+              disagreements: { type: 'array', items: { type: 'object' } },
+              composition: {
+                type: 'object',
+                properties: {
+                  sourcesRequested: { type: 'array', items: { type: 'string' } },
+                  sourcesSucceeded: { type: 'array', items: { type: 'string' } },
+                  sourcesEmpty: { type: 'array', items: { type: 'string' } },
+                  sourcesFailed: { type: 'array', items: { type: 'string' } },
+                  retrievedAt: { type: 'string' },
+                },
+              },
             },
           },
           meta: {
@@ -794,6 +818,200 @@ export const CAPABILITY_METADATA: readonly CapabilityMetadata[] = [
               sourcesUsed: { type: 'array', items: { type: 'string' } },
             },
           },
+        },
+        required: ['data', 'meta'],
+      },
+    },
+  },
+  {
+    id: 'information.verify',
+    name: 'Verify',
+    description:
+      'Verify a claim against existing Callrack capabilities (academic, news, knowledge) and return a ' +
+      'deterministic verdict — supported, contradicted, mixed, or insufficient — with the underlying evidence. ' +
+      'Uses explainable lexical term-overlap and negation-cue heuristics, never an LLM or semantic entailment.',
+    category: 'information',
+    method: 'POST',
+    path: '/v1/verify',
+    provider: { kind: 'composite' },
+    priceKey: 'PRICE_INFORMATION_VERIFY',
+    cache: { ttlSeconds: CACHE_TTL_SECONDS.INFORMATION_VERIFY },
+    status: 'active',
+    requestSchema: VerifyRequestDto,
+    responseSchemaName: 'VerifyResponseData',
+    discovery: {
+      inputExample: { claim: 'Nigeria is the most populous country in Africa.', sourceTypes: ['academic', 'news', 'knowledge'] },
+      outputExample: {
+        data: {
+          claim: 'Nigeria is the most populous country in Africa.',
+          verdict: 'supported',
+          confidence: 0.8,
+          evidence: [
+            {
+              source: { title: 'Nigeria', url: 'https://www.wikidata.org/wiki/Q1033', provider: 'knowledge.search' },
+              excerpt: 'country in West Africa',
+              retrievedAt: '2026-01-15T12:00:00Z',
+            },
+          ],
+          agreementCount: 4,
+          contradictionCount: 1,
+          sourcesChecked: 5,
+        },
+        meta: { requestId: 'req_1a2b3c...' },
+      },
+      outputSchema: {
+        properties: {
+          data: {
+            type: 'object',
+            properties: {
+              claim: { type: 'string' },
+              verdict: { type: 'string', enum: ['supported', 'contradicted', 'mixed', 'insufficient'] },
+              confidence: { type: 'number' },
+              evidence: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    source: {
+                      type: 'object',
+                      properties: {
+                        title: { type: 'string' },
+                        url: { type: ['string', 'null'] },
+                        provider: { type: 'string' },
+                      },
+                    },
+                    excerpt: { type: ['string', 'null'] },
+                    retrievedAt: { type: 'string' },
+                    data: { type: 'object' },
+                  },
+                },
+              },
+              agreementCount: { type: 'number' },
+              contradictionCount: { type: 'number' },
+              sourcesChecked: { type: 'number' },
+            },
+          },
+          meta: { type: 'object', properties: { requestId: { type: 'string' } } },
+        },
+        required: ['data', 'meta'],
+      },
+    },
+  },
+  {
+    id: 'information.evidence',
+    name: 'Evidence',
+    description:
+      'Return a machine-readable evidence pack for a query — real results from academic, news, and knowledge ' +
+      'search with full source provenance and retrieval timestamps, never an AI-generated narrative answer.',
+    category: 'information',
+    method: 'POST',
+    path: '/v1/evidence',
+    provider: { kind: 'composite' },
+    priceKey: 'PRICE_INFORMATION_EVIDENCE',
+    cache: { ttlSeconds: CACHE_TTL_SECONDS.INFORMATION_EVIDENCE },
+    status: 'active',
+    requestSchema: EvidenceRequestDto,
+    responseSchemaName: 'EvidenceResponseData',
+    discovery: {
+      inputExample: { query: 'renewable energy investment in Africa', sourceTypes: ['academic', 'news', 'knowledge'] },
+      outputExample: {
+        data: {
+          query: 'renewable energy investment in Africa',
+          findings: [
+            {
+              source: { title: 'Example headline', url: 'https://example.com/article', provider: 'news.search' },
+              retrievedAt: '2026-01-15T12:00:00Z',
+              data: { publishedAt: '2026-01-15T12:00:00Z', country: 'Nigeria' },
+            },
+          ],
+          sources: [{ title: 'Example headline', url: 'https://example.com/article', provider: 'news.search' }],
+          retrievedAt: '2026-01-15T12:00:00Z',
+        },
+        meta: { requestId: 'req_1a2b3c...' },
+      },
+      outputSchema: {
+        properties: {
+          data: {
+            type: 'object',
+            properties: {
+              query: { type: 'string' },
+              findings: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    source: { type: 'object' },
+                    excerpt: { type: ['string', 'null'] },
+                    retrievedAt: { type: 'string' },
+                    data: { type: 'object' },
+                  },
+                },
+              },
+              sources: { type: 'array', items: { type: 'object' } },
+              retrievedAt: { type: 'string' },
+            },
+          },
+          meta: { type: 'object', properties: { requestId: { type: 'string' } } },
+        },
+        required: ['data', 'meta'],
+      },
+    },
+  },
+  {
+    id: 'information.compare',
+    name: 'Compare',
+    description:
+      'Compare information gathered from academic, news, and knowledge search for a query — distinct subjects, ' +
+      'a flattened table of real attribute values, deduplicated sources, and any detected disagreements. Never ' +
+      'fabricates a value a provider did not return.',
+    category: 'information',
+    method: 'POST',
+    path: '/v1/compare',
+    provider: { kind: 'composite' },
+    priceKey: 'PRICE_INFORMATION_COMPARE',
+    cache: { ttlSeconds: CACHE_TTL_SECONDS.INFORMATION_COMPARE },
+    status: 'active',
+    requestSchema: CompareRequestDto,
+    responseSchemaName: 'CompareResponseData',
+    discovery: {
+      inputExample: { query: 'Tesla', sourceTypes: ['academic', 'news', 'knowledge'] },
+      outputExample: {
+        data: {
+          query: 'Tesla',
+          subjects: [{ name: 'Tesla, Inc.', sources: ['knowledge.search'] }],
+          attributes: [{ subject: 'Tesla, Inc.', key: 'excerpt', value: 'American electric vehicle manufacturer', provider: 'knowledge.search' }],
+          sources: [{ title: 'Tesla, Inc.', url: 'https://www.wikidata.org/wiki/Q478214', provider: 'knowledge.search' }],
+          disagreements: [],
+        },
+        meta: { requestId: 'req_1a2b3c...' },
+      },
+      outputSchema: {
+        properties: {
+          data: {
+            type: 'object',
+            properties: {
+              query: { type: 'string' },
+              subjects: {
+                type: 'array',
+                items: { type: 'object', properties: { name: { type: 'string' }, sources: { type: 'array', items: { type: 'string' } } } },
+              },
+              attributes: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    subject: { type: 'string' },
+                    key: { type: 'string' },
+                    value: { type: 'string' },
+                    provider: { type: 'string' },
+                  },
+                },
+              },
+              sources: { type: 'array', items: { type: 'object' } },
+              disagreements: { type: 'array', items: { type: 'object' } },
+            },
+          },
+          meta: { type: 'object', properties: { requestId: { type: 'string' } } },
         },
         required: ['data', 'meta'],
       },

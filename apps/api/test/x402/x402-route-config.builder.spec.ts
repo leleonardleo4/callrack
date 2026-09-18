@@ -20,6 +20,9 @@ const PRICES: Record<string, string> = {
   PRICE_KNOWLEDGE_SEARCH: '0.005',
   PRICE_GOVERNMENT_CENSUS: '0.01',
   PRICE_RESEARCH: '0.05',
+  PRICE_INFORMATION_VERIFY: '0.05',
+  PRICE_INFORMATION_EVIDENCE: '0.05',
+  PRICE_INFORMATION_COMPARE: '0.10',
 };
 
 const ACTIVE: ActiveX402NetworkConfig = {
@@ -56,6 +59,10 @@ describe('buildX402RoutesConfig', () => {
 
     const research = capabilities.find((c) => c.id === 'research')!;
     expect(routes['POST /v1/research'].accepts.price).toBe('0.05');
+
+    expect(routes['POST /v1/verify'].accepts.price).toBe('0.05');
+    expect(routes['POST /v1/evidence'].accepts.price).toBe('0.05');
+    expect(routes['POST /v1/compare'].accepts.price).toBe('0.10');
   });
 
   it('uses the "exact" scheme and the active CAIP-2 network for every route', () => {

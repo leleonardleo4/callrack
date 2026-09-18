@@ -8,6 +8,7 @@ import {
   MapPin,
   Microscope,
   Newspaper,
+  ShieldCheck,
   TrendingUp,
   type LucideIcon,
 } from 'lucide-react';
@@ -24,6 +25,7 @@ export const CATEGORY_ICONS: Record<CapabilityCategory, LucideIcon> = {
   knowledge: BookOpen,
   government: Landmark,
   research: Microscope,
+  information: ShieldCheck,
 };
 
 export function categoryIcon(category: CapabilityCategory): LucideIcon {

@@ -1,6 +1,12 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { CallrackHttpClient } from '../src/http-client.js';
-import { CallrackApiError, CallrackPaymentRequiredError, CallrackTimeoutError, CallrackValidationError } from '../src/errors.js';
+import {
+  CallrackApiError,
+  CallrackPaymentError,
+  CallrackPaymentRequiredError,
+  CallrackTimeoutError,
+  CallrackValidationError,
+} from '../src/errors.js';
 import { buildPaymentRequired, jsonResponse, paymentRequiredResponse } from './fixtures/http.js';
 
 afterEach(() => {
@@ -74,5 +80,19 @@ describe('CallrackHttpClient', () => {
     expect(paymentError.resource).toBe('http://localhost:3000/v1/weather');
     expect(paymentError.accepts).toHaveLength(1);
     expect(paymentError.accepts[0]?.asset).toBe('10458941');
+  });
+
+  it('throws CallrackPaymentError (not CallrackPaymentRequiredError) when a signer already attempted the payment', async () => {
+    const paymentRequired = buildPaymentRequired({
+      resourceUrl: 'http://localhost:3000/v1/weather',
+      error: 'Transaction simulation failed: receiver error: must optin, asset 10458941 missing from PAYTOADDR',
+    });
+    const fetchImpl = vi.fn(async () => paymentRequiredResponse(paymentRequired));
+    const client = new CallrackHttpClient({ baseUrl: 'http://localhost:3000', fetchImpl, hasSigner: true });
+
+    const error = await client.request('/v1/weather').catch((caught: unknown) => caught);
+    expect(error).toBeInstanceOf(CallrackPaymentError);
+    expect(error).not.toBeInstanceOf(CallrackPaymentRequiredError);
+    expect((error as CallrackPaymentError).message).toContain('must optin');
   });
 });

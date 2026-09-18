@@ -16,7 +16,8 @@ export type CapabilityCategory =
   | 'calendar'
   | 'knowledge'
   | 'government'
-  | 'research';
+  | 'research'
+  | 'information';
 
 export type CapabilityProviderRef =
   | { readonly kind: 'provider'; readonly slugs: readonly string[] }

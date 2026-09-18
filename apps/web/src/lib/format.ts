@@ -11,6 +11,7 @@ const CATEGORY_LABELS: Record<CapabilityCategory, string> = {
   knowledge: 'Knowledge',
   government: 'Government',
   research: 'Research',
+  information: 'Information',
 };
 
 export function formatCategory(category: CapabilityCategory): string {

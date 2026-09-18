@@ -1,8 +1,16 @@
 import type {
   AcademicSearchInput,
   AcademicSearchOutput,
+  CompareInput,
+  CompareOutput,
+  EvidenceInput,
+  EvidenceOutput,
   NewsSearchInput,
   NewsSearchOutput,
+  ResearchInput,
+  ResearchOutput,
+  VerifyInput,
+  VerifyOutput,
   WeatherInput,
   WeatherOutput,
 } from './capability-types.js';
@@ -84,6 +92,7 @@ export class CallrackClient {
       baseUrl: this.baseUrl,
       fetchImpl: paymentFetch,
       timeoutMs: options.timeoutMs,
+      hasSigner: Boolean(options.signer),
     });
   }
 
@@ -145,4 +154,24 @@ export class CallrackClient {
     search: (input: AcademicSearchInput): Promise<CallResult<AcademicSearchOutput>> =>
       this.call<AcademicSearchInput, AcademicSearchOutput>('academic.search', input),
   };
+
+  /** Verify a claim against existing Callrack capabilities — deterministic, never an LLM. See `VerifyOutput`. */
+  async verify(input: VerifyInput): Promise<CallResult<VerifyOutput>> {
+    return this.call<VerifyInput, VerifyOutput>('information.verify', input);
+  }
+
+  /** A machine-readable evidence pack for a query — never an AI-generated narrative answer. */
+  async evidence(input: EvidenceInput): Promise<CallResult<EvidenceOutput>> {
+    return this.call<EvidenceInput, EvidenceOutput>('information.evidence', input);
+  }
+
+  /** Structured comparison across whatever distinct subjects the underlying capabilities return for a query. */
+  async compare(input: CompareInput): Promise<CallResult<CompareOutput>> {
+    return this.call<CompareInput, CompareOutput>('information.compare', input);
+  }
+
+  /** Evidence-backed research packet: findings, provenance, per-source status, and composition metadata. */
+  async research(input: ResearchInput): Promise<CallResult<ResearchOutput>> {
+    return this.call<ResearchInput, ResearchOutput>('research', input);
+  }
 }

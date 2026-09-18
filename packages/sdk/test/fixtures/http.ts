@@ -35,11 +35,13 @@ export function buildPaymentRequirements(overrides: Partial<PaymentRequirements>
 export function buildPaymentRequired(overrides: {
   readonly resourceUrl: string;
   readonly accepts?: readonly PaymentRequirements[];
+  readonly error?: string;
 }): PaymentRequired {
   return {
     x402Version: 2,
     resource: { url: overrides.resourceUrl },
     accepts: overrides.accepts ?? [buildPaymentRequirements()],
+    ...(overrides.error !== undefined ? { error: overrides.error } : {}),
   };
 }
 

@@ -65,6 +65,28 @@ await client.news.search({ query: 'renewable energy Africa' });
 await client.academic.search({ query: 'large language models healthcare' });
 ```
 
+### Information capabilities
+
+Deterministic, provenance-rich capabilities composed from the atomic ones
+above — never an LLM, never a fabricated fact or citation (see the root
+README's "Information Capabilities" section for how each actually works):
+
+```ts
+const result = await client.verify({ claim: 'Nigeria is the most populous country in Africa.' });
+result.data.verdict; // "supported" | "contradicted" | "mixed" | "insufficient"
+result.data.evidence; // EvidenceItem[] — the real evidence the verdict is based on
+
+const evidence = await client.evidence({ query: 'renewable energy investment in Africa' });
+evidence.data.findings; // EvidenceItem[] with full provenance
+
+const comparison = await client.compare({ query: 'Tesla' });
+comparison.data.subjects; // distinct subjects found, with which capabilities returned each
+
+const research = await client.research({ query: 'renewable energy investment in Africa' });
+research.data.findings; // the same evidence-item shape, alongside research's existing per-source `sources` map
+research.data.composition; // which sources succeeded/were empty/failed, and when
+```
+
 ## x402 payments
 
 Every paid capability returns HTTP 402 with an x402 `PaymentRequired`
@@ -174,8 +196,12 @@ replace it, including with a future LLM-backed one, without changing
 anything else.
 
 Tools exposed to the agent (`AgentTool`) name Callrack capabilities only
-(`academic.search`, `news.search`, ...) — never the upstream provider
-behind them (OpenAlex, GDELT, ...).
+(`academic.search`, `news.search`, `information.verify`, `information.evidence`,
+`information.compare`, ...) — never the upstream provider behind them
+(OpenAlex, GDELT, ...). The default planner already recognizes verification
+("verify", "confirm", "fact-check"), evidence-gathering ("evidence", "proof"),
+and comparison ("compare", "versus") tasks, in addition to its existing
+academic/news/census rules.
 
 See `apps/agent` for a runnable reference CLI built on this runtime.
 

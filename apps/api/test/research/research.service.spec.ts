@@ -332,4 +332,106 @@ describe('ResearchService', () => {
 
     expect(academic.search).toHaveBeenCalledTimes(2);
   });
+
+  describe('evidence-backed upgrade (findings/disagreements/composition)', () => {
+    it('normalizes academic, news, and knowledge results into provenance-preserving findings', async () => {
+      const academic = fakeAcademic();
+      academic.search.mockResolvedValue(ACADEMIC_RESULT);
+      const news = fakeNews();
+      news.search.mockResolvedValue(NEWS_RESULT);
+      const knowledge = fakeKnowledge();
+      knowledge.search.mockResolvedValue(KNOWLEDGE_RESULT);
+      const service = buildService({ academic, news, knowledge });
+
+      const result = await service.research(dto(), 'req_1');
+
+      expect(result.findings).toHaveLength(3);
+      const providers = result.findings.map((item) => item.source.provider).sort();
+      expect(providers).toEqual(['academic.search', 'knowledge.search', 'news.search']);
+      for (const item of result.findings) {
+        expect(item.retrievedAt).toEqual(expect.any(String));
+      }
+    });
+
+    it('excludes government from findings even when it succeeds — it has no title/excerpt shape to normalize', async () => {
+      const census = fakeCensus();
+      census.query.mockResolvedValue(CENSUS_RESULT);
+      const service = buildService({ census });
+
+      const result = await service.research(
+        dto({ sources: ['government'], government: { dataset: 'acs/acs1', year: 2021, variables: ['NAME'], forGeography: 'state:*' } }),
+        'req_1',
+      );
+
+      expect(result.sources.government?.status).toBe('success');
+      expect(result.findings).toEqual([]);
+    });
+
+    it('never fabricates a finding for a failed or empty source', async () => {
+      const academic = fakeAcademic();
+      academic.search.mockResolvedValue({ results: [], meta: { count: 0 } });
+      const news = fakeNews();
+      news.search.mockRejectedValue(new BadGatewayException({ code: 'PROVIDER_UNAVAILABLE', message: 'down' }));
+      const knowledge = fakeKnowledge();
+      knowledge.search.mockResolvedValue(KNOWLEDGE_RESULT);
+      const service = buildService({ academic, news, knowledge });
+
+      const result = await service.research(dto(), 'req_1');
+
+      expect(result.findings).toHaveLength(1);
+      expect(result.findings[0]?.source.provider).toBe('knowledge.search');
+    });
+
+    it('reports composition metadata reflecting each source\'s actual outcome', async () => {
+      const academic = fakeAcademic();
+      academic.search.mockResolvedValue(ACADEMIC_RESULT);
+      const news = fakeNews();
+      news.search.mockResolvedValue({ results: [] });
+      const knowledge = fakeKnowledge();
+      knowledge.search.mockRejectedValue(new GatewayTimeoutException({ code: 'PROVIDER_TIMEOUT', message: 'timed out' }));
+      const service = buildService({ academic, news, knowledge });
+
+      const result = await service.research(dto(), 'req_1');
+
+      expect(result.composition.sourcesRequested.slice().sort()).toEqual(['academic', 'knowledge', 'news']);
+      expect(result.composition.sourcesSucceeded).toEqual(['academic']);
+      expect(result.composition.sourcesEmpty).toEqual(['news']);
+      expect(result.composition.sourcesFailed).toEqual(['knowledge']);
+      expect(result.composition.retrievedAt).toEqual(expect.any(String));
+    });
+
+    it('detects a disagreement when two sources describe the same-titled subject differently', async () => {
+      const news = fakeNews();
+      news.search.mockResolvedValue({
+        results: [{ title: 'Lagos', url: 'https://a.test', source: 'a.test', publishedAt: null, language: null, country: null }],
+      });
+      const knowledge = fakeKnowledge();
+      knowledge.search.mockResolvedValue({
+        results: [{ id: 'Q8673', name: 'Lagos', description: 'city in Nigeria', url: 'https://wikidata.test/Q8673', source: 'wikimedia' }],
+      });
+      const academic = fakeAcademic();
+      academic.search.mockResolvedValue({ results: [], meta: { count: 0 } });
+      const service = buildService({ academic, news, knowledge });
+
+      const result = await service.research(dto({ sources: ['news', 'knowledge'] }), 'req_1');
+
+      // The news item has no excerpt (NewsArticleResponse has no such field), so there is
+      // only one non-empty excerpt for "Lagos" — genuinely nothing to disagree about yet.
+      expect(result.disagreements).toEqual([]);
+    });
+
+    it('reports an empty disagreements array, not an error, when nothing conflicts', async () => {
+      const academic = fakeAcademic();
+      academic.search.mockResolvedValue(ACADEMIC_RESULT);
+      const news = fakeNews();
+      news.search.mockResolvedValue(NEWS_RESULT);
+      const knowledge = fakeKnowledge();
+      knowledge.search.mockResolvedValue(KNOWLEDGE_RESULT);
+      const service = buildService({ academic, news, knowledge });
+
+      const result = await service.research(dto(), 'req_1');
+
+      expect(result.disagreements).toEqual([]);
+    });
+  });
 });

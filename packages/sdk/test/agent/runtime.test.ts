@@ -90,6 +90,28 @@ describe('CallrackAgentRuntime', () => {
     vi.unstubAllGlobals();
   });
 
+  it('discovers and pays for the new information capabilities through the same spending-policy infrastructure', async () => {
+    const queue = createFetchQueue();
+    vi.stubGlobal('fetch', queue.fetch);
+    queueDiscovery(queue);
+    queuePaidCall(queue, '/v1/verify', 'req_verify');
+
+    const runtime = new CallrackAgentRuntime({
+      client: { baseUrl: 'http://localhost:3000', network: 'testnet', signer: FAKE_SIGNER },
+      maxBudget: '0.25',
+    });
+
+    const result = await runtime.run('Verify that Nigeria is the most populous country in Africa.');
+
+    expect(result.steps).toHaveLength(1);
+    expect(result.steps[0]?.toolId).toBe('information.verify');
+    expect(result.steps[0]?.error).toBeUndefined();
+    expect(result.events.map((e) => e.type)).toEqual(
+      expect.arrayContaining(['capability_selected', 'payment_required', 'payment_approved', 'payment_submitted', 'response_received']),
+    );
+    vi.unstubAllGlobals();
+  });
+
   it('uses the given planner instead of the deterministic default', async () => {
     const queue = createFetchQueue();
     vi.stubGlobal('fetch', queue.fetch);

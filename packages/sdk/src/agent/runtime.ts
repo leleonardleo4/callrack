@@ -1,5 +1,5 @@
 import { CallrackClient, type CallrackClientOptions } from '../client.js';
-import { CallrackPaymentPolicyError, CallrackPaymentRequiredError, isCallrackError } from '../errors.js';
+import { CallrackPaymentError, CallrackPaymentPolicyError, CallrackPaymentRequiredError, isCallrackError } from '../errors.js';
 import { convertToTokenAmount } from '../money.js';
 import type { PaymentEvent } from '../payment-events.js';
 import { AgentBudget } from './budget.js';
@@ -110,7 +110,11 @@ export class CallrackAgentRuntime implements CallrackAgent {
         steps.push({ toolId: tool.id, input: plannedStep.input, output: result.data, spentAtomic: tool.priceAtomic });
       } catch (error) {
         const message = isCallrackError(error) ? error.message : String(error);
-        if (error instanceof CallrackPaymentPolicyError || error instanceof CallrackPaymentRequiredError) {
+        if (
+          error instanceof CallrackPaymentPolicyError ||
+          error instanceof CallrackPaymentRequiredError ||
+          error instanceof CallrackPaymentError
+        ) {
           events.emit('payment_rejected', `Payment rejected for "${tool.id}": ${message}`, { capabilityId: tool.id });
         }
         steps.push({ toolId: tool.id, input: plannedStep.input, spentAtomic: '0', error: message });

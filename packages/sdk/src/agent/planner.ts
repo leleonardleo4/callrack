@@ -35,6 +35,21 @@ const KEYWORD_RULES: readonly KeywordRule[] = [
     toolId: 'government.census',
     buildInput: (task) => ({ query: task }),
   },
+  {
+    pattern: /\b(verify|confirm|true or false|fact.?check)\b/i,
+    toolId: 'information.verify',
+    buildInput: (task) => ({ claim: task }),
+  },
+  {
+    pattern: /\b(evidence|proof|sources? for)\b/i,
+    toolId: 'information.evidence',
+    buildInput: (task) => ({ query: task }),
+  },
+  {
+    pattern: /\b(compare|comparison|versus|vs\.?)\b/i,
+    toolId: 'information.compare',
+    buildInput: (task) => ({ query: task }),
+  },
 ];
 
 /**
