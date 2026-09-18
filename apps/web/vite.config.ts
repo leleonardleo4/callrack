@@ -21,13 +21,38 @@ export default defineConfig({
     // never calls that code path (only ExactAvmScheme, getDefaultAsset, and
     // the genesis-hash/amount-conversion helpers are used browser-side —
     // see wallet/), but Rollup still needs the named `crypto` exports to
-    // exist to bundle the module at all. Scoped to exactly the two globals
-    // that module needs, rather than polyfilling all of Node.
+    // exist to bundle the module at all. `global` is deliberately left OFF
+    // here (Buffer/process too) — this plugin's own dev-mode `global` shim
+    // (`optimizeDeps.esbuildOptions.define.global = 'global'`, a no-op
+    // self-mapping) clobbers the real fix below when both are set; the
+    // explicit `optimizeDeps.esbuildOptions.define` further down is what
+    // actually resolves the resulting `ReferenceError: global is not
+    // defined` (from crypto-browserify's `randombytes`, pulled in by the
+    // xhd-wallet-api chain above).
     nodePolyfills({ include: ['crypto', 'util'], globals: { Buffer: false, global: false, process: false } }),
   ],
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
+    },
+  },
+  // Rewrites the bare `global` identifier to `globalThis` — the standard
+  // fix for `ReferenceError: global is not defined`, thrown by
+  // crypto-browserify's `randombytes` (pulled in transitively by
+  // @algorandfoundation/xhd-wallet-api, see the plugin comment above).
+  // `define` alone only covers Vite's main dev/build transform of *source*
+  // files; `optimizeDeps.esbuildOptions.define` is required separately
+  // because Vite's dependency pre-bundler (which is what actually processes
+  // crypto-browserify, a third-party node_modules package) runs as its own
+  // standalone esbuild pass and does not inherit the top-level `define`.
+  define: {
+    global: 'globalThis',
+  },
+  optimizeDeps: {
+    esbuildOptions: {
+      define: {
+        global: 'globalThis',
+      },
     },
   },
   server: {
