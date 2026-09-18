@@ -94,4 +94,29 @@ describe('CORS (E2E)', () => {
       .map((header) => header.trim().toUpperCase());
     expect(allowedHeaders).toContain('PAYMENT-SIGNATURE');
   });
+
+  it('allows the Access-Control-Expose-Headers request header on a preflight request', async () => {
+    // Not our doing: @x402/fetch's own paid-retry logic (wrapFetchWithPayment)
+    // sets "Access-Control-Expose-Headers" directly on the *request* it
+    // sends — normally only ever a response header — presumably so a
+    // facilitator proxy can forward it. Without this allowed, a real
+    // browser's preflight rejects the paid retry outright, surfacing as a
+    // bare "Failed to fetch" *after* the wallet already signed and
+    // submitted payment. Regression coverage for that exact bug.
+    const response = await app.inject({
+      method: 'OPTIONS',
+      url: '/health',
+      headers: {
+        origin: 'https://some-third-party-agent.example',
+        'access-control-request-method': 'POST',
+        'access-control-request-headers': 'access-control-expose-headers',
+      },
+    });
+
+    expect(response.statusCode).toBeLessThan(300);
+    const allowedHeaders = (response.headers['access-control-allow-headers'] as string)
+      .split(',')
+      .map((header) => header.trim().toUpperCase());
+    expect(allowedHeaders).toContain('ACCESS-CONTROL-EXPOSE-HEADERS');
+  });
 });

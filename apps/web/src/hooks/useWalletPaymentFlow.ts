@@ -86,7 +86,38 @@ export function useWalletPaymentFlow() {
         });
 
         pendingRef.current = undefined;
-        setState((previous) => ({ ...previous, status: result.kind === 'success' ? 'completed' : 'failed', result }));
+        if (result.kind === 'success') {
+          setState((previous) => ({ ...previous, status: 'completed', result }));
+          return;
+        }
+        // A resolved (non-thrown) non-success result here means the wallet
+        // attempt completed but the underlying request still failed for
+        // some other reason (e.g. the capability itself errored after a
+        // real, already-settled payment) — always attach a `failure` so
+        // the response panel's 'failed' branch renders the real message
+        // instead of silently falling through to redisplay a stale
+        // "payment required" card as if the attempt never happened.
+        const failure: PaymentFlowFailure =
+          result.kind === 'network-error'
+            ? {
+                reason: 'network',
+                message: result.message,
+                hint: 'Check that the Callrack API is reachable from this browser and try again — this never reached the point of attempting payment.',
+              }
+            : result.kind === 'api-error'
+              ? {
+                  reason: 'unknown',
+                  message: `${result.error.code}: ${result.error.message}`,
+                  hint: 'The payment itself may have gone through, but the capability request that followed it failed. Check the request ID above if you need to report this.',
+                }
+              : {
+                  reason: 'payment-rejected',
+                  message:
+                    result.paymentRequired.error ??
+                    'The server returned a payment-required response after the payment attempt.',
+                  hint: 'The server or facilitator rejected this payment after it was submitted. The real reason is above — if it isn\'t clear, this is worth reporting rather than retrying blindly.',
+                };
+        setState((previous) => ({ ...previous, status: 'failed', result, failure }));
       } catch (error) {
         const failure = classifyPaymentFlowError(error, requiredNetworkLabel);
         pendingRef.current = failure.reason === 'cancelled' ? pending : undefined;

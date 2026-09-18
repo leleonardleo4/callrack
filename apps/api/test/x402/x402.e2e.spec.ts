@@ -174,7 +174,7 @@ describe('x402 Payment Protection (E2E)', () => {
       expect(merchant, `expected an x402-merchant extension on ${path}`).toBeDefined();
       expect(merchant!.info.name).toBe('Callrack');
       expect(merchant!.info.website).toBe('https://callrack.xyz');
-      expect(merchant!.info.logo).toBe('https://callrack.xyz/favicon.svg');
+      expect(merchant!.info.logo).toBe('https://callrack.xyz/favicon.png');
       expect(merchant!.info.categories).toContain('algorand');
       expect(merchant!.schema).toBeDefined();
     });

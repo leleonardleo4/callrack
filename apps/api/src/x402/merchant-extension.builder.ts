@@ -7,16 +7,13 @@
  * the brand lives on the root domain, so this is declared explicitly rather
  * than left to fall back to the API domain.
  *
- * `logo` points at the one real, currently-committed brand asset
- * (`apps/web/public/favicon.svg`) — never a fabricated URL. Replace this
- * with a dedicated PNG/OG-sized logo asset before Mainnet launch if a
- * better one becomes available; this is a real, working reference either
- * way, not a placeholder.
+ * `logo` points at the real, official Callrack brand asset
+ * (`apps/web/public/favicon.png`) — never a fabricated URL.
  */
 export const CALLRACK_MERCHANT_INFO = {
   name: 'Callrack',
   website: 'https://callrack.xyz',
-  logo: 'https://callrack.xyz/favicon.svg',
+  logo: 'https://callrack.xyz/favicon.png',
   categories: ['api', 'information', 'algorand', 'x402'],
 } as const;
 

@@ -373,7 +373,7 @@ control:
     "info": {
       "name": "Callrack",
       "website": "https://callrack.xyz",
-      "logo": "https://callrack.xyz/favicon.svg",
+      "logo": "https://callrack.xyz/favicon.png",
       "categories": ["api", "information", "algorand", "x402"]
     },
     "schema": { "...": "JSON Schema describing the info object above" }

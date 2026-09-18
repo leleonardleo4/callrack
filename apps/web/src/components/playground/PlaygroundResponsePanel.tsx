@@ -1,4 +1,5 @@
 import { CheckCircle2, CircleSlash, Loader2, Wifi } from 'lucide-react';
+import { convertFromTokenAmount, resolveNetwork } from '@callrack/sdk';
 import { Button } from '@/components/ui/button';
 import { HttpStatusBadge } from '@/components/HttpStatusBadge';
 import { CodeBlock } from '@/components/CodeBlock';
@@ -6,6 +7,18 @@ import { PriceTag } from '@/components/PriceTag';
 import { statusLabel } from '@/lib/http-status';
 import { formatNetworkLabel } from '@/lib/format';
 import type { PaymentFlowState } from '@/hooks/useWalletPaymentFlow';
+
+/**
+ * The x402 challenge's `amount` is always the atomic (base-unit) USDC
+ * value (e.g. "10000" for $0.01) — never a decimal dollar string. Passing
+ * it straight to something that renders `$${amount}` shows a figure 10^6x
+ * too large. `networkName` defaults to 'testnet' only for this display
+ * conversion (USDC uses the same decimals on both networks); the actual
+ * payment always uses the exact atomic amount from the live challenge.
+ */
+function formatChallengeAmountUsd(atomicAmount: string, networkName: 'testnet' | 'mainnet' | undefined): string {
+  return convertFromTokenAmount(atomicAmount, resolveNetwork(networkName ?? 'testnet').usdcDecimals);
+}
 
 export interface PlaygroundResponsePanelProps {
   readonly flow: PaymentFlowState;
@@ -69,6 +82,12 @@ export function PlaygroundResponsePanel({
           <p className="font-mono text-xs text-destructive">{flow.failure.reason}</p>
           <p className="mt-1 text-sm text-mist">{flow.failure.message}</p>
         </div>
+        {flow.failure.hint ? (
+          <div className="rounded-lg border border-inkline bg-deep-sea p-4">
+            <p className="text-xs font-medium text-ash uppercase">What this means</p>
+            <p className="mt-1 text-sm text-mist">{flow.failure.hint}</p>
+          </div>
+        ) : null}
         {flow.paymentRequired ? (
           <Button size="sm" variant="outline" onClick={onApprovePay} className="self-start">
             Try again
@@ -100,6 +119,7 @@ export function PlaygroundResponsePanel({
 
   if (result.kind === 'payment-required') {
     const requirement = result.paymentRequired.accepts[0];
+    const decimalAmount = requirement ? formatChallengeAmountUsd(requirement.amount, networkName) : undefined;
     return (
       <div className="flex flex-col gap-4">
         <HttpStatusBadge status={402} label={statusLabel(402)} />
@@ -108,13 +128,13 @@ export function PlaygroundResponsePanel({
           <p className="mt-1 text-sm text-mist">
             This is the real, live payment requirement for this call, not a simulation.
           </p>
-          {requirement ? (
+          {requirement && decimalAmount ? (
             <dl className="mt-4 grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
               <div>
                 <dt className="text-xs text-ash uppercase">Amount</dt>
                 <dd className="mt-0.5">
-                  <PriceTag amount={requirement.amount} className="text-quartz" />{' '}
-                  <span className="text-xs text-ash">(atomic units)</span>
+                  <PriceTag amount={decimalAmount} className="text-quartz" />{' '}
+                  <span className="text-xs text-ash">({requirement.amount} atomic units)</span>
                 </dd>
               </div>
               <div>
@@ -140,7 +160,7 @@ export function PlaygroundResponsePanel({
           <div className="mt-4">
             {walletConnected ? (
               <Button size="sm" onClick={onApprovePay}>
-                Approve & pay {requirement ? `$${requirement.amount}` : ''}
+                Approve & pay {decimalAmount ? `$${decimalAmount}` : ''}
               </Button>
             ) : (
               <Button size="sm" variant="outline" onClick={onConnectWallet}>

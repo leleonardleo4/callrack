@@ -2,7 +2,6 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { WalletConnectDialog } from '@/components/wallet/WalletConnectDialog';
-import { ConnectTimeoutError } from '@/wallet/connect-timeout';
 
 let mockWallets: { walletKey: string; metadata: { name: string; icon: string }; connect: () => Promise<unknown> }[] = [];
 
@@ -75,13 +74,45 @@ describe('WalletConnectDialog', () => {
     expect(onOpenChange).not.toHaveBeenCalled();
   });
 
-  it('shows an "unavailable" message — not the raw timeout error — when connect() never settles (e.g. no extension installed)', async () => {
-    // withConnectTimeout itself (test/wallet/connect-timeout.test.ts) is what
-    // actually proves a never-settling connect() eventually rejects; this
-    // only needs to prove the dialog picks the right user-facing message for
-    // that specific rejection, so the wallet's connect() rejects with it
-    // directly rather than the test waiting out a real 20s timeout.
-    const connect = vi.fn().mockRejectedValue(new ConnectTimeoutError('Timed out waiting for a response.'));
+  it(
+    'never shows an error for a connect() that is simply slow and later succeeds — only a real rejection is an error',
+    async () => {
+      // Regression coverage for a reported bug: a QR/deep-link wallet
+      // (Pera/Defly/WalletConnect) taking longer than an arbitrary elapsed
+      // time is not evidence it failed — a prior version of this dialog
+      // showed a "wallet not available" error purely because a timer
+      // fired, even while the same `connect()` call went on to succeed
+      // moments later. An error here must only ever come from `connect()`
+      // itself actually rejecting.
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      let resolveConnect!: (accounts: unknown) => void;
+      const connect = vi.fn(
+        () =>
+          new Promise((resolve) => {
+            resolveConnect = resolve;
+          }),
+      );
+      mockWallets = [{ walletKey: 'pera', metadata: { name: 'Pera', icon: '' }, connect }];
+      const onOpenChange = vi.fn();
+      render(<WalletConnectDialog open onOpenChange={onOpenChange} />);
+
+      screen.getByText('Pera').closest('button')!.click();
+
+      // Advance well past the "still waiting" hint threshold — still no error.
+      await vi.advanceTimersByTimeAsync(15_000);
+      expect(screen.queryByText(/not available|could not be connected/i)).not.toBeInTheDocument();
+      expect(screen.getByText(/still waiting for pera/i)).toBeInTheDocument();
+
+      // The wallet finally responds — this must still succeed cleanly.
+      resolveConnect([{ name: 'Account 1', address: 'TTCZHJ24VWV64DMFCXKHS2GMLFVUTBA673THZR7LNYY3GEB3XV7HNUEQXQ' }]);
+      await vi.waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
+      expect(screen.queryByText(/not available|could not be connected/i)).not.toBeInTheDocument();
+      vi.useRealTimers();
+    },
+  );
+
+  it('shows an error only when connect() actually rejects, never from elapsed time alone', async () => {
+    const connect = vi.fn().mockRejectedValue(new Error('User rejected the request.'));
     mockWallets = [{ walletKey: 'lute', metadata: { name: 'Lute', icon: '' }, connect }];
     const onOpenChange = vi.fn();
     const user = userEvent.setup();
@@ -89,7 +120,7 @@ describe('WalletConnectDialog', () => {
 
     await user.click(screen.getByText('Lute'));
 
-    expect(await screen.findByText(/not available in the current browser/i)).toBeInTheDocument();
+    expect(await screen.findByText('User rejected the request.')).toBeInTheDocument();
     expect(onOpenChange).not.toHaveBeenCalled();
   });
 });
