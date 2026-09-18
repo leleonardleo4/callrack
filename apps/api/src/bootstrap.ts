@@ -24,6 +24,7 @@ import {
 import { RequestContext } from './common/request-context/request-context.js';
 import { CapabilityRegistryService } from './capabilities/capability-registry.service.js';
 import { CapabilityRequestSchemaService } from './capabilities/capability-request-schema.service.js';
+import { RefundOrchestrationService } from './refunds/refund-orchestration.service.js';
 import {
   buildHttpFacilitatorClient,
   installX402Middleware,
@@ -127,7 +128,22 @@ export async function createApp(): Promise<NestFastifyApplication> {
       // scheme) — without it in `allowedHeaders`, a real cross-origin
       // browser (e.g. the Playground) would have that header stripped by
       // CORS preflight before it ever reached the API.
-      allowedHeaders: ['Content-Type', 'Authorization', REQUEST_ID_HEADER, PAYMENT_SIGNATURE_HEADER],
+      //
+      // Access-Control-Expose-Headers here is @x402/fetch's own doing, not
+      // ours: `wrapFetchWithPayment`'s paid retry (dist/cjs/index.js) sets
+      // it directly on the *request* it sends (normally only ever a
+      // response header a server sends back) — presumably so a facilitator
+      // proxying the request can forward it. A browser preflight rejects
+      // any request header not explicitly allowed here, so without this the
+      // paid retry fails at the fetch layer with a bare "Failed to fetch"
+      // *after* the wallet has already signed and submitted the payment.
+      allowedHeaders: [
+        'Content-Type',
+        'Authorization',
+        REQUEST_ID_HEADER,
+        PAYMENT_SIGNATURE_HEADER,
+        'Access-Control-Expose-Headers',
+      ],
       // PAYMENT-REQUIRED (the 402 challenge) and PAYMENT-RESPONSE (the paid
       // settlement receipt) must be exposed the same way: browsers only let
       // JS read response headers listed here for a cross-origin request —
@@ -270,13 +286,14 @@ export async function createProtectedApp(
   const app = await createApp();
   const x402Config = app.get(X402ConfigService);
   const capabilityRegistry = app.get(CapabilityRegistryService);
+  const refundOrchestrator = app.get(RefundOrchestrationService);
   const facilitatorClient =
     options.x402FacilitatorClient ?? buildHttpFacilitatorClient(x402Config.facilitatorUrl);
 
   // Fails application startup (not a customer's first request) on a broken
   // facilitator or an invalid route/scheme combination — see
   // installX402Middleware's own docs for why this is awaited here.
-  await installX402Middleware(app, capabilityRegistry, x402Config, facilitatorClient);
+  await installX402Middleware(app, capabilityRegistry, x402Config, facilitatorClient, refundOrchestrator);
 
   return app;
 }

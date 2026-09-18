@@ -53,3 +53,42 @@ model Request {
   @@index([providerId])
   @@index([createdAt])
 }
+
+enum RefundStatus {
+  PENDING
+  PROCESSING
+  SUBMITTED
+  CONFIRMED
+  FAILED
+}
+
+/**
+ * One row per original x402 settlement that Callrack must (or might need to)
+ * refund. `originalPaymentTransaction` is the settlement's own on-chain
+ * transaction id — the canonical, unique payment identifier x402 hands back
+ * on `PAYMENT-RESPONSE` — so the unique constraint below is what actually
+ * guarantees "one payment produces at most one refund", even under
+ * concurrent retries or multiple API instances racing to create the same
+ * row (see RefundService.getOrCreate).
+ */
+model Refund {
+  id                          String       @id @default(uuid())
+  requestId                   String?
+  originalPaymentTransaction  String       @unique
+  network                     String
+  asset                       String
+  /** Atomic (base-unit) USDC amount, as a decimal string — never floating point. */
+  amount                      String
+  payer                       String
+  merchantAddress             String
+  status                      RefundStatus @default(PENDING)
+  refundTransaction           String?
+  attemptCount                Int          @default(0)
+  lastError                   String?
+  createdAt                   DateTime     @default(now())
+  updatedAt                   DateTime     @updatedAt
+  confirmedAt                 DateTime?
+
+  @@index([status])
+  @@index([createdAt])
+}

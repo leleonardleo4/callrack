@@ -20,6 +20,7 @@ import { ResearchModule } from '../research/research.module.js';
 import { InformationModule } from '../information/information.module.js';
 import { CapabilitiesModule } from '../capabilities/capabilities.module.js';
 import { DiscoveryModule } from '../discovery/discovery.module.js';
+import { RefundsModule } from '../refunds/refunds.module.js';
 import { RequestContextMiddleware } from '../common/request-context/request-context.middleware.js';
 
 import { AppLoggerService } from '../common/logging/app-logger.service.js';
@@ -47,6 +48,7 @@ import { AppLoggerService } from '../common/logging/app-logger.service.js';
     CapabilitiesModule,
     DiscoveryModule,
     HealthModule,
+    RefundsModule,
   ],
   providers: [AppLoggerService],
   exports: [AppLoggerService],

@@ -6,3 +6,4 @@ export * from './discovery-metadata.builder.js';
 export * from './payment-context.js';
 export * from './install-x402-middleware.js';
 export * from './x402-headers.constants.js';
+export * from './refund-response-hook.js';

@@ -1,6 +1,7 @@
 import { HttpException, Injectable } from '@nestjs/common';
 import { buildCacheKey, CACHE_TTL_SECONDS, CapabilityCacheService } from '../common/cache/index.js';
 import { RequestTrackingService } from '../common/tracking/index.js';
+import { markCapabilityExecutionFailed } from '../common/request-context/capability-outcome.js';
 import { AcademicService } from '../academic/academic.service.js';
 import { NewsService } from '../news/news.service.js';
 import { KnowledgeService } from '../knowledge/knowledge.service.js';
@@ -123,10 +124,22 @@ export class ResearchService {
     }
 
     const findings = this.deriveFindings(entries, retrievedAt);
+    const status = this.computeOverallStatus(entries.map(([, entry]) => entry.status));
+
+    // Research's HTTP status stays 200 even here — this always-200 contract
+    // is documented and intentional (see the controller's own docs) — but a
+    // TOTAL failure (every requested source failed) is still a failed paid
+    // execution from Callrack's own contract, distinct from a partial
+    // result. This marker is what lets the centralized refund boundary
+    // (install-x402-middleware.ts) tell the two apart without either
+    // breaking research's status contract or duplicating refund logic here.
+    if (status === 'failed') {
+      markCapabilityExecutionFailed('All requested research sources failed.');
+    }
 
     return {
       query: dto.query,
-      status: this.computeOverallStatus(entries.map(([, entry]) => entry.status)),
+      status,
       sources: sourcesMap as ResearchSourcesMap,
       findings,
       disagreements: detectDisagreements(findings),

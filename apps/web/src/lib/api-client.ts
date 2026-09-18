@@ -15,6 +15,17 @@ export interface ApiErrorPayload {
   readonly details?: unknown;
 }
 
+/**
+ * Present only on a paid request whose capability failed after settlement
+ * succeeded — see the API's RefundOrchestrationService. Never fabricated on
+ * the client: this is exactly (and only) what the server's own JSON body
+ * says.
+ */
+export interface ApiPaymentRefundInfo {
+  readonly status: 'refunded' | 'refund_pending';
+  readonly refundTransaction?: string;
+}
+
 export interface ApiSuccessResult<T> {
   readonly kind: 'success';
   readonly status: number;
@@ -40,6 +51,7 @@ export interface ApiErrorResult {
   readonly status: number;
   readonly error: ApiErrorPayload;
   readonly requestId: string | undefined;
+  readonly payment?: ApiPaymentRefundInfo;
 }
 
 export interface NetworkErrorResult {
@@ -127,7 +139,7 @@ export async function parseApiResponse<T>(response: Response): Promise<ApiResult
     };
   }
 
-  const envelope = body as { error?: ApiErrorPayload } | undefined;
+  const envelope = body as { error?: ApiErrorPayload; payment?: ApiPaymentRefundInfo } | undefined;
   return {
     kind: 'api-error',
     status: response.status,
@@ -136,6 +148,7 @@ export async function parseApiResponse<T>(response: Response): Promise<ApiResult
       message: response.statusText || `Request failed with status ${response.status}.`,
     },
     requestId,
+    ...(envelope?.payment ? { payment: envelope.payment } : {}),
   };
 }
 

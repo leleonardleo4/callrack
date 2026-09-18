@@ -108,7 +108,10 @@ export function useWalletPaymentFlow() {
               ? {
                   reason: 'unknown',
                   message: `${result.error.code}: ${result.error.message}`,
-                  hint: 'The payment itself may have gone through, but the capability request that followed it failed. Check the request ID above if you need to report this.',
+                  hint: result.payment
+                    ? undefined
+                    : 'The payment itself may have gone through, but the capability request that followed it failed. Check the request ID above if you need to report this.',
+                  ...(result.payment ? { payment: result.payment } : {}),
                 }
               : {
                   reason: 'payment-rejected',

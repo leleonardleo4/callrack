@@ -9,6 +9,8 @@ import { buildX402ResourceServer } from './x402-resource-server.factory.js';
 import { buildX402RoutesConfig } from './x402-route-config.builder.js';
 import { buildDiscoveryExtensionsMap } from './discovery-metadata.builder.js';
 import { extractPaymentContext, setCurrentPaymentContext } from './payment-context.js';
+import { createRefundOnSendHook } from './refund-response-hook.js';
+import type { RefundOrchestrationService } from '../refunds/refund-orchestration.service.js';
 
 /**
  * Installs x402 payment protection on the Fastify instance underlying this
@@ -29,6 +31,7 @@ export async function installX402Middleware(
   capabilityRegistry: CapabilityRegistryService,
   x402Config: X402ConfigService,
   facilitatorClient: FacilitatorClient,
+  refundOrchestrator: RefundOrchestrationService,
 ): Promise<void> {
   const capabilities = capabilityRegistry.list();
   const discoveryExtensions = buildDiscoveryExtensionsMap(app, capabilities);
@@ -54,4 +57,10 @@ export async function installX402Middleware(
       setCurrentPaymentContext(paymentContext);
     }
   });
+
+  // Registered after @x402/fastify's own onSend hook above, so it always
+  // observes the FINAL settlement outcome (the PAYMENT-RESPONSE header, if
+  // any) and the final status code before this response is actually sent —
+  // see refund-response-hook.ts for exactly what it does with that.
+  fastifyInstance.addHook('onSend', createRefundOnSendHook({ refundOrchestrator, x402Config }));
 }

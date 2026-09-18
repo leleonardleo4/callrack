@@ -1,4 +1,4 @@
-import { CheckCircle2, CircleSlash, Loader2, Wifi } from 'lucide-react';
+import { CheckCircle2, CircleSlash, ExternalLink, Loader2, Wifi } from 'lucide-react';
 import { convertFromTokenAmount, resolveNetwork } from '@callrack/sdk';
 import { Button } from '@/components/ui/button';
 import { HttpStatusBadge } from '@/components/HttpStatusBadge';
@@ -6,6 +6,7 @@ import { CodeBlock } from '@/components/CodeBlock';
 import { PriceTag } from '@/components/PriceTag';
 import { statusLabel } from '@/lib/http-status';
 import { formatNetworkLabel } from '@/lib/format';
+import { algorandTransactionExplorerUrl } from '@/lib/algorand-explorer';
 import type { PaymentFlowState } from '@/hooks/useWalletPaymentFlow';
 
 /**
@@ -76,8 +77,43 @@ export function PlaygroundResponsePanel({
   }
 
   if (flow.status === 'failed' && flow.failure) {
+    const payment = flow.failure.payment;
     return (
       <div className="flex flex-col gap-3">
+        {payment ? (
+          <div className="flex flex-col gap-2 rounded-lg border border-sapphire-hairline bg-cobalt-panel p-4">
+            <div className="flex items-center gap-2 text-sm text-quartz">
+              <CheckCircle2 className="size-4 shrink-0 text-frosted-lilac" aria-hidden />
+              Payment successful
+            </div>
+            <div className="flex items-center gap-2 text-sm text-quartz">
+              <CircleSlash className="size-4 shrink-0 text-destructive" aria-hidden />
+              Capability failed
+            </div>
+            {payment.status === 'refunded' ? (
+              <div className="flex items-center gap-2 text-sm text-quartz">
+                <CheckCircle2 className="size-4 shrink-0 text-frosted-lilac" aria-hidden />
+                Refund confirmed
+                {payment.refundTransaction ? (
+                  <a
+                    href={algorandTransactionExplorerUrl(payment.refundTransaction, networkName ?? 'testnet')}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1 text-xs text-frosted-lilac underline underline-offset-2"
+                  >
+                    View on explorer
+                    <ExternalLink className="size-3" aria-hidden />
+                  </a>
+                ) : null}
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 text-sm text-ash">
+                <Loader2 className="size-4 shrink-0 animate-spin" aria-hidden />
+                Refund pending — Callrack will settle this automatically; no action needed.
+              </div>
+            )}
+          </div>
+        ) : null}
         <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4">
           <p className="font-mono text-xs text-destructive">{flow.failure.reason}</p>
           <p className="mt-1 text-sm text-mist">{flow.failure.message}</p>

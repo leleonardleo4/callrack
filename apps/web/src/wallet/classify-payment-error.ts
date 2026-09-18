@@ -4,6 +4,7 @@ import {
   CallrackPaymentPolicyError,
   CallrackTimeoutError,
 } from '@callrack/sdk';
+import type { ApiPaymentRefundInfo } from '@/lib/api-client';
 
 export type PaymentFlowFailureReason =
   | 'cancelled'
@@ -27,6 +28,13 @@ export interface PaymentFlowFailure {
    * useful to say than the real error itself.
    */
   readonly hint?: string;
+  /**
+   * Present only when the server itself reports that this payment was
+   * settled but the capability then failed (see `ApiPaymentRefundInfo`).
+   * Never set by `classifyPaymentFlowError` — only ever attached by
+   * `useWalletPaymentFlow` directly from a real `api-error` response body.
+   */
+  readonly payment?: ApiPaymentRefundInfo;
 }
 
 // A real wallet rejection surfaces from @x402/avm's ExactAvmScheme as a

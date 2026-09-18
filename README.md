@@ -319,6 +319,30 @@ service runs, and capability services have no knowledge of x402 at all (see
 `apps/api/src/x402/` — the entire integration lives at the Fastify transport
 boundary, wired in by `createProtectedApp()` in `apps/api/src/bootstrap.ts`).
 
+### Automatic refunds for failed paid requests
+
+A paid request may be **refunded automatically** when Callrack accepts
+payment but then fails to actually deliver the capability — see
+[`docs/REFUNDS.md`](docs/REFUNDS.md) for the full design, the required
+`*_REFUND_MNEMONIC` server configuration, and how to interpret the
+`payment` field a failed paid response can carry:
+
+```json
+{
+  "error": { "code": "CAPABILITY_EXECUTION_FAILED", "message": "Capability execution failed." },
+  "meta": { "requestId": "req_..." },
+  "payment": { "status": "refunded", "refundTransaction": "..." }
+}
+```
+
+`payment.status` is either `"refunded"` (a confirmed, on-chain USDC
+transfer — `refundTransaction` is always present) or `"refund_pending"`
+(recorded and retried automatically; never claimed as complete before it's
+actually confirmed). A `payment` field only ever appears when Callrack
+actually settled the original payment and the capability then failed — a
+normal successful response, an unpaid 402, or a rejected/failed payment
+never carry one.
+
 ### GoPlausible discovery & merchant metadata
 
 Callrack follows the official
