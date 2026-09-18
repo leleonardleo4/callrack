@@ -8,7 +8,7 @@ import { loadRootEnv } from '@callrack/config';
 // Vite's own env loading only exposes VITE_-prefixed vars to import.meta.env
 // in the browser; WEB_PORT below is read server-side, in this Node config
 // file, so it needs the monorepo root .env loaded the same way apps/api
-// does — pnpm/turbo run this with apps/web as cwd, not the root.
+// does - pnpm/turbo run this with apps/web as cwd, not the root.
 loadRootEnv();
 
 export default defineConfig({
@@ -19,10 +19,10 @@ export default defineConfig({
     // -> @algorandfoundation/xhd-wallet-api, whose HD-wallet key-derivation
     // module imports Node's `crypto`/`util` at the top level. This app
     // never calls that code path (only ExactAvmScheme, getDefaultAsset, and
-    // the genesis-hash/amount-conversion helpers are used browser-side —
+    // the genesis-hash/amount-conversion helpers are used browser-side -
     // see wallet/), but Rollup still needs the named `crypto` exports to
     // exist to bundle the module at all. `global` is deliberately left OFF
-    // here (Buffer/process too) — this plugin's own dev-mode `global` shim
+    // here (Buffer/process too) - this plugin's own dev-mode `global` shim
     // (`optimizeDeps.esbuildOptions.define.global = 'global'`, a no-op
     // self-mapping) clobbers the real fix below when both are set; the
     // explicit `optimizeDeps.esbuildOptions.define` further down is what
@@ -36,7 +36,7 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
-  // Rewrites the bare `global` identifier to `globalThis` — the standard
+  // Rewrites the bare `global` identifier to `globalThis` - the standard
   // fix for `ReferenceError: global is not defined`, thrown by
   // crypto-browserify's `randombytes` (pulled in transitively by
   // @algorandfoundation/xhd-wallet-api, see the plugin comment above).
@@ -77,7 +77,7 @@ export default defineConfig({
     server: {
       // @callrack/sdk resolves here as a pre-built dist (a workspace
       // symlink under node_modules), which Vitest's SSR layer otherwise
-      // externalizes to Node's native loader — bypassing `vi.mock()` for
+      // externalizes to Node's native loader - bypassing `vi.mock()` for
       // it and its own @x402/* imports. Inlining forces both through
       // Vite's transform graph so wallet payment-flow tests can fake
       // ExactAvmScheme's transaction construction the same way the SDK's

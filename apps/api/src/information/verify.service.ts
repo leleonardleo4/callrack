@@ -18,13 +18,13 @@ const VERIFY_CAPABILITY = {
 };
 
 /**
- * Deterministic, explainable claim verification — never an LLM, never
+ * Deterministic, explainable claim verification - never an LLM, never
  * semantic entailment. Gathers real evidence from existing Callrack
  * capabilities (academic/news/knowledge, same composition pattern as
  * `ResearchService`), then classifies each item as relevant-and-affirming,
  * relevant-and-denying, or irrelevant using pure lexical heuristics (see
  * `text-relevance.util.ts`). `verdict`/`confidence` are computed entirely
- * from that count — nothing here writes or infers a fact that isn't
+ * from that count - nothing here writes or infers a fact that isn't
  * directly backed by a returned evidence item.
  */
 @Injectable()

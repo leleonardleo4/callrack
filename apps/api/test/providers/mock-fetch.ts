@@ -61,7 +61,7 @@ export function stubFetchAbort(): ReturnType<typeof vi.fn> {
 
 /**
  * Simulates an immediate client-side timeout without waiting for a real
- * AbortController timer to fire — useful for capability-level e2e tests
+ * AbortController timer to fire - useful for capability-level e2e tests
  * where the provider's configured timeout (10s) would otherwise make the
  * test unacceptably slow.
  */
@@ -75,7 +75,7 @@ export function stubFetchImmediateAbort(): ReturnType<typeof vi.fn> {
   return fn;
 }
 
-/** Resolves every call (regardless of count) with the same response — for retry/fallback-heavy scenarios. */
+/** Resolves every call (regardless of count) with the same response - for retry/fallback-heavy scenarios. */
 export function stubFetchAlways(response: Response): ReturnType<typeof vi.fn> {
   const fn = vi.fn().mockResolvedValue(response);
   vi.stubGlobal('fetch', fn);

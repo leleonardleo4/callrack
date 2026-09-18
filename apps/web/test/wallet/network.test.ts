@@ -13,7 +13,7 @@ describe('wallet/network', () => {
     expect(toCallrackNetwork(NetworkId.MAINNET)).toBe('mainnet');
   });
 
-  it('never invents a third network — an unknown network id maps to undefined, not a guess', () => {
+  it('never invents a third network - an unknown network id maps to undefined, not a guess', () => {
     expect(toCallrackNetwork('betanet')).toBeUndefined();
     expect(toCallrackNetwork('localnet')).toBeUndefined();
   });

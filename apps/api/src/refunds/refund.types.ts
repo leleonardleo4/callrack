@@ -2,7 +2,7 @@
  * Everything the refund system needs about an original payment, sourced
  * ONLY from the trusted x402 settlement (`SettleResponse`, decoded from the
  * `PAYMENT-RESPONSE` header) and the server's own resolved payment
- * requirements — NEVER from request-body/query/frontend-supplied values.
+ * requirements - NEVER from request-body/query/frontend-supplied values.
  * See RefundService.checkEligibility for how every field here is validated
  * before a single atomic unit ever moves.
  */
@@ -26,7 +26,7 @@ export interface RefundEligibilityResult {
   readonly reason?: string;
 }
 
-/** What a failed paid response's `payment` field reports to the client — never more than this. */
+/** What a failed paid response's `payment` field reports to the client - never more than this. */
 export type RefundClientStatus = 'refunded' | 'refund_pending';
 
 export interface RefundClientView {

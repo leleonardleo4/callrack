@@ -6,7 +6,7 @@ const VALID_TESTNET_ADDR = 'TTCZHJ24VWV64DMFCXKHS2GMLFVUTBA673THZR7LNYY3GEB3XV7H
 const VALID_MAINNET_ADDR = 'V4BOVWHAQJUNZAPU4D7B4N2ALHVMHBRJ2F75EJG5E5XS5JFJZGAU4SS2UA';
 const FACILITATOR_URL = 'https://facilitator.goplausible.xyz';
 // GoPlausible currently advertises Algorand support using the full
-// genesis-hash CAIP-2 form — see x402-config.service.ts's toNetwork() note.
+// genesis-hash CAIP-2 form - see x402-config.service.ts's toNetwork() note.
 const ALGORAND_TESTNET_CAIP2 = `algorand:${ALGORAND_TESTNET_GENESIS_HASH}`;
 const ALGORAND_MAINNET_CAIP2 = `algorand:${ALGORAND_MAINNET_GENESIS_HASH}`;
 

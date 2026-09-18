@@ -3,7 +3,7 @@
  * (see `CallrackClient.weather`/`.news.search`/`.academic.search`), mirrored
  * from `apps/api/src/**\/dto` and `capability-definitions.ts` `discovery`
  * examples. This is intentionally NOT a generic capability-id-to-type
- * mapping system — every other capability stays reachable, fully
+ * mapping system - every other capability stays reachable, fully
  * functional, and typed at its edges (`unknown` in/out) via the generic
  * `CallrackClient.call(id, input)`, which is how an agent discovers and
  * calls capabilities it wasn't compiled against anyway.
@@ -86,13 +86,13 @@ export interface AcademicSearchOutput {
 
 /**
  * Shared provenance-preserving evidence shape, mirrored from
- * `apps/api/src/information/information.types.ts` — the same type
+ * `apps/api/src/information/information.types.ts` - the same type
  * `verify`/`evidence`/`compare`/the upgraded `research` all use.
  */
 export interface EvidenceSourceRef {
   readonly title: string;
   readonly url?: string;
-  /** The Callrack capability that produced this item (e.g. "news.search") — never an upstream provider name. */
+  /** The Callrack capability that produced this item (e.g. "news.search") - never an upstream provider name. */
   readonly provider: string;
 }
 
@@ -127,7 +127,7 @@ export type VerifyVerdict = 'supported' | 'contradicted' | 'mixed' | 'insufficie
 export interface VerifyOutput {
   readonly claim: string;
   readonly verdict: VerifyVerdict;
-  /** 0..1, deterministic — see the API's own VerifyService doc comment for the exact formula. Not an AI confidence score. */
+  /** 0..1, deterministic - see the API's own VerifyService doc comment for the exact formula. Not an AI confidence score. */
   readonly confidence: number;
   readonly evidence: readonly EvidenceItem[];
   readonly agreementCount: number;
@@ -199,7 +199,7 @@ export interface ResearchSourceError {
 
 export interface ResearchSourceEntry {
   readonly status: ResearchSourceStatus;
-  /** Present when status is "success" or "empty" — shape varies by source (e.g. AcademicSearchOutput, NewsSearchOutput). */
+  /** Present when status is "success" or "empty" - shape varies by source (e.g. AcademicSearchOutput, NewsSearchOutput). */
   readonly data?: unknown;
   readonly error?: ResearchSourceError;
 }
@@ -224,9 +224,9 @@ export interface ResearchCompositionMetadata {
 export interface ResearchOutput {
   readonly query: string;
   readonly status: ResearchOverallStatus;
-  /** Per-source raw capability responses — kept for backward compatibility. */
+  /** Per-source raw capability responses - kept for backward compatibility. */
   readonly sources: ResearchSourcesMap;
-  /** The same sources' results normalized into provenance-preserving evidence items (government excluded — see EvidenceItem). */
+  /** The same sources' results normalized into provenance-preserving evidence items (government excluded - see EvidenceItem). */
   readonly findings: readonly EvidenceItem[];
   readonly disagreements: readonly EvidenceDisagreement[];
   readonly composition: ResearchCompositionMetadata;

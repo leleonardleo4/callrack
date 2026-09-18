@@ -8,7 +8,7 @@ export const API_BASE_URL: string =
   import.meta.env.VITE_API_BASE_URL?.replace(/\/+$/, '') ?? 'http://localhost:3000';
 
 /**
- * WalletConnect Cloud project id. Optional — see `.env.example`. When unset,
+ * WalletConnect Cloud project id. Optional - see `.env.example`. When unset,
  * the wallet manager simply does not offer WalletConnect as an option; Pera,
  * Defly, Lute, and Exodus all work without it via their own native adapters.
  */

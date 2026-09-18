@@ -12,14 +12,14 @@ import { buildLlmsTxt } from './llms-txt.builder.js';
 import { buildAgentsMd } from './agents-md.builder.js';
 
 /**
- * Free, unpaid discovery/agent-file endpoints — never in the Capability
+ * Free, unpaid discovery/agent-file endpoints - never in the Capability
  * Registry, never protected by x402 (see `installX402Middleware`, which
  * only ever protects routes the registry lists). Excluded from both
  * versioning (`VERSION_NEUTRAL`, matching `HealthController`) and the
- * generated OpenAPI document (`@ApiExcludeController` — these describe
+ * generated OpenAPI document (`@ApiExcludeController` - these describe
  * *other* discovery mechanisms, not part of Callrack's own paid API
  * surface). Every response is generated live from the Capability Registry
- * and the active x402 config — there is no second, hand-maintained copy of
+ * and the active x402 config - there is no second, hand-maintained copy of
  * routes/prices/descriptions.
  */
 @ApiExcludeController()

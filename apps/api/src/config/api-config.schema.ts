@@ -3,7 +3,7 @@ import { baseEnvSchema } from '@callrack/config';
 
 /**
  * `z.coerce.boolean()` treats any non-empty string (including `"false"`) as
- * `true`, which is wrong for an env var meant to be toggled off — this
+ * `true`, which is wrong for an env var meant to be toggled off - this
  * parses the handful of conventional truthy/falsy string forms explicitly
  * instead.
  */
@@ -26,11 +26,11 @@ export const apiConfigSchema = baseEnvSchema.extend({
   // behind a reverse proxy/load balancer should confirm TRUST_PROXY is
   // appropriate for its topology (see docs/DEPLOYMENT.md).
   TRUST_PROXY: booleanEnvVar(true),
-  BODY_LIMIT_BYTES: z.coerce.number().int().positive().default(1_048_576), // 1 MiB — matches Fastify's own default; explicit so it's documented, not implicit.
+  BODY_LIMIT_BYTES: z.coerce.number().int().positive().default(1_048_576), // 1 MiB - matches Fastify's own default; explicit so it's documented, not implicit.
   RATE_LIMIT_MAX: z.coerce.number().int().positive().default(300), // requests per window, per client IP
   RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(60_000),
 
-  // Provider configuration (Phase 3). Only real, currently-used settings —
+  // Provider configuration (Phase 3). Only real, currently-used settings -
   // no invented credentials for providers that don't require them.
   OPENALEX_MAILTO: z.string().email().optional(),
   CROSSREF_MAILTO: z.string().email().optional(),

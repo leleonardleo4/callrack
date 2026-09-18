@@ -27,7 +27,7 @@ const client = new CallrackClient({
 });
 ```
 
-Never hardcode a production URL in application code — always pass
+Never hardcode a production URL in application code - always pass
 `baseUrl` from configuration.
 
 ## Capability discovery
@@ -42,12 +42,12 @@ const weather = await client.getCapability('weather');
 
 Each `PublicCapability` includes `id`, `name`, `description`, `category`,
 `method`, `path`, `price`, `status`, `requestSchema`, `responseSchema`, and
-an `example` — never internal pricing keys or facilitator secrets.
+an `example` - never internal pricing keys or facilitator secrets.
 
 ## Calling a capability
 
 Generic invocation works for any discovered capability, including ones the
-SDK wasn't compiled against — this is how an agent calls capabilities it
+SDK wasn't compiled against - this is how an agent calls capabilities it
 only learned about at runtime:
 
 ```ts
@@ -68,13 +68,13 @@ await client.academic.search({ query: 'large language models healthcare' });
 ### Information capabilities
 
 Deterministic, provenance-rich capabilities composed from the atomic ones
-above — never an LLM, never a fabricated fact or citation (see the root
+above - never an LLM, never a fabricated fact or citation (see the root
 README's "Information Capabilities" section for how each actually works):
 
 ```ts
 const result = await client.verify({ claim: 'Nigeria is the most populous country in Africa.' });
 result.data.verdict; // "supported" | "contradicted" | "mixed" | "insufficient"
-result.data.evidence; // EvidenceItem[] — the real evidence the verdict is based on
+result.data.evidence; // EvidenceItem[] - the real evidence the verdict is based on
 
 const evidence = await client.evidence({ query: 'renewable energy investment in Africa' });
 evidence.data.findings; // EvidenceItem[] with full provenance
@@ -109,7 +109,7 @@ try {
 Configure a `signer` to pay automatically. Payment orchestration (402
 detection, signing, retry, double-payment protection) is delegated to the
 official `@x402/fetch`/`@x402/core`/`@x402/avm` packages; the SDK's own
-`X402PaymentClient` adds one policy layer on top — every payment
+`X402PaymentClient` adds one policy layer on top - every payment
 requirement is independently re-validated (resource, network, asset,
 amount) against the request the SDK itself made, and a payment requirement
 is never signed unless it passes:
@@ -142,7 +142,7 @@ const client = new CallrackClient({
 });
 ```
 
-Without an explicit `spendPolicy`, the client uses `defaultSpendPolicy` —
+Without an explicit `spendPolicy`, the client uses `defaultSpendPolicy` -
 scoped to exactly its own configured network and USDC asset, capped at
 $1.00 per payment. A client never pays on a network, asset, or amount
 outside this policy, and never pays for a resource other than the one it
@@ -166,7 +166,7 @@ a Mainnet-funded mnemonic in CI.**
 
 `network: 'mainnet'` is supported but never the default, and nothing about
 using it relaxes spend-policy enforcement. This package has no Mainnet
-signer helper — supplying one is a deliberate, explicit action for
+signer helper - supplying one is a deliberate, explicit action for
 whatever code constructs the client.
 
 ## Agent runtime
@@ -190,14 +190,14 @@ result.events; // the full structured, secret-free decision log
 ```
 
 The planner is deterministic and keyword-based on purpose (`deterministicPlanner`,
-`agent/planner.ts`) — this phase is the SDK/agent foundation, not planning
+`agent/planner.ts`) - this phase is the SDK/agent foundation, not planning
 intelligence. Pass your own `planner: (task, tools) => PlannedStep[]` to
 replace it, including with a future LLM-backed one, without changing
 anything else.
 
 Tools exposed to the agent (`AgentTool`) name Callrack capabilities only
 (`academic.search`, `news.search`, `information.verify`, `information.evidence`,
-`information.compare`, ...) — never the upstream provider behind them
+`information.compare`, ...) - never the upstream provider behind them
 (OpenAlex, GDELT, ...). The default planner already recognizes verification
 ("verify", "confirm", "fact-check"), evidence-gathering ("evidence", "proof"),
 and comparison ("compare", "versus") tasks, in addition to its existing
@@ -222,5 +222,5 @@ It is never part of `pnpm test` / `pnpm build` / `pnpm lint` / `pnpm typecheck`.
 `CallrackTimeoutError`, `CallrackValidationError`, `CallrackApiError`,
 `CallrackPaymentRequiredError`, `CallrackPaymentPolicyError`,
 `CallrackPaymentError`) carry `requestId` and `capabilityId` where known,
-for correlating with server-side logs — never a private key, mnemonic, or
+for correlating with server-side logs - never a private key, mnemonic, or
 payment signature.

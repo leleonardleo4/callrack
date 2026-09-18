@@ -19,14 +19,14 @@ import type { CapabilityMetadata } from './capability.types.js';
 /**
  * The single authoritative list of public Callrack capabilities. Every
  * route, provider mapping, price key, and discovery declaration is declared
- * here exactly once — Phase 7 (x402) and Phase 8 (Bazaar discovery) both
+ * here exactly once - Phase 7 (x402) and Phase 8 (Bazaar discovery) both
  * read from this list rather than re-deriving capability metadata elsewhere.
  *
  * Paths are the full route as actually served (assuming the default
- * `API_PREFIX=v1` URI-versioning configuration — see `bootstrap.ts`).
+ * `API_PREFIX=v1` URI-versioning configuration - see `bootstrap.ts`).
  *
  * `discovery.outputExample`/`outputSchema` describe the actual public
- * Callrack response envelope (`{ data, meta }`) — never a raw upstream
+ * Callrack response envelope (`{ data, meta }`) - never a raw upstream
  * provider payload. Every field shown is a field the endpoint genuinely
  * returns today; update these alongside the response types if they change.
  */
@@ -404,7 +404,7 @@ export const CAPABILITY_METADATA: readonly CapabilityMetadata[] = [
     provider: { kind: 'provider', slugs: ['fx.frankfurter'] },
     priceKey: 'PRICE_FX_RATES',
     // Historical (dated) queries are cached far longer (FX_HISTORICAL) once
-    // resolved by the FX service — this describes the shorter, current-rate case.
+    // resolved by the FX service - this describes the shorter, current-rate case.
     cache: { ttlSeconds: CACHE_TTL_SECONDS.FX_CURRENT },
     status: 'active',
     requestSchema: FxRatesRequestDto,
@@ -828,7 +828,7 @@ export const CAPABILITY_METADATA: readonly CapabilityMetadata[] = [
     name: 'Verify',
     description:
       'Verify a claim against existing Callrack capabilities (academic, news, knowledge) and return a ' +
-      'deterministic verdict — supported, contradicted, mixed, or insufficient — with the underlying evidence. ' +
+      'deterministic verdict - supported, contradicted, mixed, or insufficient - with the underlying evidence. ' +
       'Uses explainable lexical term-overlap and negation-cue heuristics, never an LLM or semantic entailment.',
     category: 'information',
     method: 'POST',
@@ -901,7 +901,7 @@ export const CAPABILITY_METADATA: readonly CapabilityMetadata[] = [
     id: 'information.evidence',
     name: 'Evidence',
     description:
-      'Return a machine-readable evidence pack for a query — real results from academic, news, and knowledge ' +
+      'Return a machine-readable evidence pack for a query - real results from academic, news, and knowledge ' +
       'search with full source provenance and retrieval timestamps, never an AI-generated narrative answer.',
     category: 'information',
     method: 'POST',
@@ -961,7 +961,7 @@ export const CAPABILITY_METADATA: readonly CapabilityMetadata[] = [
     id: 'information.compare',
     name: 'Compare',
     description:
-      'Compare information gathered from academic, news, and knowledge search for a query — distinct subjects, ' +
+      'Compare information gathered from academic, news, and knowledge search for a query - distinct subjects, ' +
       'a flattened table of real attribute values, deduplicated sources, and any detected disagreements. Never ' +
       'fabricates a value a provider did not return.',
     category: 'information',

@@ -8,7 +8,7 @@ import type { CapabilityDefinition } from './capability.types.js';
 /**
  * The application-level source of truth for what Callrack capabilities
  * exist, where they live, what they cost, and what serves them. This is
- * metadata only — it never executes a capability request, and existing
+ * metadata only - it never executes a capability request, and existing
  * capability services do not need to consult it to keep working (see
  * `capabilities.module.ts`). Phase 7 (x402) resolves payment requirements
  * from this registry instead of re-deriving capability metadata itself.
@@ -31,7 +31,7 @@ export class CapabilityRegistryService implements OnModuleInit {
     this.byRoute = index.byRoute;
   }
 
-  /** Runs after `ProvidersModule` has registered every provider adapter — see module import order. */
+  /** Runs after `ProvidersModule` has registered every provider adapter - see module import order. */
   onModuleInit(): void {
     validateCapabilityDefinitions(this.definitions, (slug) => this.providers.has(slug));
   }

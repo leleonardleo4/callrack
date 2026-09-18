@@ -13,7 +13,7 @@ import { WikimediaProvider } from '../../../src/providers/knowledge/wikimedia/wi
 import { CensusProvider } from '../../../src/providers/government/census/census.provider.js';
 
 /**
- * Live smoke tests. NOT part of `pnpm test` — run explicitly via
+ * Live smoke tests. NOT part of `pnpm test` - run explicitly via
  * `pnpm test:providers` and require real internet connectivity. They only
  * call each provider's lightweight health-check request, never anything
  * destructive, and never log credential values (only whether a provider is
@@ -48,7 +48,7 @@ describe('Live provider smoke tests', () => {
       async () => {
         const health = await provider.checkHealth();
         const status = health.healthy ? 'OK' : 'FAILED';
-        console.log(`[smoke] ${provider.metadata.slug}: ${status} (${health.latencyMs}ms)${health.error ? ` — ${health.error}` : ''}`);
+        console.log(`[smoke] ${provider.metadata.slug}: ${status} (${health.latencyMs}ms)${health.error ? ` - ${health.error}` : ''}`);
         expect(health.healthy, `${provider.metadata.slug} health check failed: ${health.error}`).toBe(true);
       },
       30_000,

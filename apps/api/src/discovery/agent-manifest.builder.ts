@@ -11,10 +11,10 @@ export interface AgentManifestDocument {
 }
 
 /**
- * Builds `/.well-known/agent.json` — the generic agent manifest convention
+ * Builds `/.well-known/agent.json` - the generic agent manifest convention
  * from the GoPlausible discovery guide (distinct from the A2A agent-card).
  * `documentation` points at this same origin's `/llms.txt`, which is real
- * and always current (see `llms-txt.builder.ts`) — never a placeholder URL.
+ * and always current (see `llms-txt.builder.ts`) - never a placeholder URL.
  */
 export function buildAgentManifest(origin: string): AgentManifestDocument {
   return {

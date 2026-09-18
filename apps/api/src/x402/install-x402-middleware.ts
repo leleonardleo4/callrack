@@ -17,7 +17,7 @@ import type { RefundOrchestrationService } from '../refunds/refund-orchestration
  * Nest app: builds route configuration (payment + Bazaar discovery
  * metadata) from the capability registry, wires the Algorand `exact` scheme
  * + facilitator, and registers the payment middleware. Only routes present
- * in the registry are protected — health, readiness, and docs stay free
+ * in the registry are protected - health, readiness, and docs stay free
  * simply because they're never in the registry, so they're never given
  * discovery metadata either.
  *
@@ -42,7 +42,7 @@ export async function installX402Middleware(
   const fastifyInstance = app.getHttpAdapter().getInstance();
 
   // syncFacilitatorOnStart=false: we call httpServer.initialize() ourselves,
-  // once, below, and await it — the SDK's own background-init path would
+  // once, below, and await it - the SDK's own background-init path would
   // otherwise race a lazily-awaited copy on the first protected request.
   paymentMiddlewareFromHTTPServer(fastifyInstance, httpServer, undefined, undefined, false);
 
@@ -50,7 +50,7 @@ export async function installX402Middleware(
 
   // Registered after the x402 hook above, so `request.x402Context` is
   // already populated (or absent, for unpaid/free requests) by the time this
-  // runs — Fastify's onRequest hooks execute in registration order.
+  // runs - Fastify's onRequest hooks execute in registration order.
   fastifyInstance.addHook('onRequest', async (request: FastifyRequest) => {
     const paymentContext = extractPaymentContext(request.x402Context);
     if (paymentContext) {
@@ -60,7 +60,7 @@ export async function installX402Middleware(
 
   // Registered after @x402/fastify's own onSend hook above, so it always
   // observes the FINAL settlement outcome (the PAYMENT-RESPONSE header, if
-  // any) and the final status code before this response is actually sent —
+  // any) and the final status code before this response is actually sent -
   // see refund-response-hook.ts for exactly what it does with that.
   fastifyInstance.addHook('onSend', createRefundOnSendHook({ refundOrchestrator, x402Config }));
 }

@@ -6,13 +6,13 @@ import { buildX402MerchantExtension } from './merchant-extension.builder.js';
 
 /**
  * Transforms one capability's registry metadata into an x402 Bazaar
- * discovery extension — the ONLY place capability metadata becomes Bazaar
+ * discovery extension - the ONLY place capability metadata becomes Bazaar
  * metadata. `method` is intentionally omitted from the config: the Bazaar
  * server extension (`bazaarResourceServerExtension`) fills it in per-request
  * from the actual route, so it can never drift from the real HTTP method.
  *
  * Keeps the dependency direction clean: this file is the only one in
- * `capabilities/` or `x402/` that imports `@x402/extensions` for discovery —
+ * `capabilities/` or `x402/` that imports `@x402/extensions` for discovery -
  * the registry itself (capabilities/) has never heard of Bazaar.
  */
 export function buildBazaarDiscoveryExtension(
@@ -32,7 +32,7 @@ export function buildBazaarDiscoveryExtension(
 
 /**
  * Builds every capability's full extensions set (Bazaar discovery +
- * x402-merchant) in one pass, keyed by capability id — ready to hand to
+ * x402-merchant) in one pass, keyed by capability id - ready to hand to
  * `buildX402RoutesConfig`. Reflects the live Nest app's request DTOs exactly
  * once (see `buildRequestSchemaMap`), not once per capability. The
  * x402-merchant identity is the same for every route, so it's built once

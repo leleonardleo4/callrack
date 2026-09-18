@@ -17,7 +17,7 @@ export class KnowledgeController {
     summary: 'Search for a knowledge entity',
     description:
       'Searches Wikidata for entities matching a free-text query. This is a general entity/knowledge search, ' +
-      'not an authoritative fact-checking system — results reflect whatever is currently in Wikidata and are ' +
+      'not an authoritative fact-checking system - results reflect whatever is currently in Wikidata and are ' +
       'not guaranteed to be complete, current, or correct for every topic.',
   })
   @ApiBody({ type: KnowledgeSearchRequestDto })

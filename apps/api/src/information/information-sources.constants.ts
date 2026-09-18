@@ -1,6 +1,6 @@
 /**
  * Public Information source identifiers. These name Callrack *capabilities*
- * (never upstream providers, e.g. never "openalex" or "gdelt") — same
+ * (never upstream providers, e.g. never "openalex" or "gdelt") - same
  * convention as `research/research-sources.constants.ts`.
  *
  * "government" is deliberately excluded here (unlike research, which can

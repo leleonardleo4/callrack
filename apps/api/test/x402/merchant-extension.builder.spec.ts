@@ -13,7 +13,7 @@ describe('buildX402MerchantExtension', () => {
     expect(merchant.schema).toBeDefined();
   });
 
-  it('declares the real Callrack merchant identity — never a placeholder', () => {
+  it('declares the real Callrack merchant identity - never a placeholder', () => {
     expect(CALLRACK_MERCHANT_INFO.name).toBe('Callrack');
     expect(CALLRACK_MERCHANT_INFO.website).toBe('https://callrack.xyz');
     expect(CALLRACK_MERCHANT_INFO.categories).toContain('algorand');
@@ -44,7 +44,7 @@ describe('buildX402MerchantExtension', () => {
     expect(merchant.schema.properties.categories.type).toBe('array');
   });
 
-  it('is the same, single identity for every call — not per-route data', () => {
+  it('is the same, single identity for every call - not per-route data', () => {
     const first = buildX402MerchantExtension();
     const second = buildX402MerchantExtension();
     expect(first).toEqual(second);

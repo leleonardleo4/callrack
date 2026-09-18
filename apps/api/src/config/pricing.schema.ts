@@ -8,7 +8,7 @@ const moneyAmountSchema: z.ZodType<MoneyAmount> = z
   .refine((value) => value.length > 0, { message: 'price must not be empty' })
   .refine(isValidMoneyAmount, {
     message:
-      'price must be a non-negative decimal amount (e.g. "0.01") — no signs, whitespace, or scientific notation',
+      'price must be a non-negative decimal amount (e.g. "0.01") - no signs, whitespace, or scientific notation',
   });
 
 /**

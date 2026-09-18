@@ -2,7 +2,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import type { NestFastifyApplication } from '@nestjs/platform-fastify';
 import type { Type } from '@nestjs/common';
 
-/** Minimal JSON-Schema-shaped object — what a Bazaar discovery input schema actually needs. */
+/** Minimal JSON-Schema-shaped object - what a Bazaar discovery input schema actually needs. */
 export interface RequestJsonSchema {
   readonly type: 'object';
   readonly properties: Record<string, unknown>;
@@ -16,7 +16,7 @@ const SCHEMA_REF_PREFIX = '#/components/schemas/';
  * resolved schema it points to. NestJS's Swagger generator uses `$ref` for
  * nested DTOs (e.g. `ResearchRequestDto.government` references
  * `ResearchGovernmentOptionsDto`), which is correct in the context of the
- * FULL OpenAPI document — but a Bazaar `inputSchema` is a single,
+ * FULL OpenAPI document - but a Bazaar `inputSchema` is a single,
  * standalone snippet attached to one route, with no `components.schemas`
  * dictionary of its own for a `$ref` to resolve against. Left un-dereferenced,
  * the x402 SDK itself flags this at startup as an invalid bazaar extension.
@@ -37,7 +37,7 @@ function dereferenceSchema(value: unknown, schemas: Record<string, unknown>, see
     const name = ref.slice(SCHEMA_REF_PREFIX.length);
     if (seen.has(name) || !(name in schemas)) {
       // Self/circular reference, or a reference to something we don't have
-      // — leave the $ref as-is rather than recursing forever or fabricating data.
+      // - leave the $ref as-is rather than recursing forever or fabricating data.
       return obj;
     }
     return dereferenceSchema(schemas[name], schemas, new Set([...seen, name]));
@@ -52,18 +52,18 @@ function dereferenceSchema(value: unknown, schemas: Record<string, unknown>, see
 
 /**
  * Derives each capability's request JSON Schema from the SAME `@ApiProperty`
- * decorators already on its DTO — the identical reflection NestJS's own
+ * decorators already on its DTO - the identical reflection NestJS's own
  * Swagger module already performs for `/docs/json`. This is why Callrack
  * never hand-writes a second, driftable copy of each request shape for
  * discovery: `SwaggerModule.createDocument` IS the "Zod-schema-to-JSON-Schema"
  * step this project's Zod-free (class-validator) DTOs actually have.
  *
  * Building the document here is a second, independent call from the one
- * bootstrap.ts makes for `/docs/json` — both are pure reflection over static
+ * bootstrap.ts makes for `/docs/json` - both are pure reflection over static
  * decorators with no side effects, so the results are identical either way.
  *
  * Every nested-DTO `$ref` is fully inlined (see `dereferenceSchema`) so each
- * resulting schema is self-contained — required for a standalone Bazaar
+ * resulting schema is self-contained - required for a standalone Bazaar
  * `inputSchema`, which has no `components.schemas` dictionary to resolve
  * `$ref`s against.
  */
@@ -89,7 +89,7 @@ export function buildRequestSchemaMap(app: NestFastifyApplication): ReadonlyMap<
   return map;
 }
 
-/** Looks up a DTO's schema by class — Swagger keys generated schemas by class name. */
+/** Looks up a DTO's schema by class - Swagger keys generated schemas by class name. */
 export function getRequestSchemaFor(
   schemaMap: ReadonlyMap<string, RequestJsonSchema>,
   dto: Type<object>,

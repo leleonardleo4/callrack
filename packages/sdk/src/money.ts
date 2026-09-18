@@ -17,7 +17,7 @@ export function parseAtomicAmount(value: string): bigint {
   return BigInt(value);
 }
 
-/** True if `amount` (atomic units) is less than or equal to `maxAmount` (atomic units) — exact bigint comparison. */
+/** True if `amount` (atomic units) is less than or equal to `maxAmount` (atomic units) - exact bigint comparison. */
 export function isAtomicAmountWithin(amount: string, maxAmount: string): boolean {
   return parseAtomicAmount(amount) <= parseAtomicAmount(maxAmount);
 }
@@ -27,7 +27,7 @@ export function sumAtomicAmounts(amounts: readonly string[]): string {
   return amounts.reduce((total, amount) => total + parseAtomicAmount(amount), 0n).toString();
 }
 
-/** Subtracts `amount` from `total` (both atomic units), clamped at zero — never negative, never a float. */
+/** Subtracts `amount` from `total` (both atomic units), clamped at zero - never negative, never a float. */
 export function subtractAtomicAmount(total: string, amount: string): string {
   const result = parseAtomicAmount(total) - parseAtomicAmount(amount);
   return (result < 0n ? 0n : result).toString();

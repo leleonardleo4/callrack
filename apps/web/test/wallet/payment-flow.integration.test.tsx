@@ -11,13 +11,13 @@ import { CAPABILITIES_FIXTURE } from '../fixtures/capabilities';
 // ExactAvmScheme's real Algorand transaction construction while letting
 // everything else in the x402 client run for real): this fakes only
 // `X402PaymentClient`'s use of @x402/avm's real transaction/crypto pipeline
-// — `@callrack/sdk` resolves here as a pre-built workspace dist that
+// - `@callrack/sdk` resolves here as a pre-built workspace dist that
 // Vitest's SSR layer externalizes from its transform graph, so mocking the
 // nested `@x402/avm` import directly (as the SDK's own in-source test does)
 // isn't reachable from this app; mocking at the `@callrack/sdk` boundary
-// this app actually imports is. Everything this fake does — probe, decode
+// this app actually imports is. Everything this fake does - probe, decode
 // the real PAYMENT-REQUIRED header, call the real injected wallet signer,
-// attach the signature, retry — mirrors X402PaymentClient's real externally
+// attach the signature, retry - mirrors X402PaymentClient's real externally
 // observable behavior exactly; only the transaction bytes are fake.
 function base64DecodeUtf8(value: string): string {
   const binary = atob(value);
@@ -76,10 +76,10 @@ vi.mock('@callrack/sdk', async (importOriginal) => {
 
       // The real @x402/fetch `wrapFetchWithPayment` does NOT throw when the
       // retry's final response is still a 402 (verified directly against
-      // its source, node_modules/@x402/fetch — it just returns that
+      // its source, node_modules/@x402/fetch - it just returns that
       // response as-is); an earlier version of this fake inaccurately threw
       // here itself, which meant this test never actually exercised
-      // wallet-api-client.ts's own handling of that case — see the
+      // wallet-api-client.ts's own handling of that case - see the
       // dedicated test below for the real behavior this was masking.
       return globalThis.fetch(input, {
         ...init,
@@ -206,10 +206,10 @@ describe('Playground wallet payment flow (real x402 client, fake wallet crypto o
     expect(within(response).getByText('TTCZHJ24VWV64DMFCXKHS2GMLFVUTBA673THZR7LNYY3GEB3XV7HNUEQXQ')).toBeInTheDocument();
 
     // The x402 challenge's amount ("3000") is atomic units (weather is
-    // $0.003 USDC, 6 decimals) — regression coverage for a bug where this
+    // $0.003 USDC, 6 decimals) - regression coverage for a bug where this
     // was shown as a raw, un-converted "$3000" instead of "$0.003".
     expect(approveButton).toHaveAccessibleName('Approve & pay $0.003');
-    // Both the price tag and the button itself show the converted amount —
+    // Both the price tag and the button itself show the converted amount -
     // getAllByText (not getByText) because both legitimately match.
     expect(within(response).getAllByText('$0.003', { exact: false }).length).toBeGreaterThanOrEqual(2);
     expect(within(response).queryByText('$3000', { exact: false })).not.toBeInTheDocument();
@@ -224,7 +224,7 @@ describe('Playground wallet payment flow (real x402 client, fake wallet crypto o
     expect(within(response).getByText(/"latitude": 6.5244/)).toBeInTheDocument();
   });
 
-  it('shows "Transaction cancelled." — never an API failure — when the wallet rejects signing', async () => {
+  it('shows "Transaction cancelled." - never an API failure - when the wallet rejects signing', async () => {
     signTransactionsMock.mockImplementationOnce(async () => {
       throw new Error('Transaction request was rejected by the user.');
     });
@@ -277,7 +277,7 @@ describe('Playground wallet payment flow (real x402 client, fake wallet crypto o
     expect(await within(response).findByText(/must optin, asset 10458941 missing/i)).toBeInTheDocument();
     // Regression coverage for the reported bug: a payment attempt whose
     // final response was still 402 (server rejected it) must render as a
-    // failure with the real reason — never silently fall back to
+    // failure with the real reason - never silently fall back to
     // redisplaying the original "Payment required" card as if the wallet
     // approval had never happened.
     expect(within(response).queryByText('Payment required')).not.toBeInTheDocument();

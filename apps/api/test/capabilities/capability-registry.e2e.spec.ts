@@ -51,7 +51,7 @@ describe('Capability Registry (E2E)', () => {
     expect(bySearch?.id).toBe('academic.search');
 
     const response = await app.inject({ method: 'POST', url: '/v1/academic/search', payload: {} });
-    // A validation error (400), not a 404 — proves the route is real and reached the DTO pipeline.
+    // A validation error (400), not a 404 - proves the route is real and reached the DTO pipeline.
     expect(response.statusCode).toBe(400);
   });
 

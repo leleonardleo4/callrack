@@ -3,7 +3,7 @@ import type { ProviderAdapter } from './common/index.js';
 
 /**
  * Runtime registry of upstream provider adapters, keyed by slug (e.g.
- * "academic.openalex"). This is not a capability registry — it only tracks
+ * "academic.openalex"). This is not a capability registry - it only tracks
  * which provider adapters exist and lets callers resolve them by slug.
  */
 @Injectable()

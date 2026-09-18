@@ -17,7 +17,7 @@ export class WeatherController {
     summary: 'Get a weather forecast for a coordinate',
     description:
       'Returns current conditions and a daily forecast via Open-Meteo. This is forecast/reference weather ' +
-      'information, not a guaranteed real-time observation — precision depends entirely on the underlying ' +
+      'information, not a guaranteed real-time observation - precision depends entirely on the underlying ' +
       'Open-Meteo model data. Hourly forecasts are not currently supported.',
   })
   @ApiBody({ type: WeatherRequestDto })

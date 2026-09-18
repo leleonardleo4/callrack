@@ -2,7 +2,7 @@ import { Injectable, Optional } from '@nestjs/common';
 import { type PricingConfig, validatePricingConfig } from './pricing.schema.js';
 import type { MoneyAmount } from './money.js';
 
-/** Validated at construction — an invalid or missing price fails app startup immediately. */
+/** Validated at construction - an invalid or missing price fails app startup immediately. */
 @Injectable()
 export class PricingConfigService {
   private readonly config: PricingConfig;

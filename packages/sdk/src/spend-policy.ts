@@ -7,13 +7,13 @@ import type { ResolvedNetwork } from './network.js';
  * A caller-configurable spend policy, validated before every payment signs.
  * Shape matches the SDK spec's own example
  * (`{ maxPayment, allowedNetworks, allowedAssets }`) rather than inventing a
- * parallel scheme — this sits alongside `@x402/core`'s own `SpendControls`
+ * parallel scheme - this sits alongside `@x402/core`'s own `SpendControls`
  * (see `X402PaymentClient`, which wires both: `SpendControls` for its
  * built-in per-asset caps, this for Callrack's resource/network/asset/amount
  * decision used by `selectAcceptablePaymentRequirement`).
  */
 export interface CallrackSpendPolicy {
-  /** Exact decimal USDC string cap per payment (e.g. "0.10") — never a float. */
+  /** Exact decimal USDC string cap per payment (e.g. "0.10") - never a float. */
   readonly maxPayment: string;
   /** CAIP-2 network ids this client is willing to pay on. */
   readonly allowedNetworks: readonly Network[];
@@ -23,7 +23,7 @@ export interface CallrackSpendPolicy {
 
 /**
  * A safe-by-default policy scoped to exactly one resolved network's USDC
- * asset, capped at $1.00 — matching `@x402/core`'s own
+ * asset, capped at $1.00 - matching `@x402/core`'s own
  * `DEFAULT_MAX_AMOUNT_PER_PAYMENT`. A caller must explicitly widen this
  * (more networks, more assets, a higher cap) to pay for anything else; the
  * SDK never defaults to "any network, any asset, any amount".
@@ -46,7 +46,7 @@ export interface SelectPaymentRequirementInput {
   readonly paymentRequired: PaymentRequired;
   /**
    * The exact URL the SDK itself intended to call. Validated against the
-   * server's advertised resource — never the other way around — so a
+   * server's advertised resource - never the other way around - so a
    * compromised or misbehaving server cannot redirect payment to a resource
    * the caller never asked for.
    */
@@ -57,9 +57,9 @@ export interface SelectPaymentRequirementInput {
 
 /**
  * Pure decision function: given a 402 response and a spend policy, either
- * returns the one payment requirement to pay (never `accepts[0]` blindly —
+ * returns the one payment requirement to pay (never `accepts[0]` blindly -
  * every entry is inspected), or a reason none was acceptable. Never signs,
- * never has side effects — safe to unit test directly and to call from
+ * never has side effects - safe to unit test directly and to call from
  * `X402PaymentClient`'s `onBeforePaymentCreation` hook.
  */
 export function selectAcceptablePaymentRequirement(

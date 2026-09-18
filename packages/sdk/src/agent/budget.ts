@@ -2,7 +2,7 @@ import { isAtomicAmountWithin, parseAtomicAmount, subtractAtomicAmount, sumAtomi
 import type { AgentBudgetSummary } from './types.js';
 
 /**
- * Task-level spend tracker, exact atomic USDC base units throughout —
+ * Task-level spend tracker, exact atomic USDC base units throughout -
  * never floating point. Sits above `CallrackSpendPolicy`'s own per-payment
  * cap: a payment can pass the client's spend policy (a single payment within
  * its per-payment max) and still be rejected here for exceeding what's left

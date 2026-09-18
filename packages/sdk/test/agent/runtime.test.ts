@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import type { PaymentRequirements } from '@x402/core/types';
 
 // See test/x402-payment-client.test.ts for why only ExactAvmScheme's actual
-// transaction construction is faked here — everything else in the payment
+// transaction construction is faked here - everything else in the payment
 // path (selection, policy validation, retry, budget) is real.
 vi.mock('@x402/avm', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@x402/avm')>();
@@ -85,7 +85,7 @@ describe('CallrackAgentRuntime', () => {
     expect(newsStep?.error).toBe('PAYMENT_BUDGET_EXCEEDED');
     expect(result.budget.remainingAtomic).toBe('0');
     expect(result.events.some((event) => event.type === 'payment_rejected')).toBe(true);
-    // Only discovery + the one affordable capability's 402/retry — news.search was never called.
+    // Only discovery + the one affordable capability's 402/retry - news.search was never called.
     expect(queue.calls).toHaveLength(3);
     vi.unstubAllGlobals();
   });

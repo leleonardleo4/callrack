@@ -75,7 +75,7 @@ describe('selectAcceptablePaymentRequirement', () => {
     expect(result).toEqual({ ok: false, reason: 'NO_ACCEPTABLE_PAYMENT_REQUIREMENT' });
   });
 
-  it('never assumes accepts[0] is acceptable — picks the first requirement that actually satisfies policy', () => {
+  it('never assumes accepts[0] is acceptable - picks the first requirement that actually satisfies policy', () => {
     const acceptable = buildPaymentRequirements({ amount: '5000' });
     const paymentRequired = buildPaymentRequired({
       resourceUrl: RESOURCE_URL,

@@ -3,7 +3,7 @@ import type { FxRatesResponseData } from './fx-response.types.js';
 
 /**
  * Thrown when a requested currency never appears in the provider's response
- * — per the FX contract, an unsupported currency is a clear error, never a
+ * - per the FX contract, an unsupported currency is a clear error, never a
  * silently partial result.
  */
 export class UnsupportedCurrencyError extends Error {

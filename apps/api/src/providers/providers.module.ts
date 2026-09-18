@@ -15,7 +15,7 @@ import { CensusProvider } from './government/census/census.provider.js';
 /**
  * Wires every implemented provider adapter into the DI container and
  * registers it with the ProviderRegistry under its slug. This module
- * deliberately declares no controllers — providers are internal services
+ * deliberately declares no controllers - providers are internal services
  * for Phase 4 capability services to consume.
  */
 @Module({

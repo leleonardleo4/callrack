@@ -35,7 +35,7 @@ export class VerifyController {
     description:
       'Gathers real evidence from academic, news, and knowledge search (deterministic composition, the same ' +
       'pattern research/evidence/compare use) and classifies each relevant item as affirming or denying the ' +
-      'claim using explainable lexical term-overlap and negation-cue heuristics — never an LLM, never semantic ' +
+      'claim using explainable lexical term-overlap and negation-cue heuristics - never an LLM, never semantic ' +
       'entailment. `verdict`/`confidence` describe how the actually-returned evidence reads, not an independent ' +
       'fact-check; every evidence item traces to a real capability result, with a request ID.',
   })

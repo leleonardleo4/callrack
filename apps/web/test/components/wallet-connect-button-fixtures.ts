@@ -32,7 +32,7 @@ export function connectedMockState(
  * WalletConnectButton.disconnect/.switchAccount/.switchWallet.test.tsx):
  * empirically, jsdom's Popper positioning cost compounds sharply with each
  * additional open *within the same test file* (a single open take ~4s;
- * a second in the same file took over 20s) — never an issue in a real
+ * a second in the same file took over 20s) - never an issue in a real
  * browser, and avoided entirely by giving each interaction Vitest's default
  * per-file isolation (a fresh jsdom instance) instead of fighting it with
  * ever-larger timeouts.

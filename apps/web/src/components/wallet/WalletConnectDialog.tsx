@@ -9,18 +9,18 @@ export interface WalletConnectDialogProps {
   readonly onOpenChange: (open: boolean) => void;
 }
 
-/** Purely informational — never treated as a failure. A real QR/deep-link approval (Pera, Defly, WalletConnect) can legitimately take longer than this. */
+/** Purely informational - never treated as a failure. A real QR/deep-link approval (Pera, Defly, WalletConnect) can legitimately take longer than this. */
 const SLOW_CONNECT_HINT_MS = 8000;
 
 /**
  * Lists every wallet configured in `wallet/manager.ts` with its own real
  * name and icon from the use-wallet adapter's `metadata` (never a
  * hand-drawn logo). Connecting is a single call to that wallet's own
- * `connect()` — no separate connection stack per wallet, and no mnemonic or
+ * `connect()` - no separate connection stack per wallet, and no mnemonic or
  * private-key entry anywhere in this dialog.
  *
  * An error is only ever shown for a `connect()` call that actually rejects
- * — never inferred from elapsed time. A wallet taking a while to respond
+ * - never inferred from elapsed time. A wallet taking a while to respond
  * (the user hasn't scanned a QR code yet, is unlocking an extension, etc.)
  * is not evidence it's unavailable; showing an error in that case would be
  * a false positive the moment the same `connect()` call goes on to succeed.
@@ -38,7 +38,7 @@ export function WalletConnectDialog({ open, onOpenChange }: WalletConnectDialogP
     setConnectingId(walletId);
     slowTimerRef.current = setTimeout(() => setSlowId(walletId), SLOW_CONNECT_HINT_MS);
     try {
-      // No artificial timeout here — only a real rejection from the wallet
+      // No artificial timeout here - only a real rejection from the wallet
       // itself (or a real resolution) ends this wait.
       await connect();
       onOpenChange(false);
@@ -93,7 +93,7 @@ export function WalletConnectDialog({ open, onOpenChange }: WalletConnectDialogP
                     <p className="px-1 text-xs text-destructive">{error.message}</p>
                   ) : slowId === wallet.walletKey ? (
                     <p className="px-1 text-xs text-ash">
-                      Still waiting for {wallet.metadata.name} — approve the request there (check your phone for a
+                      Still waiting for {wallet.metadata.name} - approve the request there (check your phone for a
                       QR/approval prompt if applicable), or confirm the extension is installed and unlocked.
                     </p>
                   ) : null}

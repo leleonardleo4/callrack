@@ -7,14 +7,14 @@ import { CAPABILITY_METADATA } from '../../src/capabilities/capability-definitio
 /**
  * Prevents silent drift between:
  *   - the Capability Registry's real request schema (the DTO, reflected live
- *     via @nestjs/swagger — the same reflection discovery uses)
+ *     via @nestjs/swagger - the same reflection discovery uses)
  *   - the Capability Registry's declared discovery input example
  * and between:
  *   - the Capability Registry's declared discovery output example
  *   - the Capability Registry's declared discovery output schema
  *
  * There is no runtime response schema to compare the output example against
- * (response types are plain TS interfaces — see capability.types.ts), so the
+ * (response types are plain TS interfaces - see capability.types.ts), so the
  * output side is checked for internal example/schema consistency instead.
  */
 describe('discovery metadata does not drift from the registry it is derived from', () => {

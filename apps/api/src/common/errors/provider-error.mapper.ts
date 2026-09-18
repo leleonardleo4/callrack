@@ -4,7 +4,7 @@ import { ApiErrorCode } from './api-error-codes.js';
 
 /**
  * Translates a normalized provider-layer error into a Callrack API error.
- * Never leaks provider stack traces, credentials, or raw upstream payloads —
+ * Never leaks provider stack traces, credentials, or raw upstream payloads -
  * only a stable code and a safe, generic message.
  */
 export function mapProviderErrorToHttpException(error: ProviderError): HttpException {

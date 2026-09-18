@@ -85,7 +85,7 @@ describe('buildBazaarDiscoveryExtension (pure)', () => {
   });
 });
 
-describe('buildDiscoveryExtensionsMap (E2E — needs a live Nest app for reflection)', () => {
+describe('buildDiscoveryExtensionsMap (E2E - needs a live Nest app for reflection)', () => {
   let app: NestFastifyApplication;
 
   beforeAll(async () => {

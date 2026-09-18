@@ -9,7 +9,7 @@ export default defineConfig({
     // via `pnpm test:providers` / `pnpm test:x402:testnet`, never as part of
     // the default suite.
     exclude: [...configDefaults.exclude, 'test/providers/smoke/**', 'test/x402/testnet-smoke.ts'],
-    // Pricing has no defaults by design (see PricingConfigService) — every
+    // Pricing has no defaults by design (see PricingConfigService) - every
     // e2e test boots the full AppModule via createApp(), so these must be
     // present for the app to start at all. Values mirror .env.example.
     env: {
@@ -29,7 +29,7 @@ export default defineConfig({
       PRICE_INFORMATION_VERIFY: '0.05',
       PRICE_INFORMATION_EVIDENCE: '0.05',
       PRICE_INFORMATION_COMPARE: '0.10',
-      // x402 config (Phase 7) has no defaults either — X402ConfigModule is
+      // x402 config (Phase 7) has no defaults either - X402ConfigModule is
       // wired into AppModule, so even createApp() (which never installs the
       // x402 middleware itself) still constructs X402ConfigService.
       NETWORK: 'testnet',

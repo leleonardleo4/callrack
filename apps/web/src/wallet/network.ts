@@ -4,7 +4,7 @@ import type { PublicNetworkInfo } from '@/types/capability';
 
 /**
  * Maps Callrack's own network name (as returned by the live
- * `GET /v1/capabilities` response — the single source of truth for which
+ * `GET /v1/capabilities` response - the single source of truth for which
  * network the API/x402 challenge is on) to use-wallet's `NetworkId`. There
  * is no third, Playground-invented network here: only the two Callrack
  * already supports.

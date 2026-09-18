@@ -2,7 +2,7 @@ import type { RequestJsonSchema } from '../x402/discovery-schema.util.js';
 import type { CapabilityCategory, CapabilityPricing, CapabilityProviderRef, CapabilityStatus, JsonObjectSchema } from './capability.types.js';
 
 /**
- * The safe, public shape of a capability — everything a developer or agent
+ * The safe, public shape of a capability - everything a developer or agent
  * needs to discover, price, and call it, and nothing else. Deliberately
  * excludes `priceKey` (an internal config field name), the request DTO
  * *class* (a server-only construct; `requestSchema` below is its public JSON
@@ -18,7 +18,7 @@ export interface PublicCapability {
   readonly provider: CapabilityProviderRef;
   readonly price: CapabilityPricing;
   readonly status: CapabilityStatus;
-  /** JSON Schema for the request body — the same reflection x402's Bazaar extension uses, never a hand-duplicated copy. */
+  /** JSON Schema for the request body - the same reflection x402's Bazaar extension uses, never a hand-duplicated copy. */
   readonly requestSchema: RequestJsonSchema;
   readonly example: {
     readonly request: Record<string, unknown>;

@@ -1,5 +1,5 @@
 # Never let a real .env (or any dotenv variant) into a build context or
-# image layer — Docker COPY does not respect .gitignore, only this file.
+# image layer - Docker COPY does not respect .gitignore, only this file.
 .env
 .env.*
 !.env.example

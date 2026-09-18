@@ -8,8 +8,8 @@ const RECONCILE_INTERVAL_MS = 15_000;
 
 /**
  * Durable retry, not a `setTimeout`-is-the-database substitute: everything
- * this needs to know — which refunds are pending, how many times each has
- * been attempted, and when it's next eligible to retry — lives in the
+ * this needs to know - which refunds are pending, how many times each has
+ * been attempted, and when it's next eligible to retry - lives in the
  * `Refund` table, not in process memory. A restart loses nothing; the next
  * boot's `reconcileOnce()` tick rediscovers every PENDING/eligible-FAILED/
  * stuck-in-flight row from the database and carries on. `setInterval` here
@@ -18,7 +18,7 @@ const RECONCILE_INTERVAL_MS = 15_000;
  * Safe across multiple simultaneously-running API instances: every actual
  * attempt still goes through `RefundService.attemptProcessing`, whose
  * `updateMany({ where: { status: {in:['PENDING','FAILED']} } })` claim is an
- * atomic compare-and-swap at the database level — a second instance's
+ * atomic compare-and-swap at the database level - a second instance's
  * concurrent tick on the same row simply claims 0 rows and moves on.
  */
 @Injectable()
@@ -48,7 +48,7 @@ export class RefundReconcilerService implements OnModuleInit, OnModuleDestroy {
 
   async reconcileOnce(): Promise<void> {
     if (!this.refundConfig.isEnabled) {
-      // No signer configured for this network yet — rows stay PENDING/FAILED
+      // No signer configured for this network yet - rows stay PENDING/FAILED
       // untouched (never lost) until an operator configures one and restarts.
       return;
     }

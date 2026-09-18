@@ -44,7 +44,7 @@ import type { FacilitatorClient } from '@x402/core/server';
 
 export async function createApp(): Promise<NestFastifyApplication> {
   // Read directly from process.env, once, before the Nest app (and its
-  // DI-provided ApiConfigService) exists — trustProxy/bodyLimit are Fastify
+  // DI-provided ApiConfigService) exists - trustProxy/bodyLimit are Fastify
   // instance-construction options, so they can't wait for `app.get(...)`.
   // Uses the exact same schema/defaults `ApiConfigService` uses per-request,
   // so there is only one definition of these defaults, not two.
@@ -113,8 +113,8 @@ export async function createApp(): Promise<NestFastifyApplication> {
   // agents, not a single fixed browser origin, and the API never uses
   // cookies or other credentialed browser auth (payment proof travels in a
   // request header, not a cookie). Restricting `origin` to a fixed
-  // allowlist would just break legitimate cross-origin callers — including
-  // the GoPlausible x402 Doctor's own CORS sanity checks — without
+  // allowlist would just break legitimate cross-origin callers - including
+  // the GoPlausible x402 Doctor's own CORS sanity checks - without
   // protecting anything, so origin is open and `credentials` stays unset
   // (defaults to false) rather than pairing an open origin with
   // credentialed CORS.
@@ -125,14 +125,14 @@ export async function createApp(): Promise<NestFastifyApplication> {
       methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
       // PAYMENT-SIGNATURE is the request header a payer attaches to retry a
       // request with proof of payment (see @x402/core's exact/client
-      // scheme) — without it in `allowedHeaders`, a real cross-origin
+      // scheme) - without it in `allowedHeaders`, a real cross-origin
       // browser (e.g. the Playground) would have that header stripped by
       // CORS preflight before it ever reached the API.
       //
       // Access-Control-Expose-Headers here is @x402/fetch's own doing, not
       // ours: `wrapFetchWithPayment`'s paid retry (dist/cjs/index.js) sets
       // it directly on the *request* it sends (normally only ever a
-      // response header a server sends back) — presumably so a facilitator
+      // response header a server sends back) - presumably so a facilitator
       // proxying the request can forward it. A browser preflight rejects
       // any request header not explicitly allowed here, so without this the
       // paid retry fails at the fetch layer with a bare "Failed to fetch"
@@ -146,7 +146,7 @@ export async function createApp(): Promise<NestFastifyApplication> {
       ],
       // PAYMENT-REQUIRED (the 402 challenge) and PAYMENT-RESPONSE (the paid
       // settlement receipt) must be exposed the same way: browsers only let
-      // JS read response headers listed here for a cross-origin request —
+      // JS read response headers listed here for a cross-origin request -
       // curl/server-to-server callers were never affected (no CORS
       // enforcement outside a browser), but any browser-based x402 client,
       // including the Playground, could see 402s and paid responses over
@@ -159,7 +159,7 @@ export async function createApp(): Promise<NestFastifyApplication> {
   // once `trustProxy` above is honored). Backed by Redis so limits are
   // shared across replicas when Redis is reachable; `skipOnError: true`
   // means a Redis outage fails OPEN (requests proceed unlimited) rather
-  // than taking the whole API down the way a fail-closed limiter would —
+  // than taking the whole API down the way a fail-closed limiter would -
   // consistent with how CapabilityCacheService treats Redis. Health checks
   // are exempt so orchestrator liveness/readiness polling is never
   // throttled. Paid (x402) requests are intentionally NOT exempted or
@@ -245,14 +245,14 @@ export async function createApp(): Promise<NestFastifyApplication> {
   });
 
   // 8b. Standalone OpenAPI JSON at the conventional root path AI/agent
-  // tooling expects (distinct from `/docs/json`, which stays too — this
+  // tooling expects (distinct from `/docs/json`, which stays too - this
   // never replaces `/docs`). Same already-built document, no second
   // generation step.
   fastifyInstance.get('/openapi.json', async () => swaggerDocument);
 
   // 9. Public capability request-schema reflection for GET /v1/capabilities
   // (CapabilitiesController). Same reflection x402's Bazaar extension uses
-  // (see discovery-schema.util.ts) — computed once, here, because it needs
+  // (see discovery-schema.util.ts) - computed once, here, because it needs
   // the fully-built `app` that isn't available at normal constructor-
   // injection time; not a second, independent computation.
   app.get(CapabilityRequestSchemaService).initialize(buildRequestSchemaMap(app));
@@ -264,7 +264,7 @@ export interface CreateProtectedAppOptions {
   /**
    * Overrides the x402 facilitator client. Used only by the dedicated x402
    * test suite to inject a deterministic in-memory facilitator instead of
-   * the real, network-calling GoPlausible client — never set in production.
+   * the real, network-calling GoPlausible client - never set in production.
    * Every other test file uses plain `createApp()`, which never touches
    * x402 at all, so none of them need to know this option exists.
    */
@@ -273,7 +273,7 @@ export interface CreateProtectedAppOptions {
 
 /**
  * Builds the same app as `createApp()`, then layers x402 payment protection
- * on top — the "x402 sits around the app" architecture from the Phase 7
+ * on top - the "x402 sits around the app" architecture from the Phase 7
  * spec. This is the ONLY function that installs x402; `createApp()` itself
  * never does, which is why every capability e2e test written before x402
  * existed keeps working unpaid and unmodified. The real server (`bootstrap`,
@@ -291,7 +291,7 @@ export async function createProtectedApp(
     options.x402FacilitatorClient ?? buildHttpFacilitatorClient(x402Config.facilitatorUrl);
 
   // Fails application startup (not a customer's first request) on a broken
-  // facilitator or an invalid route/scheme combination — see
+  // facilitator or an invalid route/scheme combination - see
   // installX402Middleware's own docs for why this is awaited here.
   await installX402Middleware(app, capabilityRegistry, x402Config, facilitatorClient, refundOrchestrator);
 
@@ -304,14 +304,14 @@ export async function bootstrap(): Promise<NestFastifyApplication> {
   const logger = new AppLoggerService();
 
   // Only the real production entrypoint listens for OS termination signals
-  // — deliberately not enabled inside createApp()/createProtectedApp(),
+  // - deliberately not enabled inside createApp()/createProtectedApp(),
   // which the test suite also calls (many times per run) and already
   // manages its own app.close() in teardown; registering process-wide
   // signal listeners there would leak/duplicate across every test file.
   // On SIGTERM/SIGINT: Fastify stops accepting new connections and lets
   // in-flight requests finish, then Nest calls onModuleDestroy on every
   // provider (DatabaseService disconnects Prisma, RedisService disconnects
-  // ioredis) before the process exits — see their own onModuleDestroy.
+  // ioredis) before the process exits - see their own onModuleDestroy.
   app.enableShutdownHooks();
 
   await app.listen(configService.port, '0.0.0.0');

@@ -9,7 +9,7 @@ import { buildToolsFromCapabilities } from './tools.js';
 import type { AgentResult, AgentStepResult, CallrackAgent } from './types.js';
 
 export interface CallrackAgentRuntimeOptions {
-  /** Forwarded to `new CallrackClient(...)` — the runtime owns the client so it can wire payment-event logging. */
+  /** Forwarded to `new CallrackClient(...)` - the runtime owns the client so it can wire payment-event logging. */
   readonly client: CallrackClientOptions;
   /** Exact decimal USDC string task budget (e.g. "0.25"). */
   readonly maxBudget: string;
@@ -37,7 +37,7 @@ function summarize(task: string, steps: readonly AgentStepResult[]): string {
  * Deterministic-planner reference implementation of `CallrackAgent`. Chains:
  * task -> plan (which tools, which inputs) -> per-step budget check ->
  * `CallrackClient.call` (x402 payment handled transparently) -> budget
- * update -> next step — emitting the full structured event vocabulary
+ * update -> next step - emitting the full structured event vocabulary
  * along the way, never a private key, mnemonic, or signature.
  */
 export class CallrackAgentRuntime implements CallrackAgent {

@@ -28,7 +28,7 @@ describe('WalletConnectDialog', () => {
     for (const name of ['Pera', 'Defly', 'Lute', 'WalletConnect']) {
       expect(screen.getByText(name)).toBeInTheDocument();
     }
-    // Never a hand-drawn/fake logo — every row renders the adapter's own
+    // Never a hand-drawn/fake logo - every row renders the adapter's own
     // icon as a real <img>. Decorative (alt="", aria-hidden) images are
     // intentionally excluded from the accessibility tree, so this queries
     // by tag rather than role.
@@ -75,11 +75,11 @@ describe('WalletConnectDialog', () => {
   });
 
   it(
-    'never shows an error for a connect() that is simply slow and later succeeds — only a real rejection is an error',
+    'never shows an error for a connect() that is simply slow and later succeeds - only a real rejection is an error',
     async () => {
       // Regression coverage for a reported bug: a QR/deep-link wallet
       // (Pera/Defly/WalletConnect) taking longer than an arbitrary elapsed
-      // time is not evidence it failed — a prior version of this dialog
+      // time is not evidence it failed - a prior version of this dialog
       // showed a "wallet not available" error purely because a timer
       // fired, even while the same `connect()` call went on to succeed
       // moments later. An error here must only ever come from `connect()`
@@ -98,12 +98,12 @@ describe('WalletConnectDialog', () => {
 
       screen.getByText('Pera').closest('button')!.click();
 
-      // Advance well past the "still waiting" hint threshold — still no error.
+      // Advance well past the "still waiting" hint threshold - still no error.
       await vi.advanceTimersByTimeAsync(15_000);
       expect(screen.queryByText(/not available|could not be connected/i)).not.toBeInTheDocument();
       expect(screen.getByText(/still waiting for pera/i)).toBeInTheDocument();
 
-      // The wallet finally responds — this must still succeed cleanly.
+      // The wallet finally responds - this must still succeed cleanly.
       resolveConnect([{ name: 'Account 1', address: 'TTCZHJ24VWV64DMFCXKHS2GMLFVUTBA673THZR7LNYY3GEB3XV7HNUEQXQ' }]);
       await vi.waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
       expect(screen.queryByText(/not available|could not be connected/i)).not.toBeInTheDocument();

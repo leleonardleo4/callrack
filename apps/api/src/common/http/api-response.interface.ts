@@ -6,7 +6,7 @@ export interface ApiSuccessMeta {
   source?: string;
   /** Which Callrack capability sources actually ran, populated by composition capabilities. */
   sourcesUsed?: string[];
-  /** This capability's own registry price — the exact amount an x402 payment for this request actually settled. */
+  /** This capability's own registry price - the exact amount an x402 payment for this request actually settled. */
   price?: { amount: string; currency: 'USDC' };
 }
 

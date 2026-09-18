@@ -4,15 +4,15 @@
  * NOT part of `pnpm test`. Run explicitly via `pnpm test:x402:testnet`, and
  * only when you have a funded Testnet Algorand account with Testnet USDC
  * (ASA 10458941). It makes a real, small (PRICE_WEATHER) payment through the
- * real, configured GoPlausible facilitator — see .env.example's
+ * real, configured GoPlausible facilitator - see .env.example's
  * TESTNET_FACILITATOR_URL / TESTNET_PAY_TO.
  *
  * Required environment variable (never commit this):
- *   TESTNET_TEST_PAYER_PRIVATE_KEY — base64-encoded 64-byte Algorand key
+ *   TESTNET_TEST_PAYER_PRIVATE_KEY - base64-encoded 64-byte Algorand key
  *     (32-byte seed + 32-byte public key) for a funded Testnet test account.
  *     Generate one with any Algorand SDK/wallet; fund it via the Testnet
  *     dispenser (https://bank.testnet.algorand.network/) and a Testnet USDC
- *     faucet, then export it as an environment variable in your own shell —
+ *     faucet, then export it as an environment variable in your own shell -
  *     never write it to a file inside this repository.
  *
  * Flow (per the phase spec): unpaid request → 402 → client builds and signs
@@ -33,7 +33,7 @@ async function main(): Promise<void> {
   const privateKeyBase64 = process.env.TESTNET_TEST_PAYER_PRIVATE_KEY;
   if (!privateKeyBase64) {
     console.error(
-      'TESTNET_TEST_PAYER_PRIVATE_KEY is not set — see the header of this file for how to obtain a funded ' +
+      'TESTNET_TEST_PAYER_PRIVATE_KEY is not set - see the header of this file for how to obtain a funded ' +
         'Testnet test account. Refusing to run.',
     );
     process.exitCode = 1;

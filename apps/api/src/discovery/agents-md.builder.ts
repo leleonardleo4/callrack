@@ -1,15 +1,15 @@
 import type { CapabilityDefinition } from '../capabilities/capability.types.js';
 
 /**
- * Builds `/agents.md` — operating instructions for agents already using
+ * Builds `/agents.md` - operating instructions for agents already using
  * Callrack, per the GoPlausible discovery guide's agents.md spec (not
  * indexed by the facilitator; read directly by agents). Endpoint list is
- * generated from the Capability Registry — never a hand-maintained,
+ * generated from the Capability Registry - never a hand-maintained,
  * driftable duplicate.
  */
 export function buildAgentsMd(capabilities: readonly CapabilityDefinition[], origin: string): string {
   const endpointLines = capabilities
-    .map((capability) => `- ${capability.method} ${capability.path} — ${capability.description} — ${capability.price.amount} USDC per call.`)
+    .map((capability) => `- ${capability.method} ${capability.path} - ${capability.description} - ${capability.price.amount} USDC per call.`)
     .join('\n');
 
   return `# Callrack
@@ -23,7 +23,7 @@ request with a PAYMENT-SIGNATURE header carrying your payment proof.
 
 ## Important rule
 Treat the live HTTP 402 payment requirement as authoritative. Never hardcode or assume a price from this file,
-from \`/llms.txt\`, or from any prior response — always read the current 402 challenge before paying.
+from \`/llms.txt\`, or from any prior response - always read the current 402 challenge before paying.
 
 ## Endpoints
 ${endpointLines}
@@ -31,7 +31,7 @@ ${endpointLines}
 Full request/response schemas: [OpenAPI](${origin}/openapi.json) · [Interactive docs](${origin}/docs)
 
 ## Notes
-- Settlement is handled by the GoPlausible facilitator — you never pay Algorand network fees directly.
+- Settlement is handled by the GoPlausible facilitator - you never pay Algorand network fees directly.
 - An unpaid or invalidly-paid request never runs the underlying capability; you always get a clean 402 back.
 `;
 }

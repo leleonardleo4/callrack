@@ -2,12 +2,12 @@ import { z } from 'zod';
 
 /**
  * Refund signer config is intentionally OPTIONAL at this layer, per network
- * — unlike x402's own PAY_TO/FACILITATOR_URL, a Callrack deployment with no
+ * - unlike x402's own PAY_TO/FACILITATOR_URL, a Callrack deployment with no
  * refund mnemonic configured is a valid (if degraded) state: automatic
  * refunds simply cannot be *submitted* yet, but a failed paid capability
  * still gets a durable `PENDING` Refund row (see RefundService) rather than
  * being silently dropped. RefundConfigService fails startup only when a
- * mnemonic IS configured but doesn't control the network's payTo account —
+ * mnemonic IS configured but doesn't control the network's payTo account -
  * never merely for being absent (see its own docs).
  */
 const rawRefundConfigSchema = z.object({

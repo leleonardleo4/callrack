@@ -17,7 +17,7 @@ export interface ApiErrorPayload {
 
 /**
  * Present only on a paid request whose capability failed after settlement
- * succeeded — see the API's RefundOrchestrationService. Never fabricated on
+ * succeeded - see the API's RefundOrchestrationService. Never fabricated on
  * the client: this is exactly (and only) what the server's own JSON body
  * says.
  */
@@ -72,7 +72,7 @@ export function resolveApiUrl(path: string): string {
  * `ApiResult`. Extracted so both the plain (unpaid) request path below and
  * the wallet-backed paid path (`lib/wallet-api-client.ts`, which drives
  * `fetch` through the SDK's `X402PaymentClient` instead of a bare `fetch`)
- * share exactly one implementation of 402/error/success envelope parsing —
+ * share exactly one implementation of 402/error/success envelope parsing -
  * never two divergent copies.
  */
 export async function parseApiResponse<T>(response: Response): Promise<ApiResult<T>> {

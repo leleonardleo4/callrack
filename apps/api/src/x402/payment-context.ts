@@ -1,7 +1,7 @@
 import { decodeTransaction, getSenderFromTransaction, isExactAvmPayload } from '@x402/avm';
 // Importing @x402/fastify (even just for its types elsewhere in this
 // program) applies its `declare module "fastify"` augmentation, which is
-// what actually adds `x402Context` to FastifyRequest — X402PaymentContext
+// what actually adds `x402Context` to FastifyRequest - X402PaymentContext
 // itself isn't a public export, so it's referenced via that augmentation.
 import type {} from '@x402/fastify';
 import type { FastifyRequest } from 'fastify';
@@ -12,7 +12,7 @@ type X402PaymentContext = NonNullable<FastifyRequest['x402Context']>;
 const PAYMENT_CONTEXT_KEY = 'payment';
 
 /**
- * Sanitized, capability-agnostic view of a verified x402 payment — never
+ * Sanitized, capability-agnostic view of a verified x402 payment - never
  * signatures or raw transaction bytes, only what's useful for correlating a
  * request with its payment (see Phase 7 spec §17-18).
  */
@@ -26,7 +26,7 @@ export interface PaymentContext {
 
 /**
  * Best-effort payer extraction for the AVM `exact` scheme: the ASA transfer
- * transaction's sender. Never throws — a decode failure just omits `payer`,
+ * transaction's sender. Never throws - a decode failure just omits `payer`,
  * it never fails the (already-verified) request.
  */
 function tryExtractPayer(paymentPayload: X402PaymentContext['paymentPayload']): string | undefined {
@@ -66,7 +66,7 @@ export function getCurrentPaymentContext(): PaymentContext | undefined {
   return RequestContext.get<PaymentContext>(PAYMENT_CONTEXT_KEY);
 }
 
-/** Called only by the x402 Fastify wiring — see install-x402-middleware.ts. */
+/** Called only by the x402 Fastify wiring - see install-x402-middleware.ts. */
 export function setCurrentPaymentContext(context: PaymentContext): void {
   RequestContext.set(PAYMENT_CONTEXT_KEY, context);
 }

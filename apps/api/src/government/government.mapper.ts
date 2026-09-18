@@ -2,7 +2,7 @@ import type { GovernmentDatasetResult } from '../providers/government/government
 import type { CensusQueryResponseData } from './government-response.types.js';
 
 /**
- * Passes the Census Bureau's own string values through unchanged — the
+ * Passes the Census Bureau's own string values through unchanged - the
  * capability doesn't know which variable codes are numeric estimates versus
  * categorical/FIPS codes, so it never coerces types it can't be sure of.
  */

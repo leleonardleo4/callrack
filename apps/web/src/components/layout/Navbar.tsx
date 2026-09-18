@@ -36,7 +36,7 @@ function NavLinks({ onNavigate, className }: { onNavigate?: () => void; classNam
   );
 }
 
-/** Past this scroll offset (px), the header gains a background — matches the scannable "has the user left the hero" threshold, not a precise design token. */
+/** Past this scroll offset (px), the header gains a background - matches the scannable "has the user left the hero" threshold, not a precise design token. */
 const SCROLL_THRESHOLD = 8;
 
 function useScrolled(threshold: number): boolean {

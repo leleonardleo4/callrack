@@ -18,12 +18,12 @@ export interface WalletPaymentContext {
 
 /**
  * Builds everything `callCapabilityWithWallet` needs from the currently
- * connected wallet — `undefined` when there is no active account or the
+ * connected wallet - `undefined` when there is no active account or the
  * live Callrack network isn't known yet, so callers can render a
  * "Connect wallet" affordance instead of attempting to pay.
  *
  * `network` must come from the live `GET /v1/capabilities` response, never
- * a locally invented default — see `wallet/network.ts`.
+ * a locally invented default - see `wallet/network.ts`.
  */
 export function useWalletSigner(network: CallrackNetwork | undefined): WalletPaymentContext | undefined {
   const { activeAddress, signTransactions } = useWallet();

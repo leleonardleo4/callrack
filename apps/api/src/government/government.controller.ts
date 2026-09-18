@@ -18,7 +18,7 @@ export class GovernmentController {
     summary: 'Query US Census Bureau statistical data',
     description:
       'Queries a constrained subset of US Census Bureau datasets (currently: ' +
-      `${ALLOWED_CENSUS_DATASETS.join(', ')}). This capability targets US Census data specifically — it is ` +
+      `${ALLOWED_CENSUS_DATASETS.join(', ')}). This capability targets US Census data specifically - it is ` +
       'not a general worldwide government-data API, and it is not an unrestricted proxy to the full Census ' +
       'API (allowed datasets, variable count, and geography syntax are all constrained). Data is public domain ' +
       '(US government work), but Callrack does not own or guarantee the underlying figures.',

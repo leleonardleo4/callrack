@@ -274,7 +274,7 @@ describe('Research Capability (E2E)', () => {
 
     expect(response.statusCode).toBe(200);
     // The slow "academic" call (40ms) starts before the fast "news"/"knowledge"
-    // calls (5ms) finish — proof they run concurrently, not sequentially.
+    // calls (5ms) finish - proof they run concurrently, not sequentially.
     expect(startedAt.academic).toBeLessThanOrEqual(finishedAt.news);
     expect(startedAt.academic).toBeLessThanOrEqual(finishedAt.knowledge);
   });

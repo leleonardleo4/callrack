@@ -19,7 +19,7 @@ export class CompareController {
       'Runs a query across academic, news, and knowledge search and returns the distinct subjects found, a ' +
       'flattened table of real attribute values per subject, the deduplicated source list, and any detected ' +
       'disagreements (the same-titled subject described differently by two results). Never fabricates a value a ' +
-      'provider did not return — an empty `attributes`/`disagreements` array for a subject is a correct result.',
+      'provider did not return - an empty `attributes`/`disagreements` array for a subject is a correct result.',
   })
   @ApiBody({ type: CompareRequestDto })
   @ApiResponse({

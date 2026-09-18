@@ -1,7 +1,7 @@
 /**
  * Mirrors the wire shape returned by `GET /v1/capabilities`
  * (apps/api/src/capabilities/public-capability.types.ts) and the API's
- * standard response envelopes. A type declaration only — every value comes
+ * standard response envelopes. A type declaration only - every value comes
  * from the live endpoint at runtime, so this is not a second capability
  * registry, just the shape a framework-independent client needs to consume
  * one honestly.
@@ -25,7 +25,7 @@ export type CapabilityProviderRef =
   | { readonly kind: 'composite' };
 
 export interface CapabilityPricing {
-  /** Exact decimal USDC string (e.g. "0.01") — never a float. */
+  /** Exact decimal USDC string (e.g. "0.01") - never a float. */
   readonly amount: string;
   readonly currency: 'USDC';
 }

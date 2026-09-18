@@ -17,7 +17,7 @@ import { shortenAddress } from '@/lib/wallet-format';
  * The Playground's one wallet control, shown in the header/toolbar per the
  * feature's UI requirement: "Connect Wallet" when disconnected, "Wallet
  * <shortened address>" with switch-wallet/switch-account/disconnect once
- * connected. Reused wherever it's mounted — nothing here is Playground- or
+ * connected. Reused wherever it's mounted - nothing here is Playground- or
  * capability-specific.
  */
 export function WalletConnectButton(): React.JSX.Element {

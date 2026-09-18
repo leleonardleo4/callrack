@@ -6,7 +6,7 @@ import { WeatherRequestDto } from '../../src/weather/dto/weather-request.dto.js'
 import { AcademicSearchRequestDto } from '../../src/academic/dto/academic-search-request.dto.js';
 import { GeocodeRequestDto } from '../../src/geocode/dto/geocode-request.dto.js';
 
-describe('discovery-schema.util (E2E — needs a live Nest app for reflection)', () => {
+describe('discovery-schema.util (E2E - needs a live Nest app for reflection)', () => {
   let app: NestFastifyApplication;
 
   beforeAll(async () => {

@@ -19,7 +19,7 @@ const EVIDENCE_CAPABILITY = {
  * A machine-readable evidence pack, not an AI-generated answer: gathers
  * real results from existing Callrack capabilities (same composition
  * pattern as `ResearchService`/`VerifyService`) and returns them with full
- * provenance — never a narrative summary, never a fact not directly traced
+ * provenance - never a narrative summary, never a fact not directly traced
  * to one of the returned `findings`.
  */
 @Injectable()

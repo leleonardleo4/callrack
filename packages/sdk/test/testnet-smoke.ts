@@ -9,13 +9,13 @@
  * Environment variables (never commit real values for these; see
  * .env.example):
  *   AVM_MNEMONIC          25-word Algorand mnemonic for a funded Testnet
- *                          account. Required — the script exits cleanly,
+ *                          account. Required - the script exits cleanly,
  *                          explaining what's missing, if this is unset.
  *   CALLRACK_API_URL      Base URL of a running Callrack API.
  *                          Default: http://localhost:3000
  *   AGENT_MAX_BUDGET_USDC Task budget, decimal USDC. Default: 0.25
  *
- * Flow (mirrors CallrackAgentRuntime.run() exactly — this script does not
+ * Flow (mirrors CallrackAgentRuntime.run() exactly - this script does not
  * reimplement any of it): discover capabilities -> plan a task -> per-call
  * 402 -> policy check -> sign a real Testnet payment -> retry -> result ->
  * budget accounting.
@@ -62,7 +62,7 @@ async function main(): Promise<void> {
   console.log('[3/3] Confirming no secrets leaked into the event log...');
   const serialized = JSON.stringify(result.events);
   if (/mnemonic|privatekey|signtransactions/i.test(serialized)) {
-    throw new Error('Event log appears to contain secret-shaped data — refusing to print it.');
+    throw new Error('Event log appears to contain secret-shaped data - refusing to print it.');
   }
 
   console.log(`\nTestnet agent smoke test passed. Summary: ${result.summary}`);

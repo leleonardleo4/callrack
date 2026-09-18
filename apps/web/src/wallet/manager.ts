@@ -9,7 +9,7 @@ import { WALLETCONNECT_PROJECT_ID } from '@/config/env';
 /**
  * The one place the Playground's supported wallets are configured. Each
  * factory here is a separate, official `@txnlab/use-wallet-*` adapter
- * package (v5's per-wallet architecture — there is no bundled "Defly Web"
+ * package (v5's per-wallet architecture - there is no bundled "Defly Web"
  * shim from older use-wallet versions). Pera, Defly, and Lute work with no
  * further setup; Exodus is included as one additional, stable, mainstream
  * Algorand-capable wallet (straightforward ARC-API browser provider, no
@@ -35,17 +35,17 @@ function buildWallets(): WalletAdapterConfig[] {
 }
 
 /**
- * A single, module-level `WalletManager` instance — constructed once,
+ * A single, module-level `WalletManager` instance - constructed once,
  * reused for the lifetime of the app (not per-render, not per-route). Its
  * constructor and `resumeSessions()` (called by `WalletProvider` on mount)
  * only touch `localStorage`; no adapter's underlying wallet SDK is
  * constructed until a wallet is actually connected (each adapter builds its
- * client lazily), so mounting this everywhere — including in tests — never
+ * client lazily), so mounting this everywhere - including in tests - never
  * makes a real network/QR/deep-link connection by itself.
  *
  * `defaultNetwork` starts at Testnet, matching the Callrack API's own
  * default; the Playground syncs this to the API's *actual* live network
- * (from `GET /v1/capabilities`) once known — see `useNetworkSync`. This
+ * (from `GET /v1/capabilities`) once known - see `useNetworkSync`. This
  * manager's `activeNetwork` is never the source of truth for what a payment
  * actually settles on; that's always the live x402 challenge (see
  * `wallet/payment-signer.ts`).

@@ -11,7 +11,7 @@ import { CompareController } from './compare.controller.js';
 import { CompareService } from './compare.service.js';
 
 /**
- * Deliberately imports only capability modules (never ProvidersModule) —
+ * Deliberately imports only capability modules (never ProvidersModule) -
  * verify/evidence/compare compose existing capability services, exactly
  * like `ResearchModule`, and never talk to provider adapters directly.
  */

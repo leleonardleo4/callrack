@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { RefundConfigService } from '../src/config/refund-config.service.js';
 import { X402ConfigService } from '../src/config/x402-config.service.js';
 
-// A throwaway, never-funded Testnet keypair generated solely for this test —
+// A throwaway, never-funded Testnet keypair generated solely for this test -
 // see the git history for how it was generated (algosdk.generateAccount()).
 const TEST_ADDRESS = 'QVZKOLR3AFURUZMJLQVQGCYHZBIX5JPXIJNTD5C74NY5664F6EVJ3MQPQQ';
 const TEST_MNEMONIC =
@@ -15,7 +15,7 @@ const BASE_X402_ENV = {
 };
 
 describe('RefundConfigService', () => {
-  it('is disabled (never throws) when no refund mnemonic is configured at all — most deployments/tests', () => {
+  it('is disabled (never throws) when no refund mnemonic is configured at all - most deployments/tests', () => {
     const x402Config = new X402ConfigService({ ...BASE_X402_ENV, TESTNET_PAY_TO: TEST_ADDRESS });
     const service = new RefundConfigService(x402Config, {});
 
@@ -38,7 +38,7 @@ describe('RefundConfigService', () => {
   it('fails fast at startup when the refund mnemonic does NOT control the configured payTo account', () => {
     const x402Config = new X402ConfigService({
       ...BASE_X402_ENV,
-      // A different, unrelated address — the refund signer must never be
+      // A different, unrelated address - the refund signer must never be
       // allowed to run against a payTo it doesn't actually control.
       TESTNET_PAY_TO: 'TTCZHJ24VWV64DMFCXKHS2GMLFVUTBA673THZR7LNYY3GEB3XV7HNUEQXQ',
     });
@@ -55,7 +55,7 @@ describe('RefundConfigService', () => {
       MAINNET_PAY_TO: TEST_ADDRESS,
       TESTNET_PAY_TO: 'TTCZHJ24VWV64DMFCXKHS2GMLFVUTBA673THZR7LNYY3GEB3XV7HNUEQXQ',
     });
-    // Only a (wrong) TESTNET mnemonic is set — Mainnet has none configured,
+    // Only a (wrong) TESTNET mnemonic is set - Mainnet has none configured,
     // so this must behave as "disabled", never validate the Testnet one.
     const service = new RefundConfigService(x402Config, { TESTNET_REFUND_MNEMONIC: TEST_MNEMONIC });
 

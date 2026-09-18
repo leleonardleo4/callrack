@@ -44,7 +44,7 @@ export function PlaygroundPage(): React.JSX.Element {
         <p className="mt-4 max-w-2xl text-sm leading-relaxed text-ash">
           This calls the real Callrack API, never mock data. An unpaid request will honestly return{' '}
           <code className="font-mono text-frosted-lilac">402 Payment Required</code>. Connect a wallet to approve a
-          real x402 payment and retry — Callrack never fakes a successful payment here.
+          real x402 payment and retry - Callrack never fakes a successful payment here.
         </p>
 
         <div className="mt-10">

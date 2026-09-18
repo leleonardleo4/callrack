@@ -17,7 +17,7 @@ describe('tokenize', () => {
 });
 
 describe('termOverlap', () => {
-  it('returns 0 for an empty claim-term list — nothing to compare against', () => {
+  it('returns 0 for an empty claim-term list - nothing to compare against', () => {
     expect(termOverlap([], 'anything at all')).toBe(0);
   });
 

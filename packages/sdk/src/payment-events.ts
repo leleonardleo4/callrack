@@ -1,6 +1,6 @@
 /**
  * Structured, secret-free payment lifecycle events emitted by
- * `X402PaymentClient` as it pays for a request — never a signature, key,
+ * `X402PaymentClient` as it pays for a request - never a signature, key,
  * or raw payload, only the same non-sensitive fields already visible on a
  * live 402 response. Core SDK concept (not agent-specific): the agent
  * runtime is one consumer, forwarding these into its own `AgentEvent` log,

@@ -42,7 +42,7 @@ function isErrorPayload(value: unknown): value is { code: string; message: strin
 
 /**
  * Research composes existing capability *services* directly (never HTTP,
- * never provider adapters) — see the module import for confirmation there's
+ * never provider adapters) - see the module import for confirmation there's
  * no way for this to call itself: "research" isn't a valid source name, and
  * nothing here depends on an HTTP client.
  */
@@ -106,7 +106,7 @@ export class ResearchService {
     });
   }
 
-  /** Runs every planned source concurrently — bounded by construction (max 4 known sources). */
+  /** Runs every planned source concurrently - bounded by construction (max 4 known sources). */
   private async execute(
     dto: ResearchRequestDto,
     sources: ResearchSourceName[],
@@ -126,8 +126,8 @@ export class ResearchService {
     const findings = this.deriveFindings(entries, retrievedAt);
     const status = this.computeOverallStatus(entries.map(([, entry]) => entry.status));
 
-    // Research's HTTP status stays 200 even here — this always-200 contract
-    // is documented and intentional (see the controller's own docs) — but a
+    // Research's HTTP status stays 200 even here - this always-200 contract
+    // is documented and intentional (see the controller's own docs) - but a
     // TOTAL failure (every requested source failed) is still a failed paid
     // execution from Callrack's own contract, distinct from a partial
     // result. This marker is what lets the centralized refund boundary
@@ -156,7 +156,7 @@ export class ResearchService {
   /**
    * Normalizes academic/news/knowledge results into provenance-preserving
    * evidence items, reusing the exact same mapping `verify`/`evidence`/
-   * `compare` use (`information/evidence.util.ts`) — never a second,
+   * `compare` use (`information/evidence.util.ts`) - never a second,
    * divergent normalization. `government`'s tabular row data has no natural
    * title/excerpt shape to normalize into, so it's deliberately excluded
    * here; it remains fully represented in `sources.government`.

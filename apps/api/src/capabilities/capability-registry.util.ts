@@ -20,7 +20,7 @@ function routeKey(method: string, path: string): string {
   return `${method.toUpperCase()} ${path}`;
 }
 
-/** Builds id/route lookup maps, throwing immediately on any duplicate — the registry's single source of truth. */
+/** Builds id/route lookup maps, throwing immediately on any duplicate - the registry's single source of truth. */
 export function indexCapabilities(definitions: readonly CapabilityDefinition[]): CapabilityIndex {
   const byId = new Map<string, CapabilityDefinition>();
   const byRoute = new Map<string, CapabilityDefinition>();
@@ -35,7 +35,7 @@ export function indexCapabilities(definitions: readonly CapabilityDefinition[]):
     const existing = byRoute.get(key);
     if (existing) {
       throw new Error(
-        `Duplicate capability route "${key}" — used by both "${existing.id}" and "${definition.id}"`,
+        `Duplicate capability route "${key}" - used by both "${existing.id}" and "${definition.id}"`,
       );
     }
     byRoute.set(key, definition);
@@ -48,7 +48,7 @@ export function indexCapabilities(definitions: readonly CapabilityDefinition[]):
  * Structural validation beyond duplicate detection: every capability must
  * have real metadata, a valid price, and (for provider-backed capabilities)
  * only reference providers that actually exist. Throws on the first problem
- * found — this is meant to fail application startup, not a request.
+ * found - this is meant to fail application startup, not a request.
  */
 export function validateCapabilityDefinitions(
   definitions: readonly CapabilityDefinition[],

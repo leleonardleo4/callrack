@@ -19,9 +19,9 @@ export type FakeFacilitatorClient = FacilitatorClient & {
 /**
  * A deterministic, network-free FacilitatorClient for automated tests (see
  * Phase 7 spec §26: "Mock the facilitator for deterministic automated
- * tests"). Everything else in the request pipeline — the real
+ * tests"). Everything else in the request pipeline - the real
  * x402ResourceServer, x402HTTPResourceServer, ExactAvmScheme, and Fastify
- * middleware — runs unmodified; only the network call to the facilitator is
+ * middleware - runs unmodified; only the network call to the facilitator is
  * replaced.
  */
 export function createFakeFacilitatorClient(

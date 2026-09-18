@@ -4,7 +4,7 @@ import type { CryptoMarketEntry, CryptoMarketResponseData, CryptoPriceEntry, Cry
 /**
  * Both /crypto/price and /crypto/market are built from the same underlying
  * CoinGecko "markets" call (the only Phase 3 operation that reliably returns
- * price + symbol + 24h change together) — price exposes a slim subset,
+ * price + symbol + 24h change together) - price exposes a slim subset,
  * market exposes the full normalized dataset.
  */
 function findMissingAssets(requestedAssetIds: string[], markets: CryptoMarketDatum[]): string[] {

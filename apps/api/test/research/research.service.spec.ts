@@ -353,7 +353,7 @@ describe('ResearchService', () => {
       }
     });
 
-    it('excludes government from findings even when it succeeds — it has no title/excerpt shape to normalize', async () => {
+    it('excludes government from findings even when it succeeds - it has no title/excerpt shape to normalize', async () => {
       const census = fakeCensus();
       census.query.mockResolvedValue(CENSUS_RESULT);
       const service = buildService({ census });
@@ -416,7 +416,7 @@ describe('ResearchService', () => {
       const result = await service.research(dto({ sources: ['news', 'knowledge'] }), 'req_1');
 
       // The news item has no excerpt (NewsArticleResponse has no such field), so there is
-      // only one non-empty excerpt for "Lagos" — genuinely nothing to disagree about yet.
+      // only one non-empty excerpt for "Lagos" - genuinely nothing to disagree about yet.
       expect(result.disagreements).toEqual([]);
     });
 

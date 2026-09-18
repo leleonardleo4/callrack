@@ -32,13 +32,13 @@ ENV CI=true
 # Dependency layer: only package.json/lockfile from the pruned set, so this
 # layer is cached across builds unless a dependency actually changes.
 # --ignore-scripts defers @callrack/db's `prisma generate` postinstall,
-# which needs prisma/schema.prisma — not present until the "full" copy below.
+# which needs prisma/schema.prisma - not present until the "full" copy below.
 COPY --from=pruner /app/out/json/ .
 RUN pnpm install --frozen-lockfile --ignore-scripts
 
 # Real source, plus the root tsconfig.json every package's tsconfig extends
 # (turbo prune only copies each package's own files, not the workspace
-# root's shared config — verified locally; omitting this produces a
+# root's shared config - verified locally; omitting this produces a
 # "Cannot find base config file" warning from every package's build).
 COPY --from=pruner /app/out/full/ .
 COPY tsconfig.json ./tsconfig.json
@@ -80,6 +80,6 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
   CMD node -e "fetch('http://127.0.0.1:'+(process.env.API_PORT||3000)+'/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
 
 # Exec form (no shell wrapper) so Node is PID 1 and receives SIGTERM
-# directly — required for apps/api/src/bootstrap.ts's
+# directly - required for apps/api/src/bootstrap.ts's
 # `app.enableShutdownHooks()` graceful-shutdown path to actually run.
 CMD ["node", "apps/api/dist/main.js"]

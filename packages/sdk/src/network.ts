@@ -19,9 +19,9 @@ function toNetwork(genesisHash: string): Network {
 
 export interface ResolvedNetwork {
   readonly network: CallrackNetwork;
-  /** CAIP-2 network identifier — the exact value Callrack's server uses, never hand-rolled. */
+  /** CAIP-2 network identifier - the exact value Callrack's server uses, never hand-rolled. */
   readonly caip2: Network;
-  /** The USDC asset id for this network, resolved dynamically via @x402/avm — never a hardcoded literal. */
+  /** The USDC asset id for this network, resolved dynamically via @x402/avm - never a hardcoded literal. */
   readonly usdcAssetId: string;
   readonly usdcDecimals: number;
 }

@@ -76,7 +76,7 @@ describe('buildX402RoutesConfig', () => {
     }
   });
 
-  it('gives every route the same active payTo — one payment destination across all Callrack endpoints', () => {
+  it('gives every route the same active payTo - one payment destination across all Callrack endpoints', () => {
     const routes = buildX402RoutesConfig(realCapabilities(), ACTIVE) as Record<string, { accepts: { payTo: string } }>;
     const payTos = new Set(Object.values(routes).map((route) => route.accepts.payTo));
     expect(payTos.size).toBe(1);
@@ -116,7 +116,7 @@ describe('buildX402RoutesConfig', () => {
     expect(buildX402RoutesConfig([], ACTIVE)).toEqual({});
   });
 
-  it('never attaches the x402-global-challenge tag on Testnet — only real, settled Mainnet traffic is Challenge traffic', () => {
+  it('never attaches the x402-global-challenge tag on Testnet - only real, settled Mainnet traffic is Challenge traffic', () => {
     const routes = buildX402RoutesConfig(realCapabilities(), ACTIVE) as Record<
       string,
       { accepts: { extra?: Record<string, unknown> } }

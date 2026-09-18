@@ -8,7 +8,7 @@ import { ResearchController } from './research.controller.js';
 import { ResearchService } from './research.service.js';
 
 /**
- * Imports only capability modules (never ProvidersModule) — Research
+ * Imports only capability modules (never ProvidersModule) - Research
  * composes existing capability services, it never talks to provider
  * adapters directly. `CapabilitiesModule` is the one exception: the
  * controller (the API boundary, not the service) reads research's own

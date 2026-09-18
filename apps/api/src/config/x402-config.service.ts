@@ -6,7 +6,7 @@ import { type SupportedX402Network, type X402Config, validateX402Config } from '
 /** Everything the x402 integration needs to protect a route on the active network. */
 export interface ActiveX402NetworkConfig {
   readonly network: SupportedX402Network;
-  /** CAIP-2 network identifier from @x402/avm — never hand-rolled. */
+  /** CAIP-2 network identifier from @x402/avm - never hand-rolled. */
   readonly caip2Network: Network;
   readonly payTo: string;
   readonly facilitatorUrl: string;
@@ -19,7 +19,7 @@ export interface ActiveX402NetworkConfig {
  * the Algorand x402 challenge currently advertises support using the full
  * genesis-hash form in its `/supported` response (verified directly against
  * https://facilitator.goplausible.xyz/supported), so that's the form used
- * here — both are official package exports, not hand-rolled identifiers.
+ * here - both are official package exports, not hand-rolled identifiers.
  */
 function toNetwork(genesisHash: string): Network {
   return `algorand:${genesisHash}`;
@@ -30,7 +30,7 @@ function resolveActive(config: X402Config): ActiveX402NetworkConfig {
   const payTo = network === 'testnet' ? config.TESTNET_PAY_TO : config.MAINNET_PAY_TO;
   const facilitatorUrl = network === 'testnet' ? config.TESTNET_FACILITATOR_URL : config.MAINNET_FACILITATOR_URL;
 
-  // Guaranteed present by x402ConfigSchema's superRefine — this is a type
+  // Guaranteed present by x402ConfigSchema's superRefine - this is a type
   // narrowing, not a runtime check.
   if (!payTo || !facilitatorUrl) {
     throw new Error(`Missing resolved x402 configuration for network "${network}"`);
@@ -44,7 +44,7 @@ function resolveActive(config: X402Config): ActiveX402NetworkConfig {
   };
 }
 
-/** Validated at construction — invalid or missing payment configuration fails app startup immediately. */
+/** Validated at construction - invalid or missing payment configuration fails app startup immediately. */
 @Injectable()
 export class X402ConfigService {
   private readonly config: X402Config;

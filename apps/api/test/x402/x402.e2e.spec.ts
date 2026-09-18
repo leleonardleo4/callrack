@@ -8,7 +8,7 @@ import { jsonResponse, stubFetchAlways, stubFetchSequence } from '../providers/m
 import { createFakeFacilitatorClient, X402_PROTOCOL_VERSION, type FakeFacilitatorClient } from './fake-facilitator.js';
 
 // Matches exactly what X402ConfigService resolves for NETWORK=testnet/mainnet
-// — see its toNetwork() note on why the full genesis-hash form is used.
+// - see its toNetwork() note on why the full genesis-hash form is used.
 const TESTNET_NETWORK = `algorand:${ALGORAND_TESTNET_GENESIS_HASH}`;
 const MAINNET_NETWORK = `algorand:${ALGORAND_MAINNET_GENESIS_HASH}`;
 
@@ -27,7 +27,7 @@ function buildFakePaymentPayload(accepted: PaymentRequirements): PaymentPayload 
     accepted,
     payload: {
       // Structurally matches ExactAvmPayloadV2. The fake facilitator never
-      // decodes this — only a real facilitator does — so it doesn't need to
+      // decodes this - only a real facilitator does - so it doesn't need to
       // be a genuine signed transaction for these deterministic tests.
       paymentGroup: ['ZmFrZS10eG4='],
       paymentIndex: 0,
@@ -96,7 +96,7 @@ describe('x402 Payment Protection (E2E)', () => {
       expect(requirements.network).toBe(TESTNET_NETWORK);
       expect(requirements.payTo).toBe('TTCZHJ24VWV64DMFCXKHS2GMLFVUTBA673THZR7LNYY3GEB3XV7HNUEQXQ');
       // "0.003" USDC at 6 decimals, converted via pure string arithmetic (see
-      // convertToTokenAmount) — never a floating-point-derived value.
+      // convertToTokenAmount) - never a floating-point-derived value.
       expect(requirements.amount).toBe('3000');
     });
 
@@ -209,7 +209,7 @@ describe('x402 Payment Protection (E2E)', () => {
 
     beforeAll(async () => {
       // X402ConfigService reads NETWORK once, at construction, inside
-      // createApp() — flipping process.env here and restoring it
+      // createApp() - flipping process.env here and restoring it
       // immediately after is what lets this one describe block exercise
       // the Mainnet code path without affecting any other test file (each
       // runs in its own worker) or any other describe block in this file
@@ -336,7 +336,7 @@ describe('x402 Payment Protection (E2E)', () => {
 
       expect(response.statusCode).toBe(200);
       const body = JSON.parse(response.payload);
-      // The response shape is exactly the capability's normal shape — x402
+      // The response shape is exactly the capability's normal shape - x402
       // adds nothing to the business payload.
       expect(body.data.results[0]).toMatchObject({ title: 'Test Work' });
       expect(facilitator.verify).toHaveBeenCalledTimes(1);
@@ -413,7 +413,7 @@ describe('x402 Payment Protection (E2E)', () => {
       brokenFacilitator.getSupported.mockRejectedValue(new Error('network unreachable'));
 
       // The facilitator never returning any supported kind means the
-      // registered scheme has no facilitator support — a structural error
+      // registered scheme has no facilitator support - a structural error
       // x402 itself detects and rejects during initialize().
       await expect(createProtectedApp({ x402FacilitatorClient: brokenFacilitator })).rejects.toThrow();
     });

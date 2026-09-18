@@ -11,7 +11,7 @@ import type { PaymentFlowState } from '@/hooks/useWalletPaymentFlow';
 
 /**
  * The x402 challenge's `amount` is always the atomic (base-unit) USDC
- * value (e.g. "10000" for $0.01) — never a decimal dollar string. Passing
+ * value (e.g. "10000" for $0.01) - never a decimal dollar string. Passing
  * it straight to something that renders `$${amount}` shows a figure 10^6x
  * too large. `networkName` defaults to 'testnet' only for this display
  * conversion (USDC uses the same decimals on both networks); the actual
@@ -109,7 +109,7 @@ export function PlaygroundResponsePanel({
             ) : (
               <div className="flex items-center gap-2 text-sm text-ash">
                 <Loader2 className="size-4 shrink-0 animate-spin" aria-hidden />
-                Refund pending — Callrack will settle this automatically; no action needed.
+                Refund pending - Callrack will settle this automatically; no action needed.
               </div>
             )}
           </div>
@@ -190,7 +190,7 @@ export function PlaygroundResponsePanel({
             </dl>
           ) : null}
           <p className="mt-4 text-xs text-ash">
-            Callrack never fabricates a successful payment — approving below submits a real, on-chain x402 payment
+            Callrack never fabricates a successful payment - approving below submits a real, on-chain x402 payment
             for exactly this amount before the request is retried.
           </p>
           <div className="mt-4">

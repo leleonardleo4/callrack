@@ -84,12 +84,12 @@ function resolveRequestUrl(input: RequestInfo | URL): string {
  * Builds a payment-transparent `fetch` for one Callrack client configuration.
  * Orchestration itself (402 detection, header parsing, signing, retry,
  * double-payment guarding) is delegated entirely to `@x402/fetch`'s
- * `wrapFetchWithPayment` — the official, tested driver — rather than
+ * `wrapFetchWithPayment` - the official, tested driver - rather than
  * reimplemented. This module only adds Callrack's own policy layer on top,
  * via `onBeforePaymentCreation`: every payment requirement the underlying
  * client selects is independently re-validated against the request the SDK
  * itself made (resource URL, network, asset, amount) before any signing
- * happens — never against the server's own claimed destination alone.
+ * happens - never against the server's own claimed destination alone.
  *
  * A fresh `x402Client` is built per call (cheap, no I/O) rather than shared,
  * so the expected resource URL closed over by `onBeforePaymentCreation` can
@@ -128,7 +128,7 @@ export class X402PaymentClient {
     client.register(resolvedNetwork.caip2, new ExactAvmScheme(this.#signer));
 
     // Defense-in-depth: the library's own asset/amount cap, scoped to this
-    // client's configured network and policy — in addition to (not instead
+    // client's configured network and policy - in addition to (not instead
     // of) the independent re-check in onBeforePaymentCreation below.
     client.setSpendControls({
       maxAmountPerPayment: maxAtomic,

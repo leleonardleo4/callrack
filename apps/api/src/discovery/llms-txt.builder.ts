@@ -3,11 +3,11 @@ import type { CapabilityDefinition } from '../capabilities/capability.types.js';
 import type { ActiveX402NetworkConfig } from '../config/x402-config.service.js';
 
 /**
- * Builds `/llms.txt` — plain markdown for LLMs, per the GoPlausible
+ * Builds `/llms.txt` - plain markdown for LLMs, per the GoPlausible
  * discovery guide's llms.txt spec. The facilitator takes the first `#`
  * heading as the name, so it must be exactly `# Callrack`. Every endpoint,
  * price, network, and asset here is read live from the Capability Registry
- * and the active x402 config — never a hand-maintained duplicate that could
+ * and the active x402 config - never a hand-maintained duplicate that could
  * drift from the real prices in the 402 responses.
  */
 export function buildLlmsTxt(
@@ -35,9 +35,9 @@ ${endpointLines}
 ## Paying
 - Protocol: x402 (v2), settled by ${facilitatorUrl}
 - Network: ${networkLabel} · Asset: USDC (${usdc.asset})
-- On HTTP 402, read the PAYMENT-REQUIRED response header (base64 JSON) for the exact, current price — never
+- On HTTP 402, read the PAYMENT-REQUIRED response header (base64 JSON) for the exact, current price - never
   assume a price from this file; it can change.
-- Clients: any x402 client — see ${facilitatorUrl}/guide
+- Clients: any x402 client - see ${facilitatorUrl}/guide
 
 ## Docs
 - [OpenAPI](${origin}/openapi.json)

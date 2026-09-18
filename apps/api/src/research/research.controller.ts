@@ -12,7 +12,7 @@ const SOURCE_ENTRY_SCHEMA = {
   type: 'object',
   properties: {
     status: { type: 'string', enum: ['success', 'empty', 'failed'], example: 'success' },
-    data: { type: 'object', nullable: true, description: 'The underlying capability response — shape varies by source.' },
+    data: { type: 'object', nullable: true, description: 'The underlying capability response - shape varies by source.' },
     error: {
       type: 'object',
       nullable: true,
@@ -39,10 +39,10 @@ export class ResearchController {
     description:
       'Composes existing Callrack capabilities (academic, news, knowledge, and optionally government) into a ' +
       `single research result for a given query. Supported sources: ${SUPPORTED_RESEARCH_SOURCES.join(', ')}. ` +
-      'This endpoint gathers and structures evidence — it does not generate an AI-written narrative answer. ' +
+      'This endpoint gathers and structures evidence - it does not generate an AI-written narrative answer. ' +
       'One source failing does not fail the whole request: check each source\'s own `status`, and the ' +
       'top-level `status` ("complete" | "partial" | "failed") for the overall outcome. The HTTP status is ' +
-      'always 200 for a successfully *executed* research request, even when some or all sources failed — the ' +
+      'always 200 for a successfully *executed* research request, even when some or all sources failed - the ' +
       'response body always carries the true per-source and overall outcome.',
   })
   @ApiBody({ type: ResearchRequestDto })
@@ -68,7 +68,7 @@ export class ResearchController {
             },
             findings: {
               type: 'array',
-              description: 'academic/news/knowledge results normalized into provenance-preserving evidence items (government is excluded — see composition.sourcesRequested for whether it ran).',
+              description: 'academic/news/knowledge results normalized into provenance-preserving evidence items (government is excluded - see composition.sourcesRequested for whether it ran).',
               items: { type: 'object' },
             },
             disagreements: { type: 'array', items: { type: 'object' } },

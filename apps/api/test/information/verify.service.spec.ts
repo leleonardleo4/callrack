@@ -111,7 +111,7 @@ describe('VerifyService', () => {
     expect(result.confidence).toBe(0.5);
   });
 
-  it('returns "insufficient" when nothing relevant was found — never fabricates a verdict', async () => {
+  it('returns "insufficient" when nothing relevant was found - never fabricates a verdict', async () => {
     const runner = fakeRunner();
     runner.run.mockResolvedValue([irrelevantResult('academic'), irrelevantResult('news')]);
     const service = buildService(runner);

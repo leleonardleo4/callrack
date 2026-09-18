@@ -8,7 +8,7 @@ export interface CacheResult<T> {
 
 /**
  * Thin Redis-backed cache for capability services. This is the only place
- * capability code touches Redis — provider adapters never do. Failures are
+ * capability code touches Redis - provider adapters never do. Failures are
  * always non-fatal: a cache miss/error simply falls through to `loader`, and
  * a rejected `loader` is never cached.
  */

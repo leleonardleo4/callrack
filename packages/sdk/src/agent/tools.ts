@@ -4,7 +4,7 @@ import type { AgentTool } from './types.js';
 
 /**
  * Projects discovered capabilities into agent tools, deliberately dropping
- * `PublicCapability.provider` — an agent's tool list names Callrack
+ * `PublicCapability.provider` - an agent's tool list names Callrack
  * capabilities only, never the upstream provider behind them.
  */
 export function buildToolsFromCapabilities(

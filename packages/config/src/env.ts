@@ -14,7 +14,7 @@ export const baseEnvSchema = z.object({
 export type BaseEnv = z.infer<typeof baseEnvSchema>;
 
 /**
- * `dotenv.config()` with no `path` only ever checks `process.cwd()` — fine
+ * `dotenv.config()` with no `path` only ever checks `process.cwd()` - fine
  * when a script runs from the monorepo root, but pnpm/turbo run each
  * package's script with that package's own directory as cwd (e.g.
  * `apps/api`), where no `.env` exists; only the root one does. Walking up
@@ -35,8 +35,8 @@ function findMonorepoRoot(startDir: string): string | undefined {
 /**
  * Loads the monorepo's root `.env` into `process.env`, resolving its path
  * from wherever the current process actually started (see
- * `findMonorepoRoot`). Exported on its own — not just as a `parseEnv` side
- * effect — because an app's real entrypoint (e.g. `apps/api/src/main.ts`)
+ * `findMonorepoRoot`). Exported on its own - not just as a `parseEnv` side
+ * effect - because an app's real entrypoint (e.g. `apps/api/src/main.ts`)
  * needs this to run before any config service constructs, which happens
  * during Nest's dependency-injection bootstrap, earlier than any call to
  * `parseEnv` itself.

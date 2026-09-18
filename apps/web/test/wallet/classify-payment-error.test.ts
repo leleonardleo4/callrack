@@ -40,7 +40,7 @@ describe('classifyPaymentFlowError', () => {
   it('classifies a "must optin" receiver simulation failure distinctly from a generic rejection, with an actionable hint', () => {
     // The exact real-world message this classification exists for (see the
     // Testnet debugging session that first surfaced it): the payTo account
-    // configured server-side hasn't opted in to the USDC asset — nothing a
+    // configured server-side hasn't opted in to the USDC asset - nothing a
     // payer can fix, and not the same thing as their own low balance.
     const error = new CallrackPaymentError(
       'Payment for /v1/academic/search was rejected by the server: Transaction simulation failed: transaction ' +

@@ -63,7 +63,7 @@ function Button({
       ref={ref}
       // A native <button> with no `type` defaults to `type="submit"`, which
       // silently reloads/navigates the page if it's ever inside (or later
-      // becomes nested inside) a <form> — none of this app's buttons submit
+      // becomes nested inside) a <form> - none of this app's buttons submit
       // a form, so this app-wide default is correct everywhere; a caller
       // that genuinely needs a submit button can still pass type="submit".
       type={asChild ? undefined : type}

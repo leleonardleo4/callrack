@@ -7,7 +7,7 @@ import type { CallrackPaymentSigner } from './signer.js';
  * Derives a CallrackPaymentSigner from a 25-word Algorand mnemonic.
  *
  * THIS IS A REFERENCE / DEVELOPMENT UTILITY, ISOLATED IN ITS OWN MODULE ON
- * PURPOSE — for local Testnet end-to-end testing only (see `AVM_MNEMONIC`
+ * PURPOSE - for local Testnet end-to-end testing only (see `AVM_MNEMONIC`
  * in .env.example). Nothing in the core SDK (CallrackClient,
  * X402PaymentClient, CallrackAgent) imports this file; a consumer must
  * explicitly opt in by calling it and handing the result to
@@ -15,14 +15,14 @@ import type { CallrackPaymentSigner } from './signer.js';
  * never run in a browser bundle.
  *
  * `@x402/avm`'s `toClientAvmSigner` takes a Base64-encoded 64-byte key
- * (32-byte seed + 32-byte public key), not a mnemonic directly — Algorand's
+ * (32-byte seed + 32-byte public key), not a mnemonic directly - Algorand's
  * mnemonic-to-key derivation lives in algokit-utils (`seedFromMnemonic`),
  * which validates the checksum and word list, throwing on anything
  * malformed rather than silently deriving a wrong address.
  *
  * Security:
  * - Never commit a real mnemonic (`AVM_MNEMONIC` must stay out of version
- *   control — see the repo's `.gitignore` / `.env.example` convention).
+ *   control - see the repo's `.gitignore` / `.env.example` convention).
  * - Never log the mnemonic, the derived seed, or the signer's key material.
  * - Never send it to a frontend/browser context.
  * - Never use a Mainnet-funded mnemonic in automated CI (see
@@ -45,7 +45,7 @@ function defaultEnv(): Record<string, string | undefined> {
 /**
  * Reads `AVM_MNEMONIC` from the given environment (defaults to
  * `process.env`, when available) and derives a signer from it. Returns
- * `undefined` — never throws — when unset, since this is always an
+ * `undefined` - never throws - when unset, since this is always an
  * optional local/dev convenience, never a required SDK input.
  */
 export function testnetSignerFromEnv(

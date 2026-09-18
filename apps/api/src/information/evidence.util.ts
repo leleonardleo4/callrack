@@ -8,7 +8,7 @@ function omitNullish(data: Record<string, unknown>): Record<string, unknown> | u
   return entries.length > 0 ? Object.fromEntries(entries) : undefined;
 }
 
-/** `AcademicWorkResponse` has no abstract/excerpt field — `excerpt` is genuinely omitted, never synthesized. */
+/** `AcademicWorkResponse` has no abstract/excerpt field - `excerpt` is genuinely omitted, never synthesized. */
 export function academicToEvidence(data: AcademicSearchResponseData, retrievedAt: string): EvidenceItem[] {
   return data.results.map((work) => ({
     source: { title: work.title, url: work.url ?? undefined, provider: 'academic.search' },
@@ -24,7 +24,7 @@ export function academicToEvidence(data: AcademicSearchResponseData, retrievedAt
   }));
 }
 
-/** `NewsArticleResponse` has no excerpt/body field — `excerpt` is genuinely omitted, never synthesized. */
+/** `NewsArticleResponse` has no excerpt/body field - `excerpt` is genuinely omitted, never synthesized. */
 export function newsToEvidence(data: NewsSearchResponseData, retrievedAt: string): EvidenceItem[] {
   return data.results.map((article) => ({
     source: { title: article.title, url: article.url, provider: 'news.search' },
@@ -38,7 +38,7 @@ export function newsToEvidence(data: NewsSearchResponseData, retrievedAt: string
   }));
 }
 
-/** The only one of the three with a real descriptive field — `description` becomes the evidence excerpt as-is. */
+/** The only one of the three with a real descriptive field - `description` becomes the evidence excerpt as-is. */
 export function knowledgeToEvidence(data: KnowledgeSearchResponseData, retrievedAt: string): EvidenceItem[] {
   return data.results.map((entity) => ({
     source: { title: entity.name, url: entity.url, provider: 'knowledge.search' },
@@ -48,7 +48,7 @@ export function knowledgeToEvidence(data: KnowledgeSearchResponseData, retrieved
   }));
 }
 
-/** Deduplicates by exact (title, url, provider) — the same source cited by multiple evidence items counts once. */
+/** Deduplicates by exact (title, url, provider) - the same source cited by multiple evidence items counts once. */
 export function dedupeSources(items: readonly EvidenceItem[]): EvidenceSourceRef[] {
   const seen = new Map<string, EvidenceSourceRef>();
   for (const item of items) {
@@ -62,10 +62,10 @@ export function dedupeSources(items: readonly EvidenceItem[]): EvidenceSourceRef
 
 /**
  * Groups evidence items by normalized title (the "subject") and flags cases
- * where two items about the same subject carry different `excerpt` text —
+ * where two items about the same subject carry different `excerpt` text -
  * a real, deterministic conflict signal. Deliberately narrow: only compares
  * `excerpt`, only within items sharing an exact (case/whitespace-insensitive)
- * title match. An empty result is the common, correct outcome — most
+ * title match. An empty result is the common, correct outcome - most
  * subjects appear once, or multiple sources agree.
  */
 export function detectDisagreements(items: readonly EvidenceItem[]): EvidenceDisagreement[] {

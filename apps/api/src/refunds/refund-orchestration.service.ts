@@ -14,7 +14,7 @@ export interface FailedPaidCapabilityInput {
   readonly network: SupportedX402Network;
   readonly settlement: SettleResponse;
   readonly paymentRequirements: Pick<PaymentRequirements, 'asset' | 'amount' | 'network' | 'payTo'>;
-  /** Best-effort payer decoded directly from the signed payment transaction — used only if the settlement itself omits `payer`. */
+  /** Best-effort payer decoded directly from the signed payment transaction - used only if the settlement itself omits `payer`. */
   readonly fallbackPayer: string | undefined;
 }
 
@@ -36,7 +36,7 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T | undefined>
 
 /**
  * The single centralized entry point for "a paid capability failed after
- * settlement succeeded" — called only from the Fastify boundary in
+ * settlement succeeded" - called only from the Fastify boundary in
  * `install-x402-middleware.ts`, never from a capability controller/service
  * directly (see that file's own docs for why it's the right place to
  * observe both outcomes).
@@ -108,7 +108,7 @@ export class RefundOrchestrationService {
     // see "refunded" immediately when Algorand confirms quickly. If it
     // doesn't finish in time, the attempt keeps running in the background
     // (never aborted) and the reconciler will pick up/verify the outcome on
-    // its own next tick regardless — this is a UX nicety, not the
+    // its own next tick regardless - this is a UX nicety, not the
     // durability mechanism.
     const settled = await withTimeout(
       this.refunds.attemptProcessing(refund.id, input.network, mnemonic),

@@ -34,14 +34,14 @@ export class EvidenceController {
     summary: 'Return a machine-readable evidence pack for a query',
     description:
       'Gathers real results from existing Callrack capabilities (academic, news, knowledge) and returns them ' +
-      'with full provenance — never an AI-generated narrative answer. Every finding traces to a real capability ' +
+      'with full provenance - never an AI-generated narrative answer. Every finding traces to a real capability ' +
       'result and carries its own source, retrieval timestamp, and (when the underlying capability returned ' +
       'one) an excerpt plus additional structured fields.',
   })
   @ApiBody({ type: EvidenceRequestDto })
   @ApiResponse({
     status: 200,
-    description: 'Evidence gathered. `findings` may be empty when no source returned a matching result — this is never padded with a fabricated finding.',
+    description: 'Evidence gathered. `findings` may be empty when no source returned a matching result - this is never padded with a fabricated finding.',
     schema: {
       type: 'object',
       properties: {

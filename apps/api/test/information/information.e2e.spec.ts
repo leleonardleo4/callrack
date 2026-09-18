@@ -99,7 +99,7 @@ describe('Information Capabilities (E2E)', () => {
       expect(body.data.evidence[0].source.provider).toBe('knowledge.search');
     });
 
-    it('returns "insufficient" — never a false 200 with fabricated evidence — when nothing relevant is found', async () => {
+    it('returns "insufficient" - never a false 200 with fabricated evidence - when nothing relevant is found', async () => {
       stubFetchByUrl(EMPTY_ROUTES);
 
       const response = await app.inject({

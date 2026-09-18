@@ -26,7 +26,7 @@ import { X402PaymentClient } from './x402-payment-client.js';
 const DEFAULT_BASE_URL = 'http://localhost:3000';
 
 export interface CallrackClientOptions {
-  /** Defaults to `http://localhost:3000` for local development — never hardcode a production URL. */
+  /** Defaults to `http://localhost:3000` for local development - never hardcode a production URL. */
   readonly baseUrl?: string;
   /** Defaults to `testnet`; a Mainnet client must be requested explicitly. */
   readonly network?: CallrackNetwork;
@@ -36,10 +36,10 @@ export interface CallrackClientOptions {
    * `CallrackPaymentRequiredError` instead of paying automatically.
    */
   readonly signer?: CallrackPaymentSigner;
-  /** Defaults to `defaultSpendPolicy(network)` — this client's own network, USDC only, capped at $1.00/payment. */
+  /** Defaults to `defaultSpendPolicy(network)` - this client's own network, USDC only, capped at $1.00/payment. */
   readonly spendPolicy?: CallrackSpendPolicy;
   readonly timeoutMs?: number;
-  /** Observes the x402 payment lifecycle (never secrets) — used by `CallrackAgentRuntime`'s decision log. */
+  /** Observes the x402 payment lifecycle (never secrets) - used by `CallrackAgentRuntime`'s decision log. */
   readonly onPaymentEvent?: PaymentEventListener;
 }
 
@@ -57,7 +57,7 @@ export interface ListCapabilitiesOptions {
  * The Callrack SDK's top-level client: capability discovery, generic
  * capability invocation, and transparent x402 payment handling. Capability
  * metadata always comes from the live `GET /v1/capabilities` endpoint, never
- * a bundled registry — prices and availability can change server-side
+ * a bundled registry - prices and availability can change server-side
  * without an SDK release.
  */
 export class CallrackClient {
@@ -126,7 +126,7 @@ export class CallrackClient {
   }
 
   /**
-   * Invokes any discovered capability by id — the entry point an agent
+   * Invokes any discovered capability by id - the entry point an agent
    * uses for capabilities it did not know about at compile time. 402s are
    * paid automatically when a signer is configured; otherwise they surface
    * as `CallrackPaymentRequiredError`.
@@ -155,12 +155,12 @@ export class CallrackClient {
       this.call<AcademicSearchInput, AcademicSearchOutput>('academic.search', input),
   };
 
-  /** Verify a claim against existing Callrack capabilities — deterministic, never an LLM. See `VerifyOutput`. */
+  /** Verify a claim against existing Callrack capabilities - deterministic, never an LLM. See `VerifyOutput`. */
   async verify(input: VerifyInput): Promise<CallResult<VerifyOutput>> {
     return this.call<VerifyInput, VerifyOutput>('information.verify', input);
   }
 
-  /** A machine-readable evidence pack for a query — never an AI-generated narrative answer. */
+  /** A machine-readable evidence pack for a query - never an AI-generated narrative answer. */
   async evidence(input: EvidenceInput): Promise<CallResult<EvidenceOutput>> {
     return this.call<EvidenceInput, EvidenceOutput>('information.evidence', input);
   }

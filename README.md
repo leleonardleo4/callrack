@@ -5,7 +5,7 @@ information as paid, machine-readable capabilities with source provenance.
 It is a pay-per-use information infrastructure platform, not another
 general-purpose chatbot: every response traces back to a real provider, a
 real retrieval timestamp, and (for the higher-level `verify`/`evidence`/
-`compare`/`research` capabilities) explicit source-level provenance —
+`compare`/`research` capabilities) explicit source-level provenance -
 never a synthesized or fabricated answer.
 
 Atomic capabilities: academic search/work, news search/trends, crypto
@@ -151,7 +151,7 @@ pnpm --filter @callrack/db run db:seed
 - **PostgreSQL** (via `@callrack/db`, Prisma 7) is the persistent application
   database. It tracks `Capability`, `Provider`, and `Request` records for
   operational analytics.
-- **Redis** (via `@callrack/redis`, ioredis) is infrastructure only — short-lived
+- **Redis** (via `@callrack/redis`, ioredis) is infrastructure only - short-lived
   state, caching, rate-limit counters, and locks. It is never used as a primary
   datastore.
 - The API consumes both through dedicated NestJS modules
@@ -207,46 +207,46 @@ integration tests to actually execute.
 
 Beyond the atomic capabilities (one query, one provider-backed result),
 Callrack composes existing capabilities into higher-value, provenance-rich
-information capabilities — deterministic composition, never an LLM, never
+information capabilities - deterministic composition, never an LLM, never
 a fabricated fact or citation. All four reuse the exact same underlying
 capability *services* (academic/news/knowledge) that back their atomic
-counterparts (`apps/api/src/information/`) — never a duplicate HTTP client,
+counterparts (`apps/api/src/information/`) - never a duplicate HTTP client,
 never a second registry.
 
 | Capability | ID | Endpoint | Purpose |
 |---|---|---|---|
 | Verify | `information.verify` | `POST /v1/verify` | Verify a claim against real evidence and return a deterministic verdict (`supported` / `contradicted` / `mixed` / `insufficient`) with confidence and the evidence itself. |
-| Evidence | `information.evidence` | `POST /v1/evidence` | A machine-readable evidence pack for a query — findings with full provenance, never a narrative answer. |
-| Compare | `information.compare` | `POST /v1/compare` | Structured comparison across whatever distinct subjects the underlying capabilities actually return — real attribute values, real detected disagreements. |
+| Evidence | `information.evidence` | `POST /v1/evidence` | A machine-readable evidence pack for a query - findings with full provenance, never a narrative answer. |
+| Compare | `information.compare` | `POST /v1/compare` | Structured comparison across whatever distinct subjects the underlying capabilities actually return - real attribute values, real detected disagreements. |
 | Research | `research` | `POST /v1/research` | The original research composition, upgraded: alongside its existing per-source results, it now also returns `findings` (normalized evidence), `disagreements`, and `composition` metadata (which sources succeeded/were empty/failed, and when). |
 
 ```bash
 curl -X POST https://api.callrack.xyz/v1/verify \
   -H "content-type: application/json" \
   -d '{"claim": "Nigeria is the most populous country in Africa."}'
-# → 402 Payment Required (pay, then retry — see the x402 section below)
+# → 402 Payment Required (pay, then retry - see the x402 section below)
 ```
 
 **How `verify` actually works.** It gathers real evidence from academic,
 news, and knowledge search (the same composition pattern `research` uses),
 then classifies each *relevant* item as affirming or denying the claim
-using explainable lexical heuristics — term overlap against the claim's
+using explainable lexical heuristics - term overlap against the claim's
 significant words, and a small set of negation cue words ("debunked",
 "denied", "false", ...). This is **not** semantic fact-checking or an LLM
 judgment: it is a deterministic, reproducible signal over the evidence
 Callrack actually returns, and the API description says so. `sourcesChecked: 0`
-(verdict `"insufficient"`) means no relevant evidence was found — never
+(verdict `"insufficient"`) means no relevant evidence was found - never
 that the claim is false.
 
 **Never fabricated.** `evidence`/`compare` return empty arrays, not
 invented values, when the underlying providers don't have enough
-information — the same "no fabrication" rule that already governed
+information - the same "no fabrication" rule that already governed
 `research`. A `compare` subject with only one attribute, or zero detected
 disagreements, is a correct, common result.
 
 All four are configurable via `PRICE_INFORMATION_VERIFY`,
 `PRICE_INFORMATION_EVIDENCE`, `PRICE_INFORMATION_COMPARE`, and
-`PRICE_RESEARCH` (see `.env.example`) — prices are never hardcoded, and
+`PRICE_RESEARCH` (see `.env.example`) - prices are never hardcoded, and
 x402 resolves the exact same registry price automatically for every route.
 
 ---
@@ -263,7 +263,7 @@ normally and settles afterward. `GET /health`, `GET /health/ready`, and
 `GET /docs` are never protected.
 
 Prices come from the capability registry (`apps/api/src/capabilities/`),
-which itself reads `PRICE_*` environment variables — x402 never hardcodes or
+which itself reads `PRICE_*` environment variables - x402 never hardcodes or
 duplicates a price. All paid endpoints share one configured `payTo` address
 per network (the Composite-challenge requirement of one payment destination
 across every Callrack endpoint).
@@ -271,7 +271,7 @@ across every Callrack endpoint).
 ### Required environment variables
 
 ```env
-NETWORK=testnet                    # or "mainnet" — selects which pair below is active
+NETWORK=testnet                    # or "mainnet" - selects which pair below is active
 
 TESTNET_PAY_TO=<algorand-address>
 MAINNET_PAY_TO=<algorand-address>
@@ -281,17 +281,17 @@ MAINNET_FACILITATOR_URL=https://facilitator.goplausible.xyz
 ```
 
 Only the *active* network's `_PAY_TO` / `_FACILITATOR_URL` pair needs to be
-valid — you don't need Mainnet credentials to develop against Testnet. All of
+valid - you don't need Mainnet credentials to develop against Testnet. All of
 this is validated at application startup (`X402ConfigService`); a missing or
 malformed value fails startup with a clear error, never a customer's first
 request. USDC (Testnet ASA `10458941`, Mainnet ASA `31566704`) is resolved
-automatically by `@x402/avm` from the network — Callrack never hardcodes an
+automatically by `@x402/avm` from the network - Callrack never hardcodes an
 asset ID.
 
 ### Testnet setup
 
 1. Copy `.env.example` to `.env` (already includes structurally-valid but
-   **non-spendable placeholder** `TESTNET_PAY_TO`/`MAINNET_PAY_TO` values —
+   **non-spendable placeholder** `TESTNET_PAY_TO`/`MAINNET_PAY_TO` values -
    replace them with a real Algorand address you control before accepting
    any real payment).
 2. Leave `NETWORK=testnet` (the default for local development).
@@ -314,15 +314,15 @@ Client signs a payment and retries with a Payment-Signature header
 ```
 
 The capability provider is never called for an unpaid or invalid-payment
-request — payment verification happens entirely before the capability
+request - payment verification happens entirely before the capability
 service runs, and capability services have no knowledge of x402 at all (see
-`apps/api/src/x402/` — the entire integration lives at the Fastify transport
+`apps/api/src/x402/` - the entire integration lives at the Fastify transport
 boundary, wired in by `createProtectedApp()` in `apps/api/src/bootstrap.ts`).
 
 ### Automatic refunds for failed paid requests
 
 A paid request may be **refunded automatically** when Callrack accepts
-payment but then fails to actually deliver the capability — see
+payment but then fails to actually deliver the capability - see
 [`docs/REFUNDS.md`](docs/REFUNDS.md) for the full design, the required
 `*_REFUND_MNEMONIC` server configuration, and how to interpret the
 `payment` field a failed paid response can carry:
@@ -336,10 +336,10 @@ payment but then fails to actually deliver the capability — see
 ```
 
 `payment.status` is either `"refunded"` (a confirmed, on-chain USDC
-transfer — `refundTransaction` is always present) or `"refund_pending"`
+transfer - `refundTransaction` is always present) or `"refund_pending"`
 (recorded and retried automatically; never claimed as complete before it's
 actually confirmed). A `payment` field only ever appears when Callrack
-actually settled the original payment and the capability then failed — a
+actually settled the original payment and the capability then failed - a
 normal successful response, an unpaid 402, or a rejected/failed payment
 never carry one.
 
@@ -352,11 +352,11 @@ which has two independent layers:
 1. **Listing** (how a resource shows up in the Bazaar catalog at all): a
    paid route that declares the `bazaar` extension, publicly reachable, that
    receives a **real, successfully settled payment**. There is no manual
-   registration step and no Callrack-side "Bazaar database" — the
+   registration step and no Callrack-side "Bazaar database" - the
    facilitator catalogs the resource itself the first time it settles a
    payment against it. Nothing in this codebase can simulate or fake this;
    see "Local declaration vs. real Bazaar visibility" below.
-2. **Enrichment** (optional, free, cosmetic — name/logo/description shown
+2. **Enrichment** (optional, free, cosmetic - name/logo/description shown
    next to a listed resource): the facilitator reads the `x402-merchant`
    extension if present, and otherwise falls back to crawling one HTML
    origin for `<meta>` tags and `.well-known` files.
@@ -367,19 +367,19 @@ Capability Registry) so nothing is hand-maintained per route or can drift:
 ```text
 Capability Registry (id, description, requestSchema, discovery.{input,output})
         ↓
-apps/api/src/x402/discovery-schema.util.ts    — reflects the live request DTO
+apps/api/src/x402/discovery-schema.util.ts    - reflects the live request DTO
         ↓                                       (the same @ApiProperty decorators
         ↓                                        /docs/json already uses) into JSON
         ↓                                        Schema, dereferencing any
         ↓                                        `$ref`s so each schema is
         ↓                                        self-contained
-apps/api/src/x402/discovery-metadata.builder.ts — calls @x402/extensions/bazaar's
+apps/api/src/x402/discovery-metadata.builder.ts - calls @x402/extensions/bazaar's
         ↓                                          declareDiscoveryExtension(...) and
         ↓                                          merges in the x402-merchant extension
 x402 route `extensions` = { bazaar, "x402-merchant" }
 ```
 
-The registry itself never imports any `@x402/*` package — only the small
+The registry itself never imports any `@x402/*` package - only the small
 adapter in `apps/api/src/x402/` does, keeping capability metadata reusable
 even if x402 were replaced later. The Bazaar resource-server extension
 (`bazaarResourceServerExtension`) is registered exactly once, in
@@ -406,11 +406,11 @@ control:
 ```
 
 `website` is deliberately `https://callrack.xyz` (the brand/root domain),
-**not** `api.callrack.xyz` (where the paid routes actually live) — the guide
+**not** `api.callrack.xyz` (where the paid routes actually live) - the guide
 resolves the enrichment-crawl origin from `x402-merchant.website` when
 present, so this is what points the facilitator's HTML/well-known crawl at
 the right place. `apps/web`'s `index.html` carries the corresponding root
-page metadata (title, description, `og:*`, `theme-color`, favicon — every
+page metadata (title, description, `og:*`, `theme-color`, favicon - every
 value points at something that actually exists in this repo; nothing is
 fabricated), and ships static `.well-known/agent.json`, `llms.txt`, and
 `agents.md` files that defer to `api.callrack.xyz` for the live,
@@ -422,15 +422,15 @@ never `index.html`):
 
 | Path | Content-Type | Purpose |
 | --- | --- | --- |
-| `/.well-known/x402` | `application/json` | Static x402 discovery document: every paid resource, its network, USDC asset, base-unit amount, and `payTo` — generated from the live registry and active network config, not hand-written |
-| `/.well-known/agent-card.json` | `application/json` | A2A-style agent card listing Callrack's real capabilities (research, news, market data, weather, geocoding, knowledge) — never claims Callrack itself is an autonomous agent |
+| `/.well-known/x402` | `application/json` | Static x402 discovery document: every paid resource, its network, USDC asset, base-unit amount, and `payTo` - generated from the live registry and active network config, not hand-written |
+| `/.well-known/agent-card.json` | `application/json` | A2A-style agent card listing Callrack's real capabilities (research, news, market data, weather, geocoding, knowledge) - never claims Callrack itself is an autonomous agent |
 | `/.well-known/agent.json` | `application/json` | Generic manifest: name, description, url, documentation, and the x402/Algorand/USDC payment block |
 | `/llms.txt` | `text/plain` | Markdown starting `# Callrack`; explains the pay-per-request model, current capabilities and prices, how to pay, and links to `/openapi.json` and `/agents.md` |
 | `/agents.md` | `text/markdown` | Operating instructions for agents already integrating Callrack: the 402 → pay → retry flow, and the rule that a live 402 response is always authoritative over any hardcoded price |
-| `/openapi.json` | `application/json` | The same Swagger/OpenAPI document `/docs` renders, at the conventional root path agent tooling looks for — `/docs` is unaffected |
+| `/openapi.json` | `application/json` | The same Swagger/OpenAPI document `/docs` renders, at the conventional root path agent tooling looks for - `/docs` is unaffected |
 
 Callrack does **not** publish `.well-known/ai-plugin.json` (no real contact
-email exists in project config to put in one — publishing a fabricated
+email exists in project config to put in one - publishing a fabricated
 email would be worse than omitting the file) or `.well-known/mcp.json` (no
 MCP server exists in this project). Both return a plain 404, not a fake
 manifest.
@@ -438,7 +438,7 @@ manifest.
 Every paid route's Mainnet payment option also carries the
 `x402-global-challenge` tag required by the 2026 Algorand Global x402
 Challenge, **only when `NETWORK=mainnet`**, in the route's x402 `extra`
-field — Testnet traffic is never part of the competition/leaderboard, so
+field - Testnet traffic is never part of the competition/leaderboard, so
 Testnet routes never carry this tag:
 
 ```json
@@ -446,24 +446,24 @@ Testnet routes never carry this tag:
 ```
 
 (`feePayer` above is added independently by `@x402/avm`'s own
-`ExactAvmScheme` enrichment, not by Callrack — Callrack's `extra.tag` is
+`ExactAvmScheme` enrichment, not by Callrack - Callrack's `extra.tag` is
 merged in alongside it, never overwriting it.)
 
 **Facilitator caching.** The GoPlausible facilitator caches enrichment
 results (merchant/root-page/well-known metadata) for **24 hours**. Callrack
-does not build any duplicate cache of its own for this — a metadata change
+does not build any duplicate cache of its own for this - a metadata change
 (new logo, new description, edited `llms.txt`) needs no code change on
 Callrack's side, but will not be reflected in the facilitator's own catalog
 until that cache expires or is manually refreshed from the merchant side.
 This repository does not claim metadata updates propagate immediately.
 
 **Local declaration vs. real Bazaar visibility.** Running locally proves the
-*declaration* is correct — the 402 response really does carry a valid
+*declaration* is correct - the 402 response really does carry a valid
 `extensions.bazaar` block, a well-formed `x402-merchant` extension, the
 Mainnet-only challenge tag, and the right schemas (see
 `apps/api/test/x402/x402.e2e.spec.ts` and `apps/api/test/discovery/discovery.e2e.spec.ts`).
 It does **not** prove Callrack is listed in the actual GoPlausible Bazaar
-catalog — that requires a public HTTPS deployment on Mainnet and a real
+catalog - that requires a public HTTPS deployment on Mainnet and a real
 settled payment, which is out of scope for this phase. Nothing in this
 codebase claims Callrack is currently in the Bazaar catalog.
 
@@ -475,14 +475,14 @@ it to confirm the facilitator actually sees what this README describes:
 discovery files return 200 with correct content types, the `bazaar` and
 `x402-merchant` extensions parse, CORS headers pass its sanity checks, and
 (after a first real settled payment) the resource appears in the Bazaar
-catalog. This has not been run yet — there is no public deployment to point
-it at — and nothing in this repository claims it has passed.
+catalog. This has not been run yet - there is no public deployment to point
+it at - and nothing in this repository claims it has passed.
 
 ### Running the x402 test suite
 
 ```bash
 pnpm --filter @callrack/api test              # includes deterministic x402 tests (mocked facilitator, no network calls)
-pnpm --filter @callrack/api test:x402:testnet # real Testnet payment — see below
+pnpm --filter @callrack/api test:x402:testnet # real Testnet payment - see below
 ```
 
 The default suite never hits a real facilitator or blockchain: `apps/api/test/x402/fake-facilitator.ts`
@@ -494,13 +494,13 @@ Fastify middleware) runs unmodified.
 Testnet payment end-to-end (unpaid request → 402 → sign → retry → paid
 response → settlement). It requires a funded Testnet Algorand account with
 Testnet USDC, supplied via `TESTNET_TEST_PAYER_PRIVATE_KEY` (a base64-encoded
-private key, never a mnemonic or file in this repo — export it in your own
+private key, never a mnemonic or file in this repo - export it in your own
 shell only). It is never run as part of `pnpm test` or CI.
 
 ### Switching between Testnet and Mainnet
 
 Change `NETWORK` and ensure the corresponding `MAINNET_PAY_TO` /
-`MAINNET_FACILITATOR_URL` (or `TESTNET_*`) pair is set — no code changes are
+`MAINNET_FACILITATOR_URL` (or `TESTNET_*`) pair is set - no code changes are
 needed. `NETWORK=mainnet` resolves Algorand Mainnet's CAIP-2 identifier and
 Mainnet USDC automatically.
 
@@ -516,7 +516,7 @@ Select a capability → Send request → 402 → Connect Wallet → Approve & Pa
 ```
 
 Wallet connectivity is built on
-[`@txnlab/use-wallet` v5](https://github.com/TxnLab/use-wallet) — never a
+[`@txnlab/use-wallet` v5](https://github.com/TxnLab/use-wallet) - never a
 second, hand-rolled connection stack per wallet. Supported wallets
 (`apps/web/src/wallet/manager.ts`):
 
@@ -525,10 +525,10 @@ second, hand-rolled connection stack per wallet. Supported wallets
 | Pera | `@txnlab/use-wallet-pera` | Browser extension, mobile app, and Pera Discover |
 | Defly | `@txnlab/use-wallet-defly` | Mobile-first, via its own WalletConnect-based session |
 | Lute | `@txnlab/use-wallet-lute` | Browser extension |
-| WalletConnect | `@txnlab/use-wallet-walletconnect` | Generic QR/deep-link route for other compatible wallets — only offered when `VITE_WALLETCONNECT_PROJECT_ID` is configured |
+| WalletConnect | `@txnlab/use-wallet-walletconnect` | Generic QR/deep-link route for other compatible wallets - only offered when `VITE_WALLETCONNECT_PROJECT_ID` is configured |
 | Exodus | `@txnlab/use-wallet-exodus` | One additional mainstream wallet, included as a stable, zero-extra-config option |
 
-The Playground never asks for a mnemonic or private key — connecting is
+The Playground never asks for a mnemonic or private key - connecting is
 always a real wallet's own approval flow, and a rejected/cancelled wallet
 prompt is shown as "Transaction cancelled," never as an API failure.
 
@@ -536,7 +536,7 @@ The wallet layer is a thin adapter around the **existing** SDK payment
 path, not a second payment system: a connected wallet's `signTransactions`
 is wrapped into the exact same `CallrackPaymentSigner` shape
 (`packages/sdk/src/signer.ts`) that a Node script or agent would supply, and
-handed to the SDK's own `X402PaymentClient` — the same class used by
+handed to the SDK's own `X402PaymentClient` - the same class used by
 `CallrackClient` everywhere else. Transaction construction, requirement
 selection, spend-policy validation, and retry are never reimplemented in the
 browser.
@@ -554,28 +554,28 @@ request retried with the signed payment → real API response
 ```
 
 The Playground always shows the **exact** amount, network, and asset from
-the live 402 challenge before a wallet ever opens — never a price computed
+the live 402 challenge before a wallet ever opens - never a price computed
 client-side. It respects whichever network Callrack's own API is running on
 (from `GET /v1/capabilities`, the same source the rest of the Playground
-already uses) — Testnet or Mainnet, never a third, invented network.
+already uses) - Testnet or Mainnet, never a third, invented network.
 
 Requires `apps/web`'s own dependencies (`pnpm install` at the repo root
 already covers this) and, optionally, a
 [WalletConnect Cloud](https://cloud.reown.com) project id in
 `VITE_WALLETCONNECT_PROJECT_ID` (see `apps/web/.env.example`) to enable the
-WalletConnect option — Pera, Defly, Lute, and Exodus all work without it.
+WalletConnect option - Pera, Defly, Lute, and Exodus all work without it.
 
 ### ⚠️ Security
 
 - Never commit a private key, mnemonic, or `.env` file. `.env` is
   git-ignored; `.env.example` only ever contains non-spendable placeholders.
-- The resource server (this API) only ever *receives* payments — it never
+- The resource server (this API) only ever *receives* payments - it never
   holds or needs a payer's private key. `TESTNET_TEST_PAYER_PRIVATE_KEY` is a
   **test-only, funded-with-testnet-only** credential you provide yourself
   when running the Testnet smoke script; it is never read by the running
   server.
 - `payTo`, network, and asset are always resolved from trusted server
-  configuration — a client can never choose or influence any of them.
+  configuration - a client can never choose or influence any of them.
 - **CORS** is deliberately open (`origin: true`, no `Access-Control-Allow-Credentials`)
   rather than restricted to a configured allowlist: paid capabilities are
   meant to be called by arbitrary x402 clients/agents, not one fixed browser

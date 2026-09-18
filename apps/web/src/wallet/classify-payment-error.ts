@@ -19,11 +19,11 @@ export type PaymentFlowFailureReason =
 
 export interface PaymentFlowFailure {
   readonly reason: PaymentFlowFailureReason;
-  /** Always a real message — the server's or wallet's own, never fabricated. */
+  /** Always a real message - the server's or wallet's own, never fabricated. */
   readonly message: string;
   /**
    * A plain-language explanation of what this specific reason means and,
-   * where there's a concrete next step, how to resolve it — additive only,
+   * where there's a concrete next step, how to resolve it - additive only,
    * never a replacement for `message`. Omitted when there's nothing more
    * useful to say than the real error itself.
    */
@@ -31,7 +31,7 @@ export interface PaymentFlowFailure {
   /**
    * Present only when the server itself reports that this payment was
    * settled but the capability then failed (see `ApiPaymentRefundInfo`).
-   * Never set by `classifyPaymentFlowError` — only ever attached by
+   * Never set by `classifyPaymentFlowError` - only ever attached by
    * `useWalletPaymentFlow` directly from a real `api-error` response body.
    */
   readonly payment?: ApiPaymentRefundInfo;
@@ -43,7 +43,7 @@ export interface PaymentFlowFailure {
 // *user*, e.g. "...rejected by the user"). Deliberately narrower than a bare
 // /reject/i or /cancel/i: the server's own rejection message (surfaced via
 // CallrackPaymentError, e.g. "Payment for ... was rejected by the server:
-// ...") also contains the word "rejected" — matching on that alone would
+// ...") also contains the word "rejected" - matching on that alone would
 // misclassify a real server/facilitator rejection as a user cancellation.
 const CANCEL_PATTERNS: readonly RegExp[] = [
   /\buser\b.{0,20}\b(reject|cancel|declin|den(y|ied))/i,
@@ -54,7 +54,7 @@ const CANCEL_PATTERNS: readonly RegExp[] = [
 const WALLET_UNAVAILABLE_PATTERNS: readonly RegExp[] = [/not available/i, /not installed/i, /no wallet/i, /disconnected/i];
 // Algod's exact simulation-error wording for an account that can't receive
 // an asset it hasn't opted in to yet (see @callrack/api's earlier real
-// Testnet debugging session) — checked before the generic BALANCE_PATTERNS
+// Testnet debugging session) - checked before the generic BALANCE_PATTERNS
 // below, since this message also happens to contain "asset"/"missing" but
 // is a completely different, server-side-only problem.
 const NOT_OPTED_IN_PATTERNS: readonly RegExp[] = [/must optin/i, /missing from/i];
@@ -63,7 +63,7 @@ const BALANCE_PATTERNS: readonly RegExp[] = [/insufficient/i, /underflow/i, /ove
 /**
  * Classifies whatever the wallet-backed payment attempt threw into the
  * Playground's own small, user-facing vocabulary. Never invents a cause the
- * error doesn't support — an unmatched `CallrackPaymentError` still shows
+ * error doesn't support - an unmatched `CallrackPaymentError` still shows
  * its own real message (see requirement: "surface the existing
  * CallrackPaymentError details instead of replacing them with a generic
  * wallet error"), and this function performs no retry, no parallel
@@ -95,19 +95,19 @@ export function classifyPaymentFlowError(error: unknown, requiredNetworkLabel?: 
       return {
         reason: 'wrong-network',
         message: `This request's payment requirements don't match what this wallet is configured to pay (network, asset, or amount).${networkNote}`,
-        hint: 'Disconnect and reconnect your wallet, and confirm it holds USDC on the required network — this app never pays on a different network, asset, or amount than the live challenge specifies.',
+        hint: 'Disconnect and reconnect your wallet, and confirm it holds USDC on the required network - this app never pays on a different network, asset, or amount than the live challenge specifies.',
       };
     }
     return {
       reason: 'policy',
       message: error.message,
-      hint: 'This request was blocked by this app\'s own spend-policy safeguards before anything was signed — no payment was attempted.',
+      hint: 'This request was blocked by this app\'s own spend-policy safeguards before anything was signed - no payment was attempted.',
     };
   }
 
   if (error instanceof CallrackPaymentError) {
     // Algod's exact wording for "the receiving account hasn't opted in to
-    // this asset" — a real payment was signed and sent, but the *server's*
+    // this asset" - a real payment was signed and sent, but the *server's*
     // own payTo address can't accept it. Never something the payer can fix;
     // always a Callrack deployment configuration issue.
     if (NOT_OPTED_IN_PATTERNS.some((pattern) => pattern.test(message))) {
@@ -129,7 +129,7 @@ export function classifyPaymentFlowError(error: unknown, requiredNetworkLabel?: 
     return {
       reason: 'payment-rejected',
       message: error.message,
-      hint: 'The server or facilitator rejected this payment after it was submitted. The real reason is above — if it isn\'t clear, this is worth reporting rather than retrying blindly.',
+      hint: 'The server or facilitator rejected this payment after it was submitted. The real reason is above - if it isn\'t clear, this is worth reporting rather than retrying blindly.',
     };
   }
 
@@ -137,7 +137,7 @@ export function classifyPaymentFlowError(error: unknown, requiredNetworkLabel?: 
     return {
       reason: 'network',
       message: error.message,
-      hint: 'Check that the Callrack API is reachable from this browser and try again — this never reached the point of attempting payment.',
+      hint: 'Check that the Callrack API is reachable from this browser and try again - this never reached the point of attempting payment.',
     };
   }
 

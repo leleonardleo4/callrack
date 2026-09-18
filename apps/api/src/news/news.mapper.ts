@@ -3,7 +3,7 @@ import type { NewsSearchResponseData, NewsTrendsResponseData } from './news-resp
 
 /**
  * Normalizes GDELT's already-clean domain types into Callrack's public news
- * contracts. No `snippet`/description field is included — GDELT's article
+ * contracts. No `snippet`/description field is included - GDELT's article
  * list mode doesn't provide one, and this layer never fabricates data.
  */
 export function toNewsSearchResponse(result: NewsSearchResult): NewsSearchResponseData {

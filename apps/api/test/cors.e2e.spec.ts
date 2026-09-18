@@ -56,7 +56,7 @@ describe('CORS (E2E)', () => {
 
   it('exposes PAYMENT-REQUIRED and PAYMENT-RESPONSE so a real browser can read x402 headers cross-origin', async () => {
     // A browser only lets JS read response headers listed here for a
-    // cross-origin request — curl/server-to-server callers were never
+    // cross-origin request - curl/server-to-server callers were never
     // affected by this (no CORS enforcement outside a browser), but any
     // browser-based x402 client (the Playground included) could see a 402
     // or a paid response over the wire yet never actually read either
@@ -98,7 +98,7 @@ describe('CORS (E2E)', () => {
   it('allows the Access-Control-Expose-Headers request header on a preflight request', async () => {
     // Not our doing: @x402/fetch's own paid-retry logic (wrapFetchWithPayment)
     // sets "Access-Control-Expose-Headers" directly on the *request* it
-    // sends — normally only ever a response header — presumably so a
+    // sends - normally only ever a response header - presumably so a
     // facilitator proxy can forward it. Without this allowed, a real
     // browser's preflight rejects the paid retry outright, surfacing as a
     // bare "Failed to fetch" *after* the wallet already signed and

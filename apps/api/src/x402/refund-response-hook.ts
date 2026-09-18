@@ -12,7 +12,7 @@ import { ApiErrorCode } from '../common/errors/api-error-codes.js';
 
 const logger = new Logger('RefundResponseHook');
 
-/** Safe decode — a missing/malformed header just means "no confirmed settlement", never a crash. */
+/** Safe decode - a missing/malformed header just means "no confirmed settlement", never a crash. */
 export function tryDecodeSettlement(headerValue: string | number | string[] | undefined): SettleResponse | undefined {
   if (typeof headerValue !== 'string') return undefined;
   try {
@@ -43,11 +43,11 @@ export interface RefundHookDeps {
 
 /**
  * Registered as a Fastify `onSend` hook, AFTER `@x402/fastify`'s own onSend
- * hook (see install-x402-middleware.ts) — so by the time this runs, x402 has
+ * hook (see install-x402-middleware.ts) - so by the time this runs, x402 has
  * already decided whether to settle and, if it did, already attached the
  * `PAYMENT-RESPONSE` header. This is "the boundary that can observe both
  * successful settlement and subsequent capability failure" the refund
- * system's design calls for — x402's own verify/settle logic is completely
+ * system's design calls for - x402's own verify/settle logic is completely
  * unmodified; this only ever reads its output and, on the specific
  * "settled but failed" combination, augments the outgoing response.
  *
@@ -65,16 +65,16 @@ export function createRefundOnSendHook(deps: RefundHookDeps) {
     if (!x402Context) return payload; // not a paid route at all
 
     const settlement = tryDecodeSettlement(reply.getHeader(PAYMENT_RESPONSE_HEADER));
-    if (!settlement || settlement.success !== true) return payload; // never actually charged — nothing to refund
+    if (!settlement || settlement.success !== true) return payload; // never actually charged - nothing to refund
 
     const capabilityFailed = reply.statusCode >= 400 || getCapabilityExecutionFailure() !== undefined;
-    if (!capabilityFailed) return payload; // normal paid success — untouched
+    if (!capabilityFailed) return payload; // normal paid success - untouched
 
     let parsed: unknown;
     try {
       parsed = typeof payload === 'string' ? JSON.parse(payload) : payload;
     } catch {
-      // Not JSON (e.g. an HTML error page from an unrelated failure mode) —
+      // Not JSON (e.g. an HTML error page from an unrelated failure mode) -
       // never crash the response over this; the refund still gets recorded
       // below, just without a body annotation the client can read.
       parsed = undefined;
@@ -85,7 +85,7 @@ export function createRefundOnSendHook(deps: RefundHookDeps) {
       request.id;
 
     // Best-effort payer decoded directly from the client's own signed
-    // transaction bytes — used only if the trusted settlement response
+    // transaction bytes - used only if the trusted settlement response
     // itself omits `payer` (see PaymentContext's own docs on why this is
     // never taken from request JSON).
     const fallbackPayer = extractPaymentContext(x402Context)?.payer;
@@ -102,7 +102,7 @@ export function createRefundOnSendHook(deps: RefundHookDeps) {
       });
     } catch (error) {
       // The refund pipeline itself must never take down an already-failing
-      // response — log loudly and fall back to "pending" so the client at
+      // response - log loudly and fall back to "pending" so the client at
       // least knows a refund is owed, never that everything is fine.
       logger.error(`Refund orchestration threw: ${(error as Error).message}`, (error as Error).stack);
       refundView = { status: 'refund_pending' as const };
@@ -119,7 +119,7 @@ export function createRefundOnSendHook(deps: RefundHookDeps) {
     }
 
     // A 2xx response whose body was still success-shaped (currently only
-    // /v1/research's total-failure case) — synthesize the standard error
+    // /v1/research's total-failure case) - synthesize the standard error
     // envelope so the client actually sees a failing status, per the
     // "never swallow the original capability failure" requirement.
     reply.status(500);

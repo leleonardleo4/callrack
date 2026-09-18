@@ -4,7 +4,7 @@ import { bootstrap } from './bootstrap.js';
 
 // Must run before `bootstrap()` is called: config services read
 // `process.env` synchronously during Nest's dependency-injection bootstrap.
-// Only the real process entrypoint does this — tests call
+// Only the real process entrypoint does this - tests call
 // `createApp()`/`createProtectedApp()` directly with their own deliberate
 // env, and should never have a `.env` file silently loaded on top of that.
 loadRootEnv();

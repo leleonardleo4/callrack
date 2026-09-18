@@ -33,11 +33,11 @@ const IDLE_STATE: PaymentFlowState = { status: 'idle' };
 
 /**
  * Drives one Playground request through the full diagram this feature
- * implements: an unpaid probe first (so a real 402 — never a simulated one
- * — decides whether payment is needed at all), then, only on the user's
+ * implements: an unpaid probe first (so a real 402 - never a simulated one
+ * - decides whether payment is needed at all), then, only on the user's
  * explicit approval, a wallet-backed retry through the SDK's own
  * `X402PaymentClient`. Every status transition here reflects something that
- * actually happened — there is no synthetic "payment successful" state
+ * actually happened - there is no synthetic "payment successful" state
  * reachable without the underlying `X402PaymentClient.fetch` call actually
  * resolving with a paid (2xx) response.
  */
@@ -93,7 +93,7 @@ export function useWalletPaymentFlow() {
         // A resolved (non-thrown) non-success result here means the wallet
         // attempt completed but the underlying request still failed for
         // some other reason (e.g. the capability itself errored after a
-        // real, already-settled payment) — always attach a `failure` so
+        // real, already-settled payment) - always attach a `failure` so
         // the response panel's 'failed' branch renders the real message
         // instead of silently falling through to redisplay a stale
         // "payment required" card as if the attempt never happened.
@@ -102,7 +102,7 @@ export function useWalletPaymentFlow() {
             ? {
                 reason: 'network',
                 message: result.message,
-                hint: 'Check that the Callrack API is reachable from this browser and try again — this never reached the point of attempting payment.',
+                hint: 'Check that the Callrack API is reachable from this browser and try again - this never reached the point of attempting payment.',
               }
             : result.kind === 'api-error'
               ? {
@@ -118,7 +118,7 @@ export function useWalletPaymentFlow() {
                   message:
                     result.paymentRequired.error ??
                     'The server returned a payment-required response after the payment attempt.',
-                  hint: 'The server or facilitator rejected this payment after it was submitted. The real reason is above — if it isn\'t clear, this is worth reporting rather than retrying blindly.',
+                  hint: 'The server or facilitator rejected this payment after it was submitted. The real reason is above - if it isn\'t clear, this is worth reporting rather than retrying blindly.',
                 };
         setState((previous) => ({ ...previous, status: 'failed', result, failure }));
       } catch (error) {

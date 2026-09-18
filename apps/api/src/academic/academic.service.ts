@@ -120,7 +120,7 @@ export class AcademicService {
       // Both OpenAlex and Crossref return a 404-shaped failure (mapped to
       // PROVIDER_INVALID_REQUEST by the shared HTTP client) when a DOI is
       // genuinely unregistered with them, so treat that as "not found"
-      // rather than "we sent a bad request" — the DTO already validated the
+      // rather than "we sent a bad request" - the DTO already validated the
       // DOI's format before we ever called a provider.
       if (error instanceof ProviderError && error.code === ProviderErrorCode.PROVIDER_INVALID_REQUEST) {
         throw new NotFoundException({

@@ -3,7 +3,7 @@ import type { WeatherResponseData } from './weather-response.types.js';
 
 /**
  * Normalizes Open-Meteo's already-clean domain type into Callrack's public
- * weather contract. There is no hourly forecast here — the Phase 3 adapter
+ * weather contract. There is no hourly forecast here - the Phase 3 adapter
  * doesn't request or normalize hourly data, so it's never fabricated.
  */
 export function toWeatherResponse(data: WeatherData): WeatherResponseData {

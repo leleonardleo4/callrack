@@ -17,7 +17,7 @@ export class GdeltProvider extends BaseProviderAdapter implements NewsProvider {
   readonly metadata: ProviderMetadata = defineProviderMetadata({
     slug: PROVIDER_SLUG,
     name: 'GDELT',
-    description: 'Global Database of Events, Language, and Tone — worldwide news monitoring.',
+    description: 'Global Database of Events, Language, and Tone - worldwide news monitoring.',
     category: 'news',
     website: 'https://www.gdeltproject.org',
     attributionRequired: true,

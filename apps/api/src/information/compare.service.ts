@@ -19,7 +19,7 @@ const COMPARE_CAPABILITY = {
 /**
  * Structured comparison across whatever distinct subjects the underlying
  * Callrack capabilities actually return for a query (same composition
- * pattern as `ResearchService`/`VerifyService`/`EvidenceService`) — never an
+ * pattern as `ResearchService`/`VerifyService`/`EvidenceService`) - never an
  * invented comparison table. A subject with only one attribute, or zero
  * detected disagreements, is a correct, common result, not a bug: this
  * never fills in a value a provider didn't actually return.

@@ -1,6 +1,6 @@
 /**
  * Callrack SDK error hierarchy. Every error carries a `requestId` and
- * `capabilityId` where known, for correlating with server-side logs — and
+ * `capabilityId` where known, for correlating with server-side logs - and
  * never a private key, mnemonic, or payment signature, even in `cause`.
  */
 
@@ -22,7 +22,7 @@ export class CallrackError extends Error {
   }
 }
 
-/** A connection-level failure — DNS, refused connection, aborted request. Never reached the server. */
+/** A connection-level failure - DNS, refused connection, aborted request. Never reached the server. */
 export class CallrackNetworkError extends CallrackError {
   constructor(message: string, options?: CallrackErrorOptions) {
     super(message, options);
@@ -40,7 +40,7 @@ export class CallrackTimeoutError extends CallrackNetworkError {
   }
 }
 
-/** The server responded, but with a non-2xx, non-402 status — a real API error envelope. */
+/** The server responded, but with a non-2xx, non-402 status - a real API error envelope. */
 export interface CallrackApiErrorOptions extends CallrackErrorOptions {
   readonly status: number;
   readonly code?: string;
@@ -86,7 +86,7 @@ export interface CallrackPaymentRequiredErrorOptions extends CallrackErrorOption
 
 /**
  * Thrown when a capability returns 402 and the SDK is not configured to pay
- * automatically (no signer given) — the caller gets the real, live
+ * automatically (no signer given) - the caller gets the real, live
  * requirement to act on themselves, never a stale or assumed price.
  */
 export class CallrackPaymentRequiredError extends CallrackError {
@@ -112,7 +112,7 @@ export interface CallrackPaymentPolicyErrorOptions extends CallrackErrorOptions 
 }
 
 /**
- * Thrown when a payment requirement fails policy validation — wrong
+ * Thrown when a payment requirement fails policy validation - wrong
  * network, wrong asset, amount over budget, resource mismatch, or nothing
  * acceptable in `accepts` at all. The SDK never signs when this is thrown.
  */
@@ -131,7 +131,7 @@ export class CallrackPaymentPolicyError extends CallrackError {
 /**
  * Thrown when payment creation or settlement itself fails (signing error,
  * facilitator rejection, malformed settlement response) after policy
- * validation already passed — a real attempt was made and failed.
+ * validation already passed - a real attempt was made and failed.
  */
 export class CallrackPaymentError extends CallrackError {
   constructor(message: string, options?: CallrackErrorOptions) {

@@ -77,7 +77,7 @@ describe('RefundService.checkEligibility', () => {
     expect(service.checkEligibility(basePayment(), expected)).toEqual({ eligible: true });
   });
 
-  it('rejects a missing payer — the client can never omit its way into choosing a recipient', () => {
+  it('rejects a missing payer - the client can never omit its way into choosing a recipient', () => {
     const service = new RefundService(fakeDatabase({}), fakeAlgorand());
     const result = service.checkEligibility(basePayment({ payer: undefined }), expected);
     expect(result.eligible).toBe(false);

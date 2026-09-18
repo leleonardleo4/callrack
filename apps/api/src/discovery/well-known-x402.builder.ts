@@ -20,16 +20,16 @@ export interface WellKnownX402Document {
 }
 
 /**
- * Builds the `/.well-known/x402` static discovery index — a convenience for
+ * Builds the `/.well-known/x402` static discovery index - a convenience for
  * agents that want to check prices before making any request, entirely
  * separate from Bazaar listing (which requires the `bazaar` extension plus
  * a real settled payment, not this file).
  *
  * Every field is derived from the Capability Registry and the active x402
- * network config — nothing here is a second, hand-maintained route list.
+ * network config - nothing here is a second, hand-maintained route list.
  * The USDC asset id and the atomic-unit amount conversion both come from
- * `@x402/avm`'s own exports (`getDefaultAsset`, `convertToTokenAmount`) —
- * the exact same resolution the payment layer itself uses — so this can
+ * `@x402/avm`'s own exports (`getDefaultAsset`, `convertToTokenAmount`) -
+ * the exact same resolution the payment layer itself uses - so this can
  * never silently diverge from the real 402 challenge amounts, and never
  * performs floating-point arithmetic.
  */
@@ -44,12 +44,12 @@ export function buildWellKnownX402(
     x402Version: 2,
     name: 'Callrack',
     description:
-      'Callrack is a pay-per-use information infrastructure platform — every capability below is paid per ' +
+      'Callrack is a pay-per-use information infrastructure platform - every capability below is paid per ' +
       'request in USDC on Algorand via the x402 protocol. No accounts, no API keys, no subscriptions.',
     resources: capabilities.map((capability) => ({
       url: `${origin}${capability.path}`,
       method: capability.method,
-      description: `${capability.description} — ${capability.price.amount} USDC per call.`,
+      description: `${capability.description} - ${capability.price.amount} USDC per call.`,
       network: active.caip2Network,
       asset: usdc.asset,
       amount: convertToTokenAmount(capability.price.amount, usdc.decimals),

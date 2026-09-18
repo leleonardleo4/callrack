@@ -4,7 +4,7 @@ import type { AcademicSearchResponseData, AcademicWorkResponse } from './academi
 /**
  * Normalizes a provider-owned AcademicWork into Callrack's public academic
  * work contract. Only fields the provider layer can reliably supply are
- * included — no fabricated data (e.g. no `abstract`/`publisher`, since
+ * included - no fabricated data (e.g. no `abstract`/`publisher`, since
  * neither OpenAlex nor Crossref mappers currently populate them).
  */
 export function toAcademicWorkResponse(work: AcademicWork): AcademicWorkResponse {

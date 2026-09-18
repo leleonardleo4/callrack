@@ -17,7 +17,7 @@ afterEach(() => {
 describe('WalletConnectButton', () => {
   // Confirms the "Switch wallet" item wires to the same dialog-open state
   // the disconnected "Connect Wallet" button uses (see WalletConnectDialog's
-  // own dedicated tests for the picker's full rendering/connect behavior —
+  // own dedicated tests for the picker's full rendering/connect behavior -
   // re-asserting that here would mount a second Radix Popper-positioned
   // primitive in the same jsdom instance as the already-open dropdown,
   // which compounds jsdom's layout cost far beyond either alone).

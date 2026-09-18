@@ -23,7 +23,7 @@ export const STALE_IN_FLIGHT_MS = 2 * 60_000;
  * with one already confirmed for the same sender within its validity
  * window (see AlgorandRefundClient's deterministic lease). Reaching this
  * almost certainly means an EARLIER attempt for this exact refund already
- * landed on-chain — but confirming that for certain would need an indexer
+ * landed on-chain - but confirming that for certain would need an indexer
  * lookup this service doesn't perform, so it's surfaced as a distinct,
  * clearly-labeled non-retryable error for manual verification rather than
  * guessed at as either a success or a plain failure.
@@ -32,7 +32,7 @@ const LEASE_CONFLICT_PATTERN = /already in ledger|TransactionPool\.Remember|over
 
 /**
  * Error messages that indicate a permanent, non-retryable problem (a bad
- * input, not a transient RPC/network hiccup) — retrying these
+ * input, not a transient RPC/network hiccup) - retrying these
  * automatically would just waste attempts and Algorand fees. Matched
  * case-insensitively against the thrown error's message; deliberately
  * conservative (only well-understood Algorand/algod rejection reasons),
@@ -53,7 +53,7 @@ export function isRetryableRefundError(error: unknown): boolean {
   return !NON_RETRYABLE_ERROR_PATTERNS.some((pattern) => pattern.test(message));
 }
 
-/** Exponential backoff, capped — used by the reconciler to decide whether a FAILED refund is eligible to retry yet. */
+/** Exponential backoff, capped - used by the reconciler to decide whether a FAILED refund is eligible to retry yet. */
 export function nextEligibleRetryAt(attemptCount: number, lastAttemptAt: Date): Date {
   const delay = Math.min(BASE_BACKOFF_MS * 2 ** Math.max(0, attemptCount - 1), MAX_BACKOFF_MS);
   return new Date(lastAttemptAt.getTime() + delay);
@@ -77,7 +77,7 @@ export class RefundService {
 
   /**
    * Every field here must match the SERVER's own trusted expectation before
-   * a single atomic unit moves — nothing here is ever taken from a request
+   * a single atomic unit moves - nothing here is ever taken from a request
    * body, query string, or frontend-supplied value (see TrustedPaymentInfo's
    * own docs on where its fields actually come from).
    */
@@ -117,7 +117,7 @@ export class RefundService {
    * doesn't already exist. The database's own unique constraint on
    * `originalPaymentTransaction` is what actually guarantees "at most one
    * refund per payment" under concurrent callers (two requests racing to
-   * create the same row, or a retried HTTP request landing twice) — this
+   * create the same row, or a retried HTTP request landing twice) - this
    * only translates that guarantee into a friendly "return the existing row
    * instead of throwing" API.
    */
@@ -172,12 +172,12 @@ export class RefundService {
 
   /**
    * Compare-and-swap claim: only succeeds if the row is still in a state
-   * eligible to be (re)attempted. This is the actual cross-instance lock —
+   * eligible to be (re)attempted. This is the actual cross-instance lock -
    * two API replicas (or a reconciler tick racing an inline attempt) both
    * calling this for the same row will only ever have ONE `count === 1`.
    *
    * Also reclaims a PROCESSING/SUBMITTED row whose `updatedAt` is older than
-   * `STALE_IN_FLIGHT_MS` — almost certainly a process that crashed
+   * `STALE_IN_FLIGHT_MS` - almost certainly a process that crashed
    * mid-attempt, never a still-in-progress one (a single attempt normally
    * resolves in a few seconds). Re-attempting is always safe: the
    * deterministic on-chain lease (see AlgorandRefundClient) guarantees a
@@ -250,7 +250,7 @@ export class RefundService {
         data: {
           status: 'FAILED',
           lastError: message,
-          // A lease conflict is deliberately pinned at the retry ceiling —
+          // A lease conflict is deliberately pinned at the retry ceiling -
           // this codebase has no indexer lookup to confirm whether the
           // earlier attempt actually landed, so auto-retrying blindly risks
           // colliding again forever; it needs a human to check Algorand

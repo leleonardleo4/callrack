@@ -7,7 +7,7 @@ export type SupportedX402Network = (typeof SUPPORTED_NETWORKS)[number];
 /**
  * Raw env shape: NETWORK is always required; the per-network PAY_TO /
  * FACILITATOR_URL pairs are optional at this layer (you don't need Mainnet
- * credentials to develop against Testnet) — `x402ConfigSchema` below requires
+ * credentials to develop against Testnet) - `x402ConfigSchema` below requires
  * only whichever pair the active NETWORK actually needs.
  */
 const rawX402ConfigSchema = z.object({
@@ -31,7 +31,7 @@ function isValidUrl(value: string): boolean {
 
 /**
  * Every paid Callrack capability shares this one `payTo` address on the
- * active network — the registry never carries per-capability addresses (see
+ * active network - the registry never carries per-capability addresses (see
  * capabilities/capability-definitions.ts).
  */
 export const x402ConfigSchema = rawX402ConfigSchema.superRefine((data, ctx) => {
@@ -72,7 +72,7 @@ export const x402ConfigSchema = rawX402ConfigSchema.superRefine((data, ctx) => {
   // carrying a Testnet address over as MAINNET_PAY_TO (a real Mainnet
   // deployment must receive real USDC at an address the project actually
   // controls for that purpose, never the throwaway Testnet one). Only
-  // checked when both are actually configured — Testnet development
+  // checked when both are actually configured - Testnet development
   // legitimately runs with no MAINNET_PAY_TO set at all.
   if (
     data.NETWORK === 'mainnet' &&
@@ -84,7 +84,7 @@ export const x402ConfigSchema = rawX402ConfigSchema.superRefine((data, ctx) => {
       code: z.ZodIssueCode.custom,
       path: ['MAINNET_PAY_TO'],
       message:
-        'MAINNET_PAY_TO must not be the same address as TESTNET_PAY_TO — a Mainnet deployment must receive real USDC at a stable, project-controlled Mainnet address, never a Testnet/development address.',
+        'MAINNET_PAY_TO must not be the same address as TESTNET_PAY_TO - a Mainnet deployment must receive real USDC at a stable, project-controlled Mainnet address, never a Testnet/development address.',
     });
   }
 });

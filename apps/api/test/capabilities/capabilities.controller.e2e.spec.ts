@@ -71,7 +71,7 @@ describe('GET /v1/capabilities (E2E)', () => {
       required: ['query'],
     });
 
-    // The research capability's schema nests ResearchGovernmentOptionsDto —
+    // The research capability's schema nests ResearchGovernmentOptionsDto -
     // this must be a real, self-contained schema, never a dangling $ref
     // (see discovery-schema.util.ts's dereferenceSchema).
     const research = data.capabilities.find((c) => c.id === 'research');

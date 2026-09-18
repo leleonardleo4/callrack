@@ -71,7 +71,7 @@ describe('CompareService', () => {
     expect(result.attributes).toContainEqual({ subject: 'Tesla, Inc.', key: 'id', value: 'Q1', provider: 'knowledge.search' });
   });
 
-  it('returns empty subjects/attributes/disagreements when nothing is found — never fabricates a comparison', async () => {
+  it('returns empty subjects/attributes/disagreements when nothing is found - never fabricates a comparison', async () => {
     const runner = fakeRunner();
     runner.run.mockResolvedValue([
       { source: 'knowledge', status: 'empty', evidence: [] },

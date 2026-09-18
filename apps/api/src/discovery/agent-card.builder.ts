@@ -21,7 +21,7 @@ export interface AgentCardDocument {
 /**
  * Builds `/.well-known/agent-card.json` (the A2A agent-card convention from
  * the GoPlausible discovery guide). One skill per real, currently-registered
- * paid capability — never a fabricated capability. `streaming` is always
+ * paid capability - never a fabricated capability. `streaming` is always
  * `false`: Callrack has no streaming endpoints.
  */
 export function buildAgentCard(
@@ -32,7 +32,7 @@ export function buildAgentCard(
   return {
     name: 'Callrack',
     description:
-      'Callrack is a pay-per-use information infrastructure platform — academic, news, market, weather, ' +
+      'Callrack is a pay-per-use information infrastructure platform - academic, news, market, weather, ' +
       'geocoding, knowledge, government, and research-aggregation capabilities, each paid per request in USDC ' +
       'on Algorand via x402.',
     url: origin,

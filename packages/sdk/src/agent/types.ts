@@ -2,7 +2,7 @@ import type { CapabilityCategory, CapabilityPricing, JsonObjectSchema, RequestJs
 
 /**
  * A Callrack capability exposed to an agent as a callable tool. Deliberately
- * excludes `PublicCapability.provider` — an agent reasons about Callrack
+ * excludes `PublicCapability.provider` - an agent reasons about Callrack
  * capabilities (`academic.search`, `news.search`, ...), never the upstream
  * provider behind them (OpenAlex, GDELT, ...).
  */
@@ -30,7 +30,7 @@ export type AgentEventType =
 
 /**
  * A structured, secret-free log entry. Never carries a private key,
- * mnemonic, payment signature, or raw request/response body — only ids,
+ * mnemonic, payment signature, or raw request/response body - only ids,
  * amounts, and short human-readable messages, since this stream is meant to
  * power a public agent demo.
  */
@@ -67,7 +67,7 @@ export interface AgentResult {
 
 /**
  * Model-agnostic agent runtime contract. Nothing in this phase hardcodes a
- * specific LLM provider — `run` takes a plain task string and the concrete
+ * specific LLM provider - `run` takes a plain task string and the concrete
  * implementation (`CallrackAgentRuntime`) uses a deterministic planner today,
  * replaceable later by an LLM-backed one without changing this interface.
  */

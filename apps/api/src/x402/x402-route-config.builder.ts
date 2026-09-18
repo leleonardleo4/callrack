@@ -10,7 +10,7 @@ const X402_SCHEME = 'exact';
  * challenge infrastructure can classify settled Mainnet traffic under
  * "SOURCE → X402-GLOBAL-CHALLENGE" on the GoPlausible dashboard.
  *
- * Only Mainnet — per the official guide, this tag is added to the Mainnet
+ * Only Mainnet - per the official guide, this tag is added to the Mainnet
  * `accepts` configuration specifically. Testnet traffic is never part of
  * the competition/leaderboard, so tagging it would be an "accidental"
  * challenge-classification of throwaway test transactions; Testnet routes
@@ -19,23 +19,23 @@ const X402_SCHEME = 'exact';
 export const X402_GLOBAL_CHALLENGE_TAG = 'x402-global-challenge';
 
 /**
- * Transforms the capability registry into x402's route configuration —
+ * Transforms the capability registry into x402's route configuration -
  * the ONLY place capability metadata becomes x402 metadata. Every field here
  * is read from the registry or the active network config; nothing is
  * hardcoded, so registry/config changes can never drift out of sync with
  * what x402 actually protects.
  *
- * Every paid capability shares the same `payTo` and network — the registry
+ * Every paid capability shares the same `payTo` and network - the registry
  * itself never carries per-capability payment addresses (Composite challenge
  * requirement: one payTo across all Callrack endpoints).
  *
  * Every field consumed here (price, method, path, description) was already
  * validated by `CapabilityRegistryService.onModuleInit()`, and `payTo` /
- * network were already validated by `X402ConfigService` — this function
+ * network were already validated by `X402ConfigService` - this function
  * performs no redundant validation of its own.
  *
  * `discoveryExtensions` is optional so pure payment-only route config can
- * still be built without a live Nest app (e.g. in unit tests) — see
+ * still be built without a live Nest app (e.g. in unit tests) - see
  * `discovery-metadata.builder.ts` for how the Bazaar extension itself is
  * produced from a capability plus its live request JSON Schema.
  */
@@ -56,15 +56,15 @@ export function buildX402RoutesConfig(
         scheme: X402_SCHEME,
         payTo: active.payTo,
         // The exact decimal string from the registry, passed straight
-        // through — @x402/avm's ExactAvmScheme converts it to USDC atomic
+        // through - @x402/avm's ExactAvmScheme converts it to USDC atomic
         // units via pure string arithmetic (see convertToTokenAmount), never
         // floating point.
         price: capability.price.amount,
         network: active.caip2Network,
         // Merged with (never overwriting) whatever the AVM scheme itself
-        // later adds to `extra` (e.g. `feePayer`) — ExactAvmScheme.
+        // later adds to `extra` (e.g. `feePayer`) - ExactAvmScheme.
         // enhancePaymentRequirements spreads the existing `extra` first.
-        // Mainnet only — see X402_GLOBAL_CHALLENGE_TAG's own docs.
+        // Mainnet only - see X402_GLOBAL_CHALLENGE_TAG's own docs.
         ...(active.network === 'mainnet' ? { extra: { tag: X402_GLOBAL_CHALLENGE_TAG } } : {}),
       },
       ...(discoveryExtension ? { extensions: discoveryExtension } : {}),

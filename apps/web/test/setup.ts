@@ -61,7 +61,7 @@ if (!Element.prototype.scrollIntoView) {
 }
 
 // jsdom has no ResizeObserver; Radix's Popper positioning (used by the
-// wallet menu's DropdownMenu, which — unlike the capability Select — uses
+// wallet menu's DropdownMenu, which - unlike the capability Select - uses
 // "popper" placement) depends on it, and hangs indefinitely without a stub.
 if (!window.ResizeObserver) {
   window.ResizeObserver = class {

@@ -9,16 +9,16 @@ packages:
 #   - fastify: @nestjs/platform-fastify@11.2.5 (latest 11.x) still hard-pins
 #     fastify@5.11.3, vulnerable to schema-validation bypass and, more
 #     relevantly, X-Forwarded-* spoofing under TRUST_PROXY hop-count
-#     (GHSA-w2qp-rph6-63g4, GHSA-3m5p-2c4r-xxw2) — directly relevant since
+#     (GHSA-w2qp-rph6-63g4, GHSA-3m5p-2c4r-xxw2) - directly relevant since
 #     this phase turned trustProxy on for rate limiting. 5.12.5 is a same-
 #     major patch release; NestJS's Fastify adapter only uses Fastify's
 #     stable public API, so this is a safe override.
 #   - mysql2: prisma@7.10.0 hard-pins mysql2@3.15.3 (its own CLI-only MySQL
-#     introspection dependency — Callrack's schema is postgresql-only, so
+#     introspection dependency - Callrack's schema is postgresql-only, so
 #     this code path is never exercised, but the override is free and
 #     closes it anyway).
 #   - deepmerge-ts: prisma@7.10.0's own @prisma/config dependency, used only
-#     while loading prisma.config.ts at CLI/build time — never part of the
+#     while loading prisma.config.ts at CLI/build time - never part of the
 #     running API's request path. Same rationale as mysql2: free, closes a
 #     real advisory even though it's not reachable from outside a build.
 overrides:
@@ -28,7 +28,7 @@ overrides:
 
 allowBuilds:
   # First-party workspace package; its only postinstall script is
-  # `prisma generate` (packages/db/package.json) — allowed so a plain
+  # `prisma generate` (packages/db/package.json) - allowed so a plain
   # `pnpm install` runs it automatically instead of leaving it in the
   # "ignored builds" list (apps/api/Dockerfile's build stage instead calls
   # `pnpm --filter=@callrack/db run db:generate` explicitly, which doesn't

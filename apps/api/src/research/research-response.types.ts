@@ -43,9 +43,9 @@ export interface ResearchResponseData {
   status: ResearchOverallStatus;
   /** Per-source raw capability responses, kept for backward compatibility with existing consumers. */
   sources: ResearchSourcesMap;
-  /** The same sources' results, normalized into provenance-preserving evidence items — see `EvidenceItem`. */
+  /** The same sources' results, normalized into provenance-preserving evidence items - see `EvidenceItem`. */
   findings: readonly EvidenceItem[];
-  /** Same-titled results described differently by two different sources — see `detectDisagreements`. Empty is the common, correct result. */
+  /** Same-titled results described differently by two different sources - see `detectDisagreements`. Empty is the common, correct result. */
   disagreements: readonly EvidenceDisagreement[];
   composition: ResearchCompositionMetadata;
 }

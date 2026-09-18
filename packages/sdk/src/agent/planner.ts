@@ -53,12 +53,12 @@ const KEYWORD_RULES: readonly KeywordRule[] = [
 ];
 
 /**
- * A deterministic, keyword-based planner — not an autonomous LLM planner.
+ * A deterministic, keyword-based planner - not an autonomous LLM planner.
  * This phase's job is the SDK/agent *foundation*, not planning intelligence:
  * matches each keyword rule whose tool was actually discovered (never a
  * capability the client didn't advertise), and falls back to
  * `knowledge.search` when nothing else matched and it's available. Every
- * matching rule fires — a task can plan more than one capability call.
+ * matching rule fires - a task can plan more than one capability call.
  */
 export function deterministicPlanner(task: string, tools: readonly AgentTool[]): readonly PlannedStep[] {
   const availableIds = new Set(tools.map((tool) => tool.id));

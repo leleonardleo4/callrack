@@ -9,7 +9,7 @@ import { CapabilitiesController } from './capabilities.controller.js';
 /**
  * Wires the capability registry: metadata + pricing, plus the read-only
  * public `GET /v1/capabilities` endpoint. The registry itself is not
- * consulted by existing capability services on the request path — x402
+ * consulted by existing capability services on the request path - x402
  * middleware and `CapabilitiesController` both read from it at the API
  * boundary instead.
  */

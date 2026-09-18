@@ -4,7 +4,7 @@ const KEY = 'capabilityExecutionFailureReason';
 
 /**
  * Lets a capability whose HTTP contract intentionally always returns 2xx
- * (currently only `/v1/research` — see its `status: 'complete'|'partial'|
+ * (currently only `/v1/research` - see its `status: 'complete'|'partial'|
  * 'failed'` body field) report that this specific request should still be
  * treated as a FAILED execution for refund purposes, without changing its
  * documented HTTP status contract.

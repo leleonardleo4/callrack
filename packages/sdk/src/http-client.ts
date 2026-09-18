@@ -15,7 +15,7 @@ const DEFAULT_TIMEOUT_MS = 30_000;
 
 export interface CallrackHttpClientOptions {
   readonly baseUrl: string;
-  /** The fetch implementation to use — a plain fetch for discovery, or an X402PaymentClient's payment-aware fetch for paid capability calls. */
+  /** The fetch implementation to use - a plain fetch for discovery, or an X402PaymentClient's payment-aware fetch for paid capability calls. */
   readonly fetchImpl: typeof fetch;
   readonly timeoutMs?: number;
   /**
@@ -23,7 +23,7 @@ export interface CallrackHttpClientOptions {
    * Changes how a final `402` is classified: without a signer it genuinely
    * means "this endpoint is paid and nothing tried to pay for it yet"; with
    * one, `X402PaymentClient` already attempted a real payment and the
-   * server still rejected the retried request — a payment failure, not a
+   * server still rejected the retried request - a payment failure, not a
    * missing-signer situation.
    */
   readonly hasSigner?: boolean;
@@ -42,13 +42,13 @@ function toRequirementSummary(requirement: PaymentRequirements): PaymentRequirem
 /**
  * Framework-independent JSON HTTP client for the Callrack API. Handles
  * timeouts, network failures, malformed responses, and the API's error
- * envelope — classifying everything into the SDK's own error taxonomy
+ * envelope - classifying everything into the SDK's own error taxonomy
  * rather than leaking raw fetch/Response objects.
  *
  * A bare (unsigned) `x402HTTPClient` is used only to reuse the official 402
  * body/header parsing when a request comes back unpaid and there is no
  * payment-aware fetch in front of it (see `CallrackClient.call` without a
- * configured signer) — never to create or sign a payment itself.
+ * configured signer) - never to create or sign a payment itself.
  */
 export class CallrackHttpClient {
   private readonly baseUrl: string;
@@ -102,7 +102,7 @@ export class CallrackHttpClient {
 
       if (this.hasSigner) {
         // A signer was configured, so X402PaymentClient already attempted a
-        // real payment before this request ever reached here — a 402 at
+        // real payment before this request ever reached here - a 402 at
         // this point means the server rejected it (e.g. the payTo address
         // isn't opted in to the asset, insufficient funds, facilitator
         // settlement failure), not that nothing tried to pay.
@@ -111,7 +111,7 @@ export class CallrackHttpClient {
       }
 
       throw new CallrackPaymentRequiredError(
-        `${path} requires payment and this client has no signer configured — see CallrackClient's \`signer\` option`,
+        `${path} requires payment and this client has no signer configured - see CallrackClient's \`signer\` option`,
         {
           requestId,
           resource: paymentRequired.resource.url,

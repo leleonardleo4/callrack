@@ -3,7 +3,7 @@ import { defineConfig } from 'vitest/config';
 
 /**
  * Config for live provider smoke tests. Run explicitly via
- * `pnpm test:providers` — never part of the default `pnpm test`.
+ * `pnpm test:providers` - never part of the default `pnpm test`.
  */
 export default defineConfig({
   test: {

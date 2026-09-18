@@ -10,7 +10,7 @@ export interface ApiErrorMeta {
   requestId: string;
 }
 
-/** Present only on a paid request whose capability failed after settlement succeeded — see RefundOrchestrationService. */
+/** Present only on a paid request whose capability failed after settlement succeeded - see RefundOrchestrationService. */
 export interface ApiPaymentRefundInfo {
   status: 'refunded' | 'refund_pending';
   refundTransaction?: string;

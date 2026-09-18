@@ -64,7 +64,7 @@ describe('HolidaysService', () => {
 
   it('normalizes an empty provider response without treating it as an error', async () => {
     // Nager.Date itself 404s for a truly unrecognized country code (handled
-    // below as a provider error) — this covers a recognized country/year
+    // below as a provider error) - this covers a recognized country/year
     // that genuinely has zero holidays on record.
     const nager = fakeNager();
     nager.getPublicHolidays.mockResolvedValue({ holidays: [] });

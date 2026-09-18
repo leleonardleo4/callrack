@@ -3,7 +3,7 @@ import algosdk from 'algosdk';
 import { X402ConfigService } from './x402-config.service.js';
 import { type RefundConfig, validateRefundConfig } from './refund-config.schema.js';
 
-/** Derives the Algorand address a 25-word mnemonic controls — pure/local, no network call. */
+/** Derives the Algorand address a 25-word mnemonic controls - pure/local, no network call. */
 export function deriveAlgorandAddressFromMnemonic(mnemonic: string): string {
   const account = algosdk.mnemonicToSecretKey(mnemonic);
   return account.addr.toString();
@@ -11,19 +11,19 @@ export function deriveAlgorandAddressFromMnemonic(mnemonic: string): string {
 
 /**
  * Resolves and validates the merchant refund signer for whichever network
- * is active (Callrack only ever runs one network per instance — see
+ * is active (Callrack only ever runs one network per instance - see
  * X402ConfigService). Testnet and Mainnet mnemonics are two entirely
  * separate env vars, never shared or derived from one another.
  *
  * By design, this NEVER fails startup just because no refund mnemonic is
- * configured — refunds are then simply "disabled": a failed paid capability
+ * configured - refunds are then simply "disabled": a failed paid capability
  * still gets a durable `PENDING` Refund row (RefundService doesn't need a
  * working signer to persist intent), it just can't be submitted on-chain
  * until an operator configures one and restarts. This matters because most
  * of this codebase's own tests boot the full app with no refund
  * configuration at all.
  *
- * It DOES fail startup — fast, loudly — the moment a mnemonic IS configured
+ * It DOES fail startup - fast, loudly - the moment a mnemonic IS configured
  * but derives an address other than the network's configured `payTo`. A
  * refund can only ever be paid out of the same account that received the
  * original payment; a signer for an unrelated wallet must never be allowed
@@ -75,12 +75,12 @@ export class RefundConfigService implements OnModuleInit {
     return this.mnemonic !== undefined;
   }
 
-  /** The active network's payTo account — refunds are always paid from and validated against this address. */
+  /** The active network's payTo account - refunds are always paid from and validated against this address. */
   get merchantAddress(): string {
     return this.x402Config.payTo;
   }
 
-  /** Throws with a clear, actionable message if refunds aren't enabled — never returns an empty/undefined signer. */
+  /** Throws with a clear, actionable message if refunds aren't enabled - never returns an empty/undefined signer. */
   getSignerMnemonicOrThrow(): string {
     if (!this.mnemonic) {
       throw new Error(

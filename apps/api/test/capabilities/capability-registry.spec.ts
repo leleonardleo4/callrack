@@ -128,7 +128,7 @@ describe('CAPABILITY_METADATA (registration)', () => {
 
   it('never names a capability after an external vendor brand (e.g. "openalex", "coingecko")', () => {
     // "census" and "government" are generic, descriptive product terms (the
-    // capability really is a Census query), not a private vendor's brand —
+    // capability really is a Census query), not a private vendor's brand -
     // unlike "openalex"/"coingecko"/etc., which are specific companies'
     // product names that must stay confined to the provider layer.
     const externalVendorBrands = [

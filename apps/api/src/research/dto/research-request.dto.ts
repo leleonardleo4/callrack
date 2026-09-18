@@ -30,7 +30,7 @@ const MAX_SOURCES = SUPPORTED_RESEARCH_SOURCES.length;
 const MAX_LIMIT = 10;
 
 /**
- * Government/Census cannot be derived from free text — it requires the same
+ * Government/Census cannot be derived from free text - it requires the same
  * structured parameters as `POST /v1/government/census`. These are only
  * validated (and required) when "government" is listed in `sources`.
  */
