@@ -49,7 +49,12 @@ function Hero(): React.JSX.Element {
   const { theme } = useTheme();
 
   return (
-    <div className="relative flex h-dvh flex-col justify-center overflow-hidden border-b border-inkline">
+    // -mt-(--navbar-height) slides this section up underneath the sticky,
+    // transparent-until-scrolled header (see Navbar) so Aurora renders
+    // full-bleed behind it instead of starting below the header's own box.
+    // justify-center keeps the actual text well clear of that overlap for
+    // any reasonable viewport height, so no compensating top padding.
+    <div className="relative -mt-(--navbar-height) flex h-dvh flex-col justify-center overflow-hidden border-b border-inkline">
       <Aurora
         className="pointer-events-none absolute inset-0"
         colorStops={AURORA_COLOR_STOPS}

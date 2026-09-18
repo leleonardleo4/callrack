@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -36,12 +36,36 @@ function NavLinks({ onNavigate, className }: { onNavigate?: () => void; classNam
   );
 }
 
+/** Past this scroll offset (px), the header gains a background — matches the scannable "has the user left the hero" threshold, not a precise design token. */
+const SCROLL_THRESHOLD = 8;
+
+function useScrolled(threshold: number): boolean {
+  const [scrolled, setScrolled] = useState(() => (typeof window === 'undefined' ? false : window.scrollY > threshold));
+
+  useEffect(() => {
+    function handleScroll(): void {
+      setScrolled(window.scrollY > threshold);
+    }
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [threshold]);
+
+  return scrolled;
+}
+
 export function Navbar(): React.JSX.Element {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const scrolled = useScrolled(SCROLL_THRESHOLD);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-inkline bg-abyss/90 backdrop-blur-sm">
-      <div className="mx-auto flex h-14 max-w-(--page-max-width) items-center justify-between px-4 sm:px-6">
+    <header
+      className={cn(
+        'sticky top-0 z-40 h-(--navbar-height) border-b transition-colors duration-300',
+        scrolled ? 'border-inkline bg-abyss/90 backdrop-blur-sm' : 'border-transparent bg-transparent',
+      )}
+    >
+      <div className="mx-auto flex h-full max-w-(--page-max-width) items-center justify-between px-4 sm:px-6">
         <Link to="/" aria-label="Callrack home" className="flex items-center">
           <Logo className="h-6 w-auto text-foreground" />
         </Link>
