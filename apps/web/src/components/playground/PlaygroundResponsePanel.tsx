@@ -1,22 +1,84 @@
-import { CheckCircle2, Wifi } from 'lucide-react';
+import { CheckCircle2, CircleSlash, Loader2, Wifi } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { HttpStatusBadge } from '@/components/HttpStatusBadge';
 import { CodeBlock } from '@/components/CodeBlock';
 import { PriceTag } from '@/components/PriceTag';
 import { statusLabel } from '@/lib/http-status';
 import { formatNetworkLabel } from '@/lib/format';
-import type { ApiResult } from '@/lib/api-client';
+import type { PaymentFlowState } from '@/hooks/useWalletPaymentFlow';
 
 export interface PlaygroundResponsePanelProps {
-  readonly result: ApiResult<unknown> | undefined;
-  readonly sending: boolean;
+  readonly flow: PaymentFlowState;
   readonly networkName: 'testnet' | 'mainnet' | undefined;
+  readonly walletConnected: boolean;
+  readonly onApprovePay: () => void;
+  readonly onConnectWallet: () => void;
 }
 
-export function PlaygroundResponsePanel({ result, sending, networkName }: PlaygroundResponsePanelProps): React.JSX.Element {
-  if (sending) {
-    return <p className="text-sm text-ash">Sending request…</p>;
+const BUSY_LABELS: Partial<Record<PaymentFlowState['status'], string>> = {
+  preparing: 'Preparing request…',
+  'awaiting-approval': 'Waiting for wallet approval…',
+  'submitting-payment': 'Submitting payment…',
+  retrying: 'Retrying request with payment…',
+};
+
+export function PlaygroundResponsePanel({
+  flow,
+  networkName,
+  walletConnected,
+  onApprovePay,
+  onConnectWallet,
+}: PlaygroundResponsePanelProps): React.JSX.Element {
+  const busyLabel = BUSY_LABELS[flow.status];
+  if (busyLabel) {
+    return (
+      <div className="flex items-center gap-2 text-sm text-ash">
+        <Loader2 className="size-4 animate-spin" aria-hidden />
+        {busyLabel}
+      </div>
+    );
   }
 
+  if (flow.status === 'idle') {
+    return <p className="text-sm text-ash">Send a request to see the response here.</p>;
+  }
+
+  if (flow.status === 'cancelled') {
+    return (
+      <div className="flex flex-col gap-4">
+        <div className="flex items-start gap-3 rounded-lg border border-inkline bg-deep-sea p-4">
+          <CircleSlash className="mt-0.5 size-4 shrink-0 text-ash" aria-hidden />
+          <div>
+            <p className="text-sm font-medium text-quartz">Transaction cancelled.</p>
+            <p className="mt-1 text-xs text-ash">You can approve the payment again whenever you're ready.</p>
+          </div>
+        </div>
+        {flow.paymentRequired ? (
+          <Button size="sm" onClick={onApprovePay} className="self-start">
+            Approve & pay again
+          </Button>
+        ) : null}
+      </div>
+    );
+  }
+
+  if (flow.status === 'failed' && flow.failure) {
+    return (
+      <div className="flex flex-col gap-3">
+        <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4">
+          <p className="font-mono text-xs text-destructive">{flow.failure.reason}</p>
+          <p className="mt-1 text-sm text-mist">{flow.failure.message}</p>
+        </div>
+        {flow.paymentRequired ? (
+          <Button size="sm" variant="outline" onClick={onApprovePay} className="self-start">
+            Try again
+          </Button>
+        ) : null}
+      </div>
+    );
+  }
+
+  const result = flow.result;
   if (!result) {
     return <p className="text-sm text-ash">Send a request to see the response here.</p>;
   }
@@ -49,10 +111,10 @@ export function PlaygroundResponsePanel({ result, sending, networkName }: Playgr
           {requirement ? (
             <dl className="mt-4 grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
               <div>
-                <dt className="text-xs text-ash uppercase">Price</dt>
+                <dt className="text-xs text-ash uppercase">Amount</dt>
                 <dd className="mt-0.5">
                   <PriceTag amount={requirement.amount} className="text-quartz" />{' '}
-                  <span className="text-xs text-ash">(atomic units of asset {requirement.asset})</span>
+                  <span className="text-xs text-ash">(atomic units)</span>
                 </dd>
               </div>
               <div>
@@ -62,19 +124,30 @@ export function PlaygroundResponsePanel({ result, sending, networkName }: Playgr
                 </dd>
               </div>
               <div>
-                <dt className="text-xs text-ash uppercase">Payment destination</dt>
-                <dd className="mt-0.5 break-all font-mono text-xs text-mist">{requirement.payTo}</dd>
+                <dt className="text-xs text-ash uppercase">Asset</dt>
+                <dd className="mt-0.5 break-all font-mono text-xs text-mist">{requirement.asset}</dd>
               </div>
               <div>
-                <dt className="text-xs text-ash uppercase">Timeout</dt>
-                <dd className="mt-0.5 text-mist">{requirement.maxTimeoutSeconds}s</dd>
+                <dt className="text-xs text-ash uppercase">Payment destination</dt>
+                <dd className="mt-0.5 break-all font-mono text-xs text-mist">{requirement.payTo}</dd>
               </div>
             </dl>
           ) : null}
           <p className="mt-4 text-xs text-ash">
-            To see the real paid response, settle this exact amount via x402 and retry below with your payment
-            signature. Callrack never fabricates a successful payment.
+            Callrack never fabricates a successful payment — approving below submits a real, on-chain x402 payment
+            for exactly this amount before the request is retried.
           </p>
+          <div className="mt-4">
+            {walletConnected ? (
+              <Button size="sm" onClick={onApprovePay}>
+                Approve & pay {requirement ? `$${requirement.amount}` : ''}
+              </Button>
+            ) : (
+              <Button size="sm" variant="outline" onClick={onConnectWallet}>
+                Connect wallet to pay
+              </Button>
+            )}
+          </div>
         </div>
         <details className="text-xs text-ash">
           <summary className="cursor-pointer select-none">Raw PAYMENT-REQUIRED payload</summary>

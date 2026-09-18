@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Logo } from '@/components/Logo';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { WalletConnectButton } from '@/components/wallet/WalletConnectButton';
 import { cn } from 'cn';
 
 const NAV_LINKS = [
@@ -49,6 +50,7 @@ export function Navbar(): React.JSX.Element {
 
         <div className="hidden items-center gap-2 md:flex">
           <ThemeToggle />
+          <WalletConnectButton />
           <Button asChild variant="outline" size="sm">
             <Link to="/docs">Read the docs</Link>
           </Button>
@@ -73,6 +75,7 @@ export function Navbar(): React.JSX.Element {
               </SheetHeader>
               <NavLinks onNavigate={() => setMobileOpen(false)} className="flex flex-col gap-5 p-4" />
               <div className="mt-auto flex flex-col gap-2 border-t border-inkline p-4">
+                <WalletConnectButton />
                 <Button asChild variant="outline" onClick={() => setMobileOpen(false)}>
                   <Link to="/docs">Read the docs</Link>
                 </Button>

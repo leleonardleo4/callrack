@@ -480,6 +480,67 @@ Change `NETWORK` and ensure the corresponding `MAINNET_PAY_TO` /
 needed. `NETWORK=mainnet` resolves Algorand Mainnet's CAIP-2 identifier and
 Mainnet USDC automatically.
 
+### Paying from the Playground with a real wallet
+
+`apps/web`'s Playground (`/playground`) lets a developer connect an Algorand
+wallet and complete a **real** x402 payment for any capability, end to end:
+
+```text
+Select a capability → Send request → 402 → Connect Wallet → Approve & Pay
+  → real Algorand transaction signed in the wallet → payment submitted
+  → request retried with payment → real, paid response
+```
+
+Wallet connectivity is built on
+[`@txnlab/use-wallet` v5](https://github.com/TxnLab/use-wallet) — never a
+second, hand-rolled connection stack per wallet. Supported wallets
+(`apps/web/src/wallet/manager.ts`):
+
+| Wallet | Package | Notes |
+| --- | --- | --- |
+| Pera | `@txnlab/use-wallet-pera` | Browser extension, mobile app, and Pera Discover |
+| Defly | `@txnlab/use-wallet-defly` | Mobile-first, via its own WalletConnect-based session |
+| Lute | `@txnlab/use-wallet-lute` | Browser extension |
+| WalletConnect | `@txnlab/use-wallet-walletconnect` | Generic QR/deep-link route for other compatible wallets — only offered when `VITE_WALLETCONNECT_PROJECT_ID` is configured |
+| Exodus | `@txnlab/use-wallet-exodus` | One additional mainstream wallet, included as a stable, zero-extra-config option |
+
+The Playground never asks for a mnemonic or private key — connecting is
+always a real wallet's own approval flow, and a rejected/cancelled wallet
+prompt is shown as "Transaction cancelled," never as an API failure.
+
+The wallet layer is a thin adapter around the **existing** SDK payment
+path, not a second payment system: a connected wallet's `signTransactions`
+is wrapped into the exact same `CallrackPaymentSigner` shape
+(`packages/sdk/src/signer.ts`) that a Node script or agent would supply, and
+handed to the SDK's own `X402PaymentClient` — the same class used by
+`CallrackClient` everywhere else. Transaction construction, requirement
+selection, spend-policy validation, and retry are never reimplemented in the
+browser.
+
+```text
+use-wallet (connected account)
+    ↓  wallet/payment-signer.ts adapts signTransactions
+CallrackPaymentSigner (packages/sdk)
+    ↓
+X402PaymentClient.fetch  ← the exact class CallrackClient itself uses
+    ↓
+402 detected → payment requirement selected → wallet asked to sign
+    ↓
+request retried with the signed payment → real API response
+```
+
+The Playground always shows the **exact** amount, network, and asset from
+the live 402 challenge before a wallet ever opens — never a price computed
+client-side. It respects whichever network Callrack's own API is running on
+(from `GET /v1/capabilities`, the same source the rest of the Playground
+already uses) — Testnet or Mainnet, never a third, invented network.
+
+Requires `apps/web`'s own dependencies (`pnpm install` at the repo root
+already covers this) and, optionally, a
+[WalletConnect Cloud](https://cloud.reown.com) project id in
+`VITE_WALLETCONNECT_PROJECT_ID` (see `apps/web/.env.example`) to enable the
+WalletConnect option — Pera, Defly, Lute, and Exodus all work without it.
+
 ### ⚠️ Security
 
 - Never commit a private key, mnemonic, or `.env` file. `.env` is

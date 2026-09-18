@@ -1,21 +1,25 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Send } from 'lucide-react';
 import { Seo } from '@/components/Seo';
 import { Section, Eyebrow } from '@/components/layout/Section';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { PriceTag } from '@/components/PriceTag';
 import { ApiErrorState } from '@/components/ApiErrorState';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DynamicRequestForm } from '@/components/playground/DynamicRequestForm';
 import { PlaygroundResponsePanel } from '@/components/playground/PlaygroundResponsePanel';
+import { WalletConnectDialog } from '@/components/wallet/WalletConnectDialog';
 import { useCapabilities } from '@/hooks/useCapabilities';
-import { callCapability, type ApiResult } from '@/lib/api-client';
+import { useWalletPaymentFlow } from '@/hooks/useWalletPaymentFlow';
+import { useWalletSigner } from '@/wallet/useWalletSigner';
 import { buildRequestBody, initFormState, type FormFieldValue } from '@/lib/dynamic-form';
+import { formatNetworkLabel } from '@/lib/format';
 import type { PublicCapability } from '@/types/capability';
+
+const BUSY_STATUSES = new Set(['preparing', 'awaiting-approval', 'submitting-payment', 'retrying']);
 
 export function PlaygroundPage(): React.JSX.Element {
   const state = useCapabilities();
@@ -29,7 +33,7 @@ export function PlaygroundPage(): React.JSX.Element {
     <>
       <Seo
         title="Playground"
-        description="Call a real Callrack capability directly from your browser and see the honest HTTP 402 payment requirement: no fake payment success."
+        description="Call a real Callrack capability directly from your browser, connect an Algorand wallet, and see the honest HTTP 402 payment flow: no fake payment success."
         path="/playground"
       />
       <Section>
@@ -39,8 +43,8 @@ export function PlaygroundPage(): React.JSX.Element {
         </h1>
         <p className="mt-4 max-w-2xl text-sm leading-relaxed text-ash">
           This calls the real Callrack API, never mock data. An unpaid request will honestly return{' '}
-          <code className="font-mono text-frosted-lilac">402 Payment Required</code>; Callrack never fakes a
-          successful payment here.
+          <code className="font-mono text-frosted-lilac">402 Payment Required</code>. Connect a wallet to approve a
+          real x402 payment and retry — Callrack never fakes a successful payment here.
         </p>
 
         <div className="mt-10">
@@ -75,37 +79,35 @@ function PlaygroundBody({ capabilities, capability, onSelectCapability, networkN
     initFormState(capability.requestSchema, capability.example.request),
   );
   const [fieldError, setFieldError] = useState<{ field: string; message: string } | undefined>(undefined);
-  const [paymentSignature, setPaymentSignature] = useState('');
-  const [sending, setSending] = useState(false);
-  const [result, setResult] = useState<ApiResult<unknown> | undefined>(undefined);
+  const [connectDialogOpen, setConnectDialogOpen] = useState(false);
+
+  const { state: flow, start, approveAndPay, reset } = useWalletPaymentFlow();
+  const wallet = useWalletSigner(networkName);
+  const sending = BUSY_STATUSES.has(flow.status);
 
   // Re-seed the form whenever the selected capability changes.
   useEffect(() => {
     setFormState(initFormState(capability.requestSchema, capability.example.request));
     setFieldError(undefined);
-    setResult(undefined);
-    setPaymentSignature('');
-  }, [capability.id, capability.requestSchema, capability.example.request]);
+    reset();
+  }, [capability.id, capability.requestSchema, capability.example.request, reset]);
 
-  const canRetryWithPayment = useMemo(
-    () => result?.kind === 'payment-required' && paymentSignature.trim().length > 0,
-    [result, paymentSignature],
-  );
-
-  async function handleSend(signature?: string): Promise<void> {
+  async function handleSend(): Promise<void> {
     const built = buildRequestBody(capability.requestSchema, formState);
     if (!built.ok) {
       setFieldError({ field: built.field, message: built.message });
       return;
     }
     setFieldError(undefined);
-    setSending(true);
-    try {
-      const response = await callCapability(capability.path, built.body, signature);
-      setResult(response);
-    } finally {
-      setSending(false);
+    await start(capability, built.body);
+  }
+
+  async function handleApprovePay(): Promise<void> {
+    if (!wallet) {
+      setConnectDialogOpen(true);
+      return;
     }
+    await approveAndPay(wallet, formatNetworkLabel(networkName));
   }
 
   return (
@@ -144,38 +146,19 @@ function PlaygroundBody({ capabilities, capability, onSelectCapability, networkN
         <Button onClick={() => handleSend()} disabled={sending} className="self-start">
           <Send className="size-4" aria-hidden /> Send request
         </Button>
-
-        {result?.kind === 'payment-required' ? (
-          <div className="flex flex-col gap-2 rounded-lg border border-inkline bg-deep-sea p-4">
-            <Label htmlFor="payment-signature">Advanced: retry with a payment signature</Label>
-            <p className="text-xs text-ash">
-              If you already produced a valid x402 payment signature yourself, paste it here to retry this
-              exact request and see the real paid response. Callrack never generates or signs a payment.
-            </p>
-            <Textarea
-              id="payment-signature"
-              value={paymentSignature}
-              onChange={(event) => setPaymentSignature(event.target.value)}
-              rows={2}
-              className="font-mono text-xs"
-              placeholder="PAYMENT-SIGNATURE header value"
-            />
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={!canRetryWithPayment || sending}
-              onClick={() => handleSend(paymentSignature.trim())}
-              className="self-start"
-            >
-              Retry with payment
-            </Button>
-          </div>
-        ) : null}
       </div>
 
       <div className="rounded-lg border border-inkline bg-deep-sea p-5" role="region" aria-label="Response">
-        <PlaygroundResponsePanel result={result} sending={sending} networkName={networkName} />
+        <PlaygroundResponsePanel
+          flow={flow}
+          networkName={networkName}
+          walletConnected={Boolean(wallet)}
+          onApprovePay={handleApprovePay}
+          onConnectWallet={() => setConnectDialogOpen(true)}
+        />
       </div>
+
+      <WalletConnectDialog open={connectDialogOpen} onOpenChange={setConnectDialogOpen} />
     </div>
   );
 }

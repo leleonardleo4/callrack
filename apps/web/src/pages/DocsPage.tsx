@@ -179,6 +179,14 @@ function PaymentSection({ state }: { state: ReturnType<typeof useCapabilities> }
         <li>Settle that exact amount{network ? ` on ${formatNetworkLabel(network.name)}` : ''} through the configured facilitator.</li>
         <li>Retry the identical request with a PAYMENT-SIGNATURE header carrying proof of payment.</li>
       </ol>
+      <p>
+        Building this flow yourself is only needed for a script or agent. From a browser, the{' '}
+        <Link to="/playground" className="text-frosted-lilac hover:underline">
+          Playground
+        </Link>{' '}
+        does all four steps for you: connect an Algorand wallet (Pera, Defly, Lute, WalletConnect, or Exodus),
+        approve the exact amount shown, and Callrack retries the request automatically once the payment settles.
+      </p>
       <Alert>
         <Info className="size-4" aria-hidden />
         <AlertTitle>Treat the live 402 response as authoritative</AlertTitle>

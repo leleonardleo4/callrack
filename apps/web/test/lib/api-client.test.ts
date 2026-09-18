@@ -70,6 +70,34 @@ describe('callCapability', () => {
     }
   });
 
+  it('returns an api-error result for a malformed (undecodable) PAYMENT-REQUIRED header', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValueOnce(
+        new Response('{}', { status: 402, headers: { 'payment-required': 'not-valid-base64-json!!', 'x-request-id': 'req_bad' } }),
+      ),
+    );
+
+    const result = await callCapability('/v1/weather', { latitude: 1, longitude: 1 });
+
+    expect(result.kind).toBe('api-error');
+    if (result.kind === 'api-error') {
+      expect(result.status).toBe(402);
+      expect(result.error.code).toBe('PAYMENT_REQUIRED_HEADER_INVALID');
+    }
+  });
+
+  it('returns an api-error result for a 402 with no PAYMENT-REQUIRED header at all', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValueOnce(new Response('{}', { status: 402 })));
+
+    const result = await callCapability('/v1/weather', { latitude: 1, longitude: 1 });
+
+    expect(result.kind).toBe('api-error');
+    if (result.kind === 'api-error') {
+      expect(result.error.code).toBe('PAYMENT_REQUIRED_HEADER_MISSING');
+    }
+  });
+
   it('returns an api-error result for a validation failure', async () => {
     mockFetchOnce(
       new Response(

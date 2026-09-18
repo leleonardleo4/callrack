@@ -60,6 +60,17 @@ if (!Element.prototype.scrollIntoView) {
   Element.prototype.scrollIntoView = () => {};
 }
 
+// jsdom has no ResizeObserver; Radix's Popper positioning (used by the
+// wallet menu's DropdownMenu, which — unlike the capability Select — uses
+// "popper" placement) depends on it, and hangs indefinitely without a stub.
+if (!window.ResizeObserver) {
+  window.ResizeObserver = class {
+    observe(): void {}
+    unobserve(): void {}
+    disconnect(): void {}
+  };
+}
+
 // jsdom doesn't implement matchMedia; ThemeProvider reads it for the
 // system-preference fallback. Reports "no preference" (matches: false) by
 // default, same as most real headless/CI browser contexts.

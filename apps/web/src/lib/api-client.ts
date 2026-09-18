@@ -51,23 +51,19 @@ export type ApiResult<T> = ApiSuccessResult<T> | PaymentRequiredResult | ApiErro
 
 const REQUEST_ID_HEADER = 'x-request-id';
 
-async function request<T>(path: string, init?: RequestInit): Promise<ApiResult<T>> {
-  let response: Response;
-  try {
-    response = await fetch(`${API_BASE_URL}${path}`, {
-      ...init,
-      headers: {
-        'Content-Type': 'application/json',
-        ...init?.headers,
-      },
-    });
-  } catch (cause) {
-    return {
-      kind: 'network-error',
-      message: cause instanceof Error ? cause.message : 'The network request failed.',
-    };
-  }
+export function resolveApiUrl(path: string): string {
+  return `${API_BASE_URL}${path}`;
+}
 
+/**
+ * Parses an already-fetched `Response` from a Callrack API call into an
+ * `ApiResult`. Extracted so both the plain (unpaid) request path below and
+ * the wallet-backed paid path (`lib/wallet-api-client.ts`, which drives
+ * `fetch` through the SDK's `X402PaymentClient` instead of a bare `fetch`)
+ * share exactly one implementation of 402/error/success envelope parsing —
+ * never two divergent copies.
+ */
+export async function parseApiResponse<T>(response: Response): Promise<ApiResult<T>> {
   const requestId = response.headers.get(REQUEST_ID_HEADER) ?? undefined;
 
   if (response.status === 402) {
@@ -141,6 +137,25 @@ async function request<T>(path: string, init?: RequestInit): Promise<ApiResult<T
     },
     requestId,
   };
+}
+
+async function request<T>(path: string, init?: RequestInit): Promise<ApiResult<T>> {
+  let response: Response;
+  try {
+    response = await fetch(resolveApiUrl(path), {
+      ...init,
+      headers: {
+        'Content-Type': 'application/json',
+        ...init?.headers,
+      },
+    });
+  } catch (cause) {
+    return {
+      kind: 'network-error',
+      message: cause instanceof Error ? cause.message : 'The network request failed.',
+    };
+  }
+  return parseApiResponse<T>(response);
 }
 
 export function getCapabilities(): Promise<ApiResult<PublicCapabilitiesData>> {

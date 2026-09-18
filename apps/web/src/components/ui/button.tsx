@@ -48,15 +48,18 @@ function Button({
   variant = 'default',
   size = 'default',
   asChild = false,
+  ref,
   ...props
 }: React.ComponentProps<'button'> &
   VariantProps<typeof buttonVariants> & {
     asChild?: boolean;
+    ref?: React.Ref<HTMLButtonElement>;
   }) {
   const Comp = asChild ? Slot.Root : 'button';
 
   return (
     <Comp
+      ref={ref}
       data-slot="button"
       data-variant={variant}
       data-size={size}
