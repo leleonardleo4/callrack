@@ -1,8 +1,19 @@
-# Netlify config for this app. Lives here (not the repo root) so it's
-# picked up once the Netlify site's Base directory is set to "apps/web" -
-# every path below is relative to that base. apps/api is not deployed via
-# Netlify - see docs/DEPLOYMENT.md for its own deployment (an OCI ARM64 VM
-# running Docker, via .github/workflows/ship.yml).
+# Netlify config for this app. Lives here (not the repo root) because the
+# Netlify site's own dashboard has "Package path" set to "apps/web" -
+# that's what makes Netlify look for (and find) this exact file rather
+# than one at the repo root.
+#
+# Every path below is still resolved against the REPO ROOT, not this
+# directory, despite that package-path setting - confirmed directly from
+# a real build log, not assumed: `command` ran with
+# `Current directory: /opt/build/repo`, and a first attempt at
+# `publish = "dist"` resolved to `/opt/build/repo/dist` (which doesn't
+# exist - the real build output lands at `/opt/build/repo/apps/web/dist`,
+# since Vite resolves its own outDir relative to vite.config.ts's
+# location, not the shell's cwd) and failed with "Deploy directory 'dist'
+# does not exist". apps/api is not deployed via Netlify - see
+# docs/DEPLOYMENT.md for its own deployment (an OCI ARM64 VM running
+# Docker, via .github/workflows/ship.yml).
 
 [build]
   # turbo, not a bare `pnpm build`: this app imports other workspace
@@ -11,10 +22,11 @@
   # builds those first - the same graph `pnpm build`/CI already relies on
   # - so this can't fail with a dependency's dist/ missing the way a plain
   # filtered build could. Confirmed this resolves the pnpm workspace
-  # correctly even with this directory as the build's cwd (pnpm walks up
-  # to the workspace root automatically) - not assumed.
+  # correctly with the repo root as cwd (pnpm walks up to the workspace
+  # root automatically regardless of cwd) - not assumed, and the actual
+  # build log confirms it (`Tasks: 4 successful, 4 total`).
   command = "pnpm exec turbo build --filter=@callrack/web"
-  publish = "dist"
+  publish = "apps/web/dist"
 
 [build.environment]
   NODE_VERSION = "22"
