@@ -14,12 +14,18 @@
 # `@callrack/db`'s `prisma generate` postinstall once its node_modules are
 # reshaped by `pnpm deploy`'s isolation.
 #
-# Three independent install stages feed the two final images - deliberately
-# not shared, because `runtime` must never ship devDependencies and
-# `migrator` needs `prisma` (a devDependency of `@callrack/db`), so no
-# single node_modules tree could be correct for both:
-#   - `assemble`         full install, all 5 pruned packages, compiles the API
-#   - `deps-for-runtime` prod-only install, only what `runtime` ships
+# Three separate install stages feed the two final images - deliberately
+# not sharing one node_modules tree, because `runtime` must never ship
+# devDependencies and `migrator` needs `prisma` (a devDependency of
+# `@callrack/db`), so no single install could be correct for both:
+#   - `assemble`         full install, all 5 pruned packages, compiles the
+#                        API and generates the Prisma Client
+#   - `deps-for-runtime` prod-only install, only what `runtime` ships; gets
+#                        its generated Prisma Client by copying `assemble`'s
+#                        already-generated output rather than running
+#                        `prisma generate` itself, since the `prisma` CLI
+#                        that would require is a devDependency this install
+#                        deliberately excludes
 #   - `migrator-deps`    full install of `@callrack/db` ALONE (its own
 #                        `turbo prune`, not @callrack/api's) - never pulls in
 #                        @nestjs/cli, @swc/core, or any other apps/api-only
@@ -109,28 +115,43 @@ RUN pnpm --filter=@callrack/api... build
 # `assemble`'s node_modules in place, so a stray devDependency can never
 # leak into the runtime image through directory reuse.
 #
-# Also runs its OWN `prisma generate`, not just `assemble`'s: this
-# node_modules tree - not assemble's - is what `runtime` actually ships
-# (see the `runtime` stage below), and `@prisma/client`'s package code
-# resolves its generated output (`.prisma/client/...`, the wasm query
+# This node_modules tree - not assemble's - is what `runtime` actually
+# ships (see the `runtime` stage below), and `@prisma/client`'s package
+# code resolves its generated output (`.prisma/client/...`, the wasm query
 # compiler) via a bare `require('.prisma/client/...')` scoped to wherever
-# THIS install's own pnpm store landed it. A `--ignore-scripts` install
-# never runs that generation step, so without this, `runtime` would ship a
-# `@prisma/client` with the real npm package but no generated output behind
-# it - confirmed by reproducing this exact install in isolation and
-# checking for `.prisma/client` in its pnpm store: it does not exist until
-# generate runs against it specifically. Copying `packages/db`'s source
-# from `assemble` afterwards does NOT fix this, because that source
-# directory only carries a symlink into ITS OWN pnpm store, not the
-# generated files themselves.
+# THIS install's own pnpm store landed it - copying `packages/db`'s source
+# from `assemble` does NOT carry that along, because that source directory
+# only holds a symlink into ITS OWN pnpm store, not the generated files
+# themselves. So this stage needs the real generated output physically
+# present in ITS OWN store.
+#
+# It can't get there by running `prisma generate` itself, though: the
+# `prisma` CLI is a devDependency of @callrack/db, and this install is
+# deliberately `--prod` (`runtime` must never ship devDependencies) - so
+# the CLI was never installed here. Confirmed directly: running the
+# generate command in this stage fails pnpm's own dependency-status check,
+# since `prisma` genuinely isn't present. Rather than accepting `prisma`
+# into a "production" install just to run it once, bind-mount `assemble`'s
+# ALREADY-generated output (it ran the identical `prisma generate` against
+# the identical schema, from its own full/dev install) and copy over just
+# the generated `.prisma/client` directory - not the whole node_modules,
+# and not a permanent extra layer, since a bind mount only exists for the
+# one RUN that declares it. The destination is discovered with a glob
+# rather than hardcoded, because pnpm's content-hash suffix for
+# `@prisma/client` depends on the full peer-dependency resolution graph
+# and isn't something a Dockerfile should pin.
 FROM toolchain AS deps-for-runtime
 ENV CI=true
 COPY --from=slice /workspace/out/json/ .
 RUN --mount=type=cache,id=callrack-pnpm-store,target=/root/.local/share/pnpm/store \
     pnpm install --prod --frozen-lockfile --ignore-scripts
-COPY --from=slice /workspace/out/full/packages/db/prisma ./packages/db/prisma
-COPY --from=slice /workspace/out/full/packages/db/prisma.config.ts ./packages/db/prisma.config.ts
-RUN pnpm --filter=@callrack/db run db:generate
+RUN --mount=type=bind,from=assemble,source=/workspace/node_modules/.pnpm,target=/mnt/assembled-pnpm-store \
+    sh -euc ' \
+      for dir in /mnt/assembled-pnpm-store/@prisma+client@*; do \
+        name=$(basename "$dir"); \
+        mkdir -p "node_modules/.pnpm/$name/node_modules"; \
+        cp -r "$dir/node_modules/.prisma" "node_modules/.pnpm/$name/node_modules/.prisma"; \
+      done'
 
 # --- migrator-deps: full install of @callrack/db ALONE, nothing else -------
 # `prisma migrate deploy` does not read the generated Prisma Client at all -
