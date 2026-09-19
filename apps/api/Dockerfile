@@ -181,6 +181,15 @@ ENV API_PORT=3004
 RUN addgroup --system --gid 1001 svc \
   && adduser --system --uid 1001 --ingroup svc svc
 
+# `WORKDIR` above created /workspace while still root (svc didn't exist
+# yet) - the `--chown` on the COPY instructions below only sets ownership
+# on what they copy in, never on /workspace itself, so left alone it stays
+# root-owned and `svc` can never write anything new directly into it.
+# apps/api's own runtime process has no documented need to do that today,
+# but `migrator`'s does (see that stage below, where this exact gap broke
+# it) - fixed here too so both final images hold the same invariant.
+RUN chown svc:svc /workspace
+
 COPY --from=deps-for-runtime --chown=svc:svc /workspace/node_modules ./node_modules
 COPY --from=assemble --chown=svc:svc /workspace/package.json ./package.json
 COPY --from=assemble --chown=svc:svc /workspace/apps/api ./apps/api
@@ -213,6 +222,35 @@ ENV NODE_ENV=production
 RUN addgroup --system --gid 1001 svc \
   && adduser --system --uid 1001 --ingroup svc svc
 
+# `WORKDIR` above created /workspace while still root - see the identical
+# comment in `runtime` above. This one isn't theoretical for `migrator`:
+# it's the confirmed cause of a real runtime EACCES failure. `pnpm` writes
+# its own scratch files (e.g. `_tmp_<pid>_<hash>`) relative to CWD as part
+# of ordinary operation, not just during install - CMD below runs as
+# `svc`, and a root-owned /workspace refused that write.
+RUN chown svc:svc /workspace
+
+COPY --from=migrator-deps --chown=svc:svc /workspace/package.json ./package.json
+
+# `corepack enable` only installs the dispatcher shim - it does not
+# download pnpm itself. That happens lazily on first invocation, into
+# $COREPACK_HOME (defaults to the invoking user's own $HOME). Nothing in
+# THIS stage ever invokes pnpm during the build (only `migrator-deps`, a
+# separate stage whose filesystem - and whatever corepack cached inside
+# it - is never copied forward), so left alone, the container's one and
+# only command would BE that first invocation: running as `svc`, at
+# runtime, needing network access to a registry a production container may
+# have no egress for, and a writable cache dir that was never populated
+# for `svc` in the first place. Confirmed this is exactly what the
+# original failure was - not the /workspace ownership gap above, but the
+# combination of both. Fixed by preparing the exact pnpm version this
+# repo's own package.json pins, at build time (network + root available),
+# into a fixed location any user can read - so the container never needs
+# network or install access just to run `prisma migrate deploy`.
+ENV COREPACK_HOME=/opt/corepack-cache
+RUN corepack prepare "$(node -p "require('./package.json').packageManager")" --activate \
+  && chown -R svc:svc /opt/corepack-cache
+
 # From `migrator-deps`, never `assemble` - this image never needs (and must
 # never wait on) the Nest build. `migrator-deps` is its own `turbo prune`
 # scoped to @callrack/db alone, so this node_modules tree carries the
@@ -220,7 +258,6 @@ RUN addgroup --system --gid 1001 svc \
 # apps/api's own devDependencies (@nestjs/cli, @swc/core, etc.) the way
 # reusing `assemble`'s tree would have.
 COPY --from=migrator-deps --chown=svc:svc /workspace/node_modules ./node_modules
-COPY --from=migrator-deps --chown=svc:svc /workspace/package.json ./package.json
 COPY --from=migrator-deps --chown=svc:svc /workspace/pnpm-workspace.yaml ./pnpm-workspace.yaml
 COPY --from=migrator-deps --chown=svc:svc /workspace/packages/db ./packages/db
 
