@@ -215,7 +215,6 @@ CMD ["node", "apps/api/dist/main.js"]
 
 # --- migrator: one-shot, applies pending migrations then exits --------------
 FROM node:${NODE_MAJOR} AS migrator
-RUN corepack enable
 WORKDIR /workspace
 ENV NODE_ENV=production
 
@@ -223,33 +222,8 @@ RUN addgroup --system --gid 1001 svc \
   && adduser --system --uid 1001 --ingroup svc svc
 
 # `WORKDIR` above created /workspace while still root - see the identical
-# comment in `runtime` above. This one isn't theoretical for `migrator`:
-# it's the confirmed cause of a real runtime EACCES failure. `pnpm` writes
-# its own scratch files (e.g. `_tmp_<pid>_<hash>`) relative to CWD as part
-# of ordinary operation, not just during install - CMD below runs as
-# `svc`, and a root-owned /workspace refused that write.
+# comment in `runtime` above.
 RUN chown svc:svc /workspace
-
-COPY --from=migrator-deps --chown=svc:svc /workspace/package.json ./package.json
-
-# `corepack enable` only installs the dispatcher shim - it does not
-# download pnpm itself. That happens lazily on first invocation, into
-# $COREPACK_HOME (defaults to the invoking user's own $HOME). Nothing in
-# THIS stage ever invokes pnpm during the build (only `migrator-deps`, a
-# separate stage whose filesystem - and whatever corepack cached inside
-# it - is never copied forward), so left alone, the container's one and
-# only command would BE that first invocation: running as `svc`, at
-# runtime, needing network access to a registry a production container may
-# have no egress for, and a writable cache dir that was never populated
-# for `svc` in the first place. Confirmed this is exactly what the
-# original failure was - not the /workspace ownership gap above, but the
-# combination of both. Fixed by preparing the exact pnpm version this
-# repo's own package.json pins, at build time (network + root available),
-# into a fixed location any user can read - so the container never needs
-# network or install access just to run `prisma migrate deploy`.
-ENV COREPACK_HOME=/opt/corepack-cache
-RUN corepack prepare "$(node -p "require('./package.json').packageManager")" --activate \
-  && chown -R svc:svc /opt/corepack-cache
 
 # From `migrator-deps`, never `assemble` - this image never needs (and must
 # never wait on) the Nest build. `migrator-deps` is its own `turbo prune`
@@ -258,12 +232,36 @@ RUN corepack prepare "$(node -p "require('./package.json').packageManager")" --a
 # apps/api's own devDependencies (@nestjs/cli, @swc/core, etc.) the way
 # reusing `assemble`'s tree would have.
 COPY --from=migrator-deps --chown=svc:svc /workspace/node_modules ./node_modules
+COPY --from=migrator-deps --chown=svc:svc /workspace/package.json ./package.json
 COPY --from=migrator-deps --chown=svc:svc /workspace/pnpm-workspace.yaml ./pnpm-workspace.yaml
 COPY --from=migrator-deps --chown=svc:svc /workspace/packages/db ./packages/db
 
 USER svc
+WORKDIR /workspace/packages/db
 
-# Same command this repo already documents and runs in CI for a production
-# migration (`prisma migrate deploy` - applies existing migrations only,
-# never generates a new one, never touched by a plain `migrate dev`/`db push`).
-CMD ["pnpm", "--filter=@callrack/db", "run", "db:migrate:deploy"]
+# Traced the actual runtime failure to `pnpm run` itself, not to
+# `db:migrate:deploy` (just `"prisma migrate deploy"`, no chaining) or any
+# postinstall/pretest hook. Before running ANY script, `pnpm run` calls its
+# own `runDepsStatusCheck`, which compares node_modules against a recorded
+# workspace-state snapshot and, in its default mode, "self-heals" a
+# perceived mismatch by spawning `pnpm install` as a child process -
+# confirmed directly in pnpm 11.15.1's own bundled source
+# (runDepsStatusCheck's `switch (opts.verifyDepsBeforeRun) { case
+# "install": install2(); ... }`, where install2 is `pnpm install` bound to
+# the project dir). That's the literal, root-cause origin of "pnpm install
+# running at container runtime" - not this Dockerfile, not `db:migrate
+# :deploy`. It's also not fixable by only suppressing the interactive purge
+# prompt (`CI=true`/`confirmModulesPurge`): the args that spawned install
+# runs with (`createInstallArgs`) never include `--frozen-lockfile`, so
+# even a "successful" self-heal would have been a live, non-deterministic
+# reinstall from the registry - exactly what a baked, immutable image must
+# never do.
+#
+# Fixed by never invoking `pnpm run` here at all. `prisma`'s own
+# package.json (`"main": "build/index.js"`) is resolved the same way
+# `@prisma/client`'s generated output was verified to resolve earlier in
+# this file: `packages/db/node_modules/prisma` is a symlink into this
+# stage's own pnpm store, populated by `migrator-deps`'s real, complete
+# install, so it's valid the moment this image is assembled - not
+# something a runtime install could ever be needed for.
+CMD ["node", "node_modules/prisma/build/index.js", "migrate", "deploy"]
