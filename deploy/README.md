@@ -131,4 +131,8 @@ printf '%s\n%s\n' "$REGISTRY_ACTOR" "$REGISTRY_TOKEN" | \
 This is also how you roll back: pass the short SHA of a previous, known-good
 build (visible in `/opt/apps/callrack/.active-release`'s history if you've
 been keeping copies, or in the GHCR package's own tag list) instead of the
-latest one.
+latest one. Note that every *successful* promotion prunes this repository's
+own stale local image tags (never anything unrelated to callrack, and
+never on a failed/rolled-back promotion) - a rollback to an older SHA just
+re-pulls it from GHCR, which always keeps every tag regardless of what's
+been pruned locally.

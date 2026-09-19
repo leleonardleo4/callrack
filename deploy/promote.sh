@@ -121,6 +121,28 @@ commit_candidate() {
   fi
 }
 
+# Only after a successful promotion - never touches anything but this
+# repository's own runtime/migrator tags, since `alpha` is a shared network
+# with other apps' images potentially sitting in the same local Docker
+# storage. A blanket `docker image prune` would risk deleting those too;
+# this only ever removes callrack tags that are NOT the release just
+# promoted. Best-effort: an image Docker still considers "in use" for some
+# other reason is left alone rather than failing the whole promotion over
+# disk cleanup.
+prune_stale_images() {
+  local stale
+  stale=$(docker images "${REGISTRY}/${REPOSITORY}" --format '{{.Repository}}:{{.Tag}}' \
+    | grep -E ':(runtime|migrator)-' \
+    | grep -v -- "-${release_ref}$" || true)
+  if [[ -n "$stale" ]]; then
+    announce "pruning stale local images:"
+    printf '%s\n' "$stale" | while IFS= read -r tag; do
+      announce "  - ${tag}"
+    done
+    printf '%s\n' "$stale" | xargs -r docker rmi >/dev/null 2>&1 || true
+  fi
+}
+
 restore_previous() {
   announce "candidate never became healthy - rolling back"
   docker rm --force "$UNIT_NAME" >/dev/null 2>&1 || true
@@ -147,6 +169,7 @@ main() {
 
   if wait_until_alive; then
     commit_candidate
+    prune_stale_images
     record_release
     announce "promotion of ${release_ref} succeeded"
   else
