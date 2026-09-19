@@ -95,9 +95,9 @@ describe('x402 Payment Protection (E2E)', () => {
       expect(requirements.scheme).toBe('exact');
       expect(requirements.network).toBe(TESTNET_NETWORK);
       expect(requirements.payTo).toBe('TTCZHJ24VWV64DMFCXKHS2GMLFVUTBA673THZR7LNYY3GEB3XV7HNUEQXQ');
-      // "0.003" USDC at 6 decimals, converted via pure string arithmetic (see
+      // "0.015" USDC at 6 decimals, converted via pure string arithmetic (see
       // convertToTokenAmount) - never a floating-point-derived value.
-      expect(requirements.amount).toBe('3000');
+      expect(requirements.amount).toBe('15000');
     });
 
     it('returns 402 for every representative protected capability', async () => {

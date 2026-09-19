@@ -59,9 +59,9 @@ describe('Discovery endpoints (E2E)', () => {
       const weather = body.resources.find((r: { url: string }) => new URL(r.url).pathname === '/v1/weather');
       expect(weather.network).toBe(ALGORAND_TESTNET_NETWORK_FROM_CONFIG);
       expect(weather.asset).toBe(usdc.asset);
-      // PRICE_WEATHER=0.003 in the test env - 0.003 * 10^6 = 3000, via pure
+      // PRICE_WEATHER=0.015 in the test env - 0.015 * 10^6 = 15000, via pure
       // string arithmetic (convertToTokenAmount), never floating point.
-      expect(weather.amount).toBe('3000');
+      expect(weather.amount).toBe('15000');
       expect(weather.payTo).toBe('TTCZHJ24VWV64DMFCXKHS2GMLFVUTBA673THZR7LNYY3GEB3XV7HNUEQXQ');
       expect(weather.method).toBe('POST');
     });
@@ -121,8 +121,8 @@ describe('Discovery endpoints (E2E)', () => {
       for (const capability of CAPABILITY_METADATA) {
         expect(response.payload, `llms.txt missing ${capability.id}`).toContain(capability.path);
       }
-      // PRICE_WEATHER=0.003 in the test env.
-      expect(response.payload).toContain('0.003 USDC');
+      // PRICE_WEATHER=0.015 in the test env.
+      expect(response.payload).toContain('0.015 USDC');
     });
 
     it('names the real GoPlausible facilitator and the active Testnet network', async () => {

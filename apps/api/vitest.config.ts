@@ -13,22 +13,22 @@ export default defineConfig({
     // e2e test boots the full AppModule via createApp(), so these must be
     // present for the app to start at all. Values mirror .env.example.
     env: {
-      PRICE_ACADEMIC_SEARCH: '0.01',
-      PRICE_ACADEMIC_WORK: '0.005',
-      PRICE_NEWS_SEARCH: '0.01',
-      PRICE_NEWS_TRENDS: '0.02',
-      PRICE_CRYPTO_PRICE: '0.002',
-      PRICE_CRYPTO_MARKET: '0.005',
-      PRICE_FX_RATES: '0.002',
-      PRICE_WEATHER: '0.003',
-      PRICE_GEOCODE: '0.002',
-      PRICE_HOLIDAYS: '0.002',
-      PRICE_KNOWLEDGE_SEARCH: '0.005',
-      PRICE_GOVERNMENT_CENSUS: '0.01',
-      PRICE_RESEARCH: '0.05',
-      PRICE_INFORMATION_VERIFY: '0.05',
-      PRICE_INFORMATION_EVIDENCE: '0.05',
-      PRICE_INFORMATION_COMPARE: '0.10',
+      PRICE_ACADEMIC_SEARCH: '0.05',
+      PRICE_ACADEMIC_WORK: '0.025',
+      PRICE_NEWS_SEARCH: '0.05',
+      PRICE_NEWS_TRENDS: '0.10',
+      PRICE_CRYPTO_PRICE: '0.01',
+      PRICE_CRYPTO_MARKET: '0.025',
+      PRICE_FX_RATES: '0.01',
+      PRICE_WEATHER: '0.015',
+      PRICE_GEOCODE: '0.01',
+      PRICE_HOLIDAYS: '0.01',
+      PRICE_KNOWLEDGE_SEARCH: '0.025',
+      PRICE_GOVERNMENT_CENSUS: '0.05',
+      PRICE_RESEARCH: '0.25',
+      PRICE_INFORMATION_VERIFY: '0.25',
+      PRICE_INFORMATION_EVIDENCE: '0.25',
+      PRICE_INFORMATION_COMPARE: '0.50',
       // x402 config (Phase 7) has no defaults either - X402ConfigModule is
       // wired into AppModule, so even createApp() (which never installs the
       // x402 middleware itself) still constructs X402ConfigService.

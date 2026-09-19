@@ -26,10 +26,10 @@ describe('Capability Registry (E2E)', () => {
 
   it('every registered capability price resolves from the environment, as an exact string', () => {
     const academicSearch = registry.getById('academic.search');
-    expect(academicSearch?.price).toEqual({ amount: '0.01', currency: 'USDC' });
+    expect(academicSearch?.price).toEqual({ amount: '0.05', currency: 'USDC' });
 
     const research = registry.getById('research');
-    expect(research?.price).toEqual({ amount: '0.05', currency: 'USDC' });
+    expect(research?.price).toEqual({ amount: '0.25', currency: 'USDC' });
   });
 
   it('every registered capability route actually exists on the live app (never a phantom route)', async () => {
