@@ -1,0 +1,47 @@
+# Netlify config for this app. Lives here (not the repo root) so it's
+# picked up once the Netlify site's Base directory is set to "apps/web" -
+# every path below is relative to that base. apps/api is not deployed via
+# Netlify - see docs/DEPLOYMENT.md for its own deployment (an OCI ARM64 VM
+# running Docker, via .github/workflows/ship.yml).
+
+[build]
+  # turbo, not a bare `pnpm build`: this app imports other workspace
+  # packages (@callrack/sdk, etc.) that ship as a pre-built dist/, not raw
+  # TypeScript. turbo.json's own build task (`dependsOn: ["^build"]`)
+  # builds those first - the same graph `pnpm build`/CI already relies on
+  # - so this can't fail with a dependency's dist/ missing the way a plain
+  # filtered build could. Confirmed this resolves the pnpm workspace
+  # correctly even with this directory as the build's cwd (pnpm walks up
+  # to the workspace root automatically) - not assumed.
+  command = "pnpm exec turbo build --filter=@callrack/web"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+  # Not a secret - the API's own public URL, needed at build time since
+  # Vite inlines import.meta.env.VITE_API_BASE_URL into the bundle.
+  # Without this, the deployed site silently falls back to
+  # src/config/env.ts's http://localhost:3000 default. Set
+  # VITE_WALLETCONNECT_PROJECT_ID in Netlify's own site environment
+  # variables instead (Site configuration -> Environment variables) -
+  # deliberately not committed here.
+  VITE_API_BASE_URL = "https://api.callrack.xyz"
+
+# This app is a client-side-routed SPA (react-router's createBrowserRouter,
+# not server-rendered), so Netlify has no file on disk for any route but
+# "/" - without this, a direct load or refresh of /capabilities, /docs,
+# /playground, etc. 404s, which is exactly what was just reported.
+# status = 200 makes this a rewrite, not a redirect: the real URL stays in
+# the address bar so react-router's own client-side routing still takes
+# over correctly instead of bouncing to "/".
+#
+# Safe against the GoPlausible x402 discovery guide's own SPA-catch-all
+# warning (an HTML body on a .well-known/.txt path counts as a miss):
+# public/.well-known/agent.json, llms.txt, and agents.md are real files
+# Vite copies into dist/ as-is, and Netlify always matches an actual file
+# on disk before falling through to a redirect rule - confirmed via
+# Netlify's own documented precedence, not assumed.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
