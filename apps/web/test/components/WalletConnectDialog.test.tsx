@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { WalletConnectDialog } from '@/components/wallet/WalletConnectDialog';
 
@@ -96,15 +96,21 @@ describe('WalletConnectDialog', () => {
       const onOpenChange = vi.fn();
       render(<WalletConnectDialog open onOpenChange={onOpenChange} />);
 
-      screen.getByText('Pera').closest('button')!.click();
+      await act(async () => {
+        screen.getByText('Pera').closest('button')!.click();
+      });
 
       // Advance well past the "still waiting" hint threshold - still no error.
-      await vi.advanceTimersByTimeAsync(15_000);
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(15_000);
+      });
       expect(screen.queryByText(/not available|could not be connected/i)).not.toBeInTheDocument();
       expect(screen.getByText(/still waiting for pera/i)).toBeInTheDocument();
 
       // The wallet finally responds - this must still succeed cleanly.
-      resolveConnect([{ name: 'Account 1', address: 'TTCZHJ24VWV64DMFCXKHS2GMLFVUTBA673THZR7LNYY3GEB3XV7HNUEQXQ' }]);
+      await act(async () => {
+        resolveConnect([{ name: 'Account 1', address: 'TTCZHJ24VWV64DMFCXKHS2GMLFVUTBA673THZR7LNYY3GEB3XV7HNUEQXQ' }]);
+      });
       await vi.waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
       expect(screen.queryByText(/not available|could not be connected/i)).not.toBeInTheDocument();
       vi.useRealTimers();
