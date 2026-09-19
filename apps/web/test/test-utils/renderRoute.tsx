@@ -7,6 +7,7 @@ import { CapabilityDetailPage } from '@/pages/CapabilityDetailPage';
 import { DocsPage } from '@/pages/DocsPage';
 import { PlaygroundPage } from '@/pages/PlaygroundPage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
+import { ErrorPage } from '@/pages/ErrorPage';
 
 /** The same route tree as src/router.tsx, using createMemoryRouter so tests control the initial path/history. */
 export function renderRoute(initialPath: string) {
@@ -14,6 +15,7 @@ export function renderRoute(initialPath: string) {
     [
       {
         element: <RootLayout />,
+        errorElement: <ErrorPage />,
         children: [
           { path: '/', element: <LandingPage /> },
           { path: '/capabilities', element: <CapabilitiesPage /> },

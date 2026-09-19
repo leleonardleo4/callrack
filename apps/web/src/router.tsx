@@ -6,10 +6,12 @@ import { CapabilityDetailPage } from '@/pages/CapabilityDetailPage';
 import { DocsPage } from '@/pages/DocsPage';
 import { PlaygroundPage } from '@/pages/PlaygroundPage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
+import { ErrorPage } from '@/pages/ErrorPage';
 
 export const router = createBrowserRouter([
   {
     element: <RootLayout />,
+    errorElement: <ErrorPage />,
     children: [
       { path: '/', element: <LandingPage /> },
       { path: '/capabilities', element: <CapabilitiesPage /> },
