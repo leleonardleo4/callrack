@@ -14,6 +14,13 @@ export interface CreateRedisClientOptions {
    * entirely for a dedicated instance.
    */
   keyPrefix?: string;
+  /**
+   * Overrides ioredis's own default (10_000ms) - useful for a short-lived,
+   * disposable client (e.g. a test-suite setup hook establishing a fresh
+   * connection per test) that must fail fast rather than hang for 10s on
+   * every single use whenever Redis happens to be unreachable.
+   */
+  connectTimeout?: number;
 }
 
 export function createRedisClient(
@@ -36,6 +43,7 @@ export function createRedisClient(
     maxRetriesPerRequest: 3,
     ...(tls ? { tls } : {}),
     ...(options.keyPrefix ? { keyPrefix: options.keyPrefix } : {}),
+    ...(options.connectTimeout !== undefined ? { connectTimeout: options.connectTimeout } : {}),
     // Every caller of this client already checks readiness before issuing a
     // command (see CapabilityCacheService.safeGet/safeSet, RedisService's
     // own try/catch'd isHealthy/ping) or needs a command to fail instantly

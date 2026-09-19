@@ -30,4 +30,16 @@ describe('createRedisClient', () => {
     );
     client.disconnect();
   });
+
+  it('uses ioredis\'s own default connectTimeout when none is given', () => {
+    const client = createRedisClient('redis://localhost:6379');
+    expect(client.options.connectTimeout).toBe(10_000);
+    client.disconnect();
+  });
+
+  it('applies a given connectTimeout override', () => {
+    const client = createRedisClient('redis://localhost:6379', { connectTimeout: 300 });
+    expect(client.options.connectTimeout).toBe(300);
+    client.disconnect();
+  });
 });
