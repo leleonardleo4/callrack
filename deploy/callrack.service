@@ -1,0 +1,25 @@
+[Unit]
+Description=Callrack API container (lifecycle owned by /opt/apps/callrack/promote.sh)
+# infra.service is whatever already brings up the shared `alpha` network,
+# the `postgres` container, and the `redis` container on this host - this
+# unit only ever starts/stops a container that promote.sh created; it never
+# creates one itself, so it must never race ahead of that infrastructure.
+After=docker.service infra.service network-online.target
+Requires=docker.service infra.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+# `docker start`/`docker stop` act on whatever container currently answers
+# to the name `callrack-api` - promote.sh keeps that name stable across
+# promotions (stop -> rename -> start a replacement under the same name),
+# so this unit never needs to know a specific image tag or be touched by a
+# release.
+ExecStart=/usr/bin/docker start callrack-api
+ExecStop=/usr/bin/docker stop --time 15 callrack-api
+TimeoutStartSec=60
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target
