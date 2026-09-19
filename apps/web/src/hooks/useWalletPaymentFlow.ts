@@ -85,8 +85,8 @@ export function useWalletPaymentFlow() {
           },
         });
 
-        pendingRef.current = undefined;
         if (result.kind === 'success') {
+          pendingRef.current = undefined;
           setState((previous) => ({ ...previous, status: 'completed', result }));
           return;
         }
@@ -97,6 +97,12 @@ export function useWalletPaymentFlow() {
         // the response panel's 'failed' branch renders the real message
         // instead of silently falling through to redisplay a stale
         // "payment required" card as if the attempt never happened.
+        // `pendingRef` deliberately stays set here (only cleared on actual
+        // success or an explicit `reset()`) - the response panel's "Try
+        // again" button calls this same `approveAndPay`, which bails
+        // immediately if `pendingRef.current` is empty. Clearing it
+        // unconditionally here (as this used to) meant "Try again" was a
+        // silent no-op on every failure.
         const failure: PaymentFlowFailure =
           result.kind === 'network-error'
             ? {
@@ -123,7 +129,10 @@ export function useWalletPaymentFlow() {
         setState((previous) => ({ ...previous, status: 'failed', result, failure }));
       } catch (error) {
         const failure = classifyPaymentFlowError(error, requiredNetworkLabel);
-        pendingRef.current = failure.reason === 'cancelled' ? pending : undefined;
+        // Same reasoning as the resolved-failure branch above: leave
+        // `pendingRef` set for both 'cancelled' and any other failure
+        // reason, so "Approve & pay again"/"Try again" can actually retry
+        // instead of silently doing nothing.
         setState((previous) => ({
           ...previous,
           status: failure.reason === 'cancelled' ? 'cancelled' : 'failed',
