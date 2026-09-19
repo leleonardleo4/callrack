@@ -18,7 +18,6 @@ const booleanEnvVar = (defaultValue: boolean) =>
 
 export const apiConfigSchema = baseEnvSchema.extend({
   API_PREFIX: z.string().min(1, 'API_PREFIX cannot be empty').default('v1'),
-  SERVICE_NAME: z.string().default('callrack-api'),
   API_VERSION: z.string().default('0.1.0'),
 
   // Production hardening (Phase 11). Defaults are safe for local

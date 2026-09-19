@@ -15,7 +15,6 @@ describe('ApiConfigService', () => {
     expect(config.isProduction).toBe(false);
     expect(config.port).toBe(4000);
     expect(config.apiPrefix).toBe('v1');
-    expect(config.serviceName).toBe('callrack-api');
   });
 
   it('fails validation on invalid configuration', () => {

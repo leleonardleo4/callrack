@@ -24,7 +24,6 @@ describe('Health Endpoint (E2E)', () => {
     expect(response.statusCode).toBe(200);
     const body = JSON.parse(response.payload);
     expect(body.status).toBe('ok');
-    expect(body.service).toBe('callrack-api');
     expect(body.version).toBe('0.1.0');
     expect(typeof body.uptime).toBe('number');
     expect(response.headers['x-request-id']).toBeDefined();

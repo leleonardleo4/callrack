@@ -7,7 +7,6 @@ describe('HealthController', () => {
   it('returns healthy system status', () => {
     const configService = new ApiConfigService({
       NODE_ENV: 'test',
-      SERVICE_NAME: 'callrack-api',
       API_VERSION: '0.1.0',
     });
     const healthService = new HealthService(configService);
@@ -16,7 +15,6 @@ describe('HealthController', () => {
     const health = controller.getHealth();
 
     expect(health.status).toBe('ok');
-    expect(health.service).toBe('callrack-api');
     expect(health.version).toBe('0.1.0');
     expect(typeof health.uptime).toBe('number');
     expect(typeof health.timestamp).toBe('string');

@@ -21,7 +21,6 @@ export class HealthController {
       type: 'object',
       properties: {
         status: { type: 'string', example: 'ok' },
-        service: { type: 'string', example: 'callrack-api' },
         version: { type: 'string', example: '0.1.0' },
         uptime: { type: 'number', example: 123 },
         timestamp: { type: 'string', example: '2026-09-16T19:00:00.000Z' },

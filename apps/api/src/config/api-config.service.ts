@@ -33,10 +33,6 @@ export class ApiConfigService {
     return this.config.API_PREFIX;
   }
 
-  get serviceName(): string {
-    return this.config.SERVICE_NAME;
-  }
-
   get version(): string {
     return this.config.API_VERSION;
   }

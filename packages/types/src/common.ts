@@ -11,7 +11,6 @@ export interface ApiResponse<T = unknown> {
 
 export interface SystemHealthStatus {
   status: 'ok' | 'degraded' | 'down';
-  service: string;
   version: string;
   uptime: number;
   timestamp: string;

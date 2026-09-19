@@ -17,7 +17,6 @@ export class HealthService {
   getHealth(): SystemHealthStatus {
     return {
       status: 'ok',
-      service: this.configService.serviceName,
       version: this.configService.version,
       uptime: Math.floor((Date.now() - this.startTime) / 1000),
       timestamp: new Date().toISOString(),
