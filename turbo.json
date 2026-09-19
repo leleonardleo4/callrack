@@ -12,7 +12,17 @@
       "dependsOn": ["^build"]
     },
     "test": {
-      "dependsOn": ["^build"]
+      "dependsOn": ["^build"],
+      // Turbo's default (strict) environment mode only forwards a var into
+      // a task's actual process if it's declared here - anything else set
+      // at the shell/CI-job level (e.g. ci.yml's REDIS_URL/DATABASE_URL for
+      // the real Postgres/Redis services) is otherwise silently invisible
+      // to the task itself, confirmed directly: `REDIS_URL=canary turbo run
+      // test` printed `undefined` inside the actual vitest process before
+      // this was added. Listed here (not passThroughEnv) because a
+      // different DATABASE_URL/REDIS_URL can genuinely change test
+      // behavior, so it belongs in the cache hash too.
+      "env": ["DATABASE_URL", "REDIS_URL"]
     },
     "dev": {
       "cache": false,
