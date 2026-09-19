@@ -9,6 +9,16 @@ export default defineConfig({
     // via `pnpm test:providers` / `pnpm test:x402:testnet`, never as part of
     // the default suite.
     exclude: [...configDefaults.exclude, 'test/providers/smoke/**', 'test/x402/testnet-smoke.ts'],
+    // Flushes Redis before every test - see test/setup.ts for why: several
+    // e2e spec FILES stub different provider responses behind the same
+    // request parameters, sharing one cache key, and would otherwise "win"
+    // or "lose" against each other's cached results whenever Redis is
+    // actually reachable (invisible with no local Redis running, real in
+    // CI). Running files sequentially (not in parallel workers) closes the
+    // remaining gap: two DIFFERENT files racing the same live Redis
+    // instance mid-test, which a per-test flush alone can't fully prevent.
+    setupFiles: ['./test/setup.ts'],
+    fileParallelism: false,
     // Pricing has no defaults by design (see PricingConfigService) - every
     // e2e test boots the full AppModule via createApp(), so these must be
     // present for the app to start at all. Values mirror .env.example.
