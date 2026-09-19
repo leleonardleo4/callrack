@@ -577,27 +577,38 @@ provider outage, a facilitator issue), not just a refund-code problem.
 
 ## 27. CI/CD
 
-`.github/workflows/ci.yml`:
+Two separate workflow files, deliberately - a quality gate that always runs,
+and a deploy pipeline that never runs by itself:
 
-- **`verify`** (push + PR to `main`): install → generate Prisma client →
+**`.github/workflows/ci.yml`** - runs on every push/PR to `main`, never
+deploys anything:
+
+- **`verify`** (Verify Monorepo): install → generate Prisma client →
   `migrate deploy` against a CI Postgres → lint → typecheck → test → build.
   Merging is blocked if any step fails (standard GitHub branch-protection
   behavior - enable "require status checks to pass" on `main` if not
   already).
-- **`docker-build`** (push + PR, after `verify`): builds
-  `apps/api/Dockerfile` (no push/registry) to catch a Dockerfile
-  regression before merge.
-- **`deploy`** (manual `workflow_dispatch` only - **never** on push/PR):
-  requires selecting `testnet` or `production`, which maps to a GitHub
-  Environment of the same name. Configure each Environment (repo Settings
-  → Environments) with its own secrets and, for `production`, required
-  reviewers, so a Mainnet deploy needs an explicit human approval on top
-  of picking the right dropdown value. The job currently exits 1 with an
-  explanatory message - replace its placeholder step with the chosen
-  host's real deploy command (and the migration-release step from §8)
-  once a platform is selected. This structure makes it structurally
-  impossible for a routine push/PR merge to trigger any deployment, let
-  alone one with Mainnet configuration.
+- **`docker-build`** (after `verify`): builds `apps/api/Dockerfile` (no
+  push/registry credentials needed) to catch a Dockerfile regression
+  before merge, not at deploy time.
+
+That's the whole file - no `deploy` job here. There used to be a
+placeholder one gated on `workflow_dispatch` before a hosting platform was
+chosen; it's been removed entirely now that one has (see below), rather
+than left around as a second, confusing "deploy" surface that never
+actually deployed anything.
+
+**`.github/workflows/ship.yml`** - the real deploy pipeline (§8b's
+migrator image, the OCI edge VM, `deploy/promote.sh`), covered fully in
+`deploy/README.md`. Manual `workflow_dispatch` only, never on push/PR:
+`preflight` (re-runs the same quality gate against whatever ref was
+dispatched) → `forge` (matrix-builds `runtime`/`migrator` × `amd64`/`arm64`
+- four parallel jobs, so one architecture's failure never hides behind
+the other's pass) → `publish` (stitches each image's two arch-specific
+tags into one multi-arch manifest) → `rollout` (gated by the `production`
+GitHub Environment - configure a required reviewer there so a real deploy
+always needs an explicit human approval, on top of the workflow itself
+never triggering automatically).
 
 ## 28. Database migration deployment
 
