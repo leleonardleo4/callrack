@@ -182,11 +182,30 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     steps:
+      - uses: actions/checkout@v4
+
       - name: Stage the SSH key
         run: |
           install -m 700 -d ~/.ssh
           printf '%s\n' "${{ secrets.EDGE_SSH_KEY }}" > ~/.ssh/edge_key
           chmod 600 ~/.ssh/edge_key
+
+      # promote.sh lives in this repo, not on the VM - nothing before this
+      # ever put it there, which is why the first deploy failed with
+      # "No such file or directory". Synced on every run (not just once)
+      # so a change to promote.sh itself takes effect on the next dispatch
+      # without a separate manual step.
+      - name: Sync promote.sh onto the edge VM
+        run: |
+          set -euo pipefail
+          scp -i ~/.ssh/edge_key \
+            -o StrictHostKeyChecking=accept-new \
+            deploy/promote.sh \
+            "${{ secrets.EDGE_USER }}@${{ secrets.EDGE_HOST }}:/opt/apps/callrack/promote.sh"
+          ssh -i ~/.ssh/edge_key \
+            -o StrictHostKeyChecking=accept-new \
+            "${{ secrets.EDGE_USER }}@${{ secrets.EDGE_HOST }}" \
+            "chmod 700 /opt/apps/callrack/promote.sh"
 
       - name: Promote ${{ needs.preflight.outputs.release_ref }} on the edge VM
         env:
