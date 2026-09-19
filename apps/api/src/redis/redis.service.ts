@@ -10,7 +10,9 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
   readonly cache: RedisCache;
 
   constructor(configService: ApiConfigService) {
-    this.client = createRedisClient(configService.raw.REDIS_URL);
+    this.client = createRedisClient(configService.raw.REDIS_URL, {
+      keyPrefix: configService.raw.REDIS_KEY_PREFIX,
+    });
     this.cache = new RedisCache(this.client);
     this.client.on('error', (error: Error) => {
       this.logger.warn(`Redis connection error: ${error.message}`);

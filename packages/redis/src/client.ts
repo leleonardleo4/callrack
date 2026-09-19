@@ -4,7 +4,22 @@ export type RedisClientType = Redis;
 
 const DEFAULT_REDIS_URL = 'redis://localhost:6379';
 
-export function createRedisClient(url: string = process.env.REDIS_URL || DEFAULT_REDIS_URL): RedisClientType {
+export interface CreateRedisClientOptions {
+  /**
+   * Namespaces every key this client touches (ioredis applies it client-side
+   * to every command automatically - GET/SET/DEL/EXISTS/TTL/etc all see it,
+   * including commands issued by something the raw client is handed to
+   * directly, e.g. `@fastify/rate-limit`'s `redis` option). Needed when
+   * several unrelated apps share one Redis instance/keyspace; omit it
+   * entirely for a dedicated instance.
+   */
+  keyPrefix?: string;
+}
+
+export function createRedisClient(
+  url: string = process.env.REDIS_URL || DEFAULT_REDIS_URL,
+  options: CreateRedisClientOptions = {},
+): RedisClientType {
   const { protocol, hostname } = new URL(url);
   // ioredis parses connection details (host/port/auth) from the URL string,
   // but does not reliably forward that hostname as the TLS SNI value once a
@@ -20,6 +35,7 @@ export function createRedisClient(url: string = process.env.REDIS_URL || DEFAULT
     lazyConnect: true,
     maxRetriesPerRequest: 3,
     ...(tls ? { tls } : {}),
+    ...(options.keyPrefix ? { keyPrefix: options.keyPrefix } : {}),
     // Every caller of this client already checks readiness before issuing a
     // command (see CapabilityCacheService.safeGet/safeSet, RedisService's
     // own try/catch'd isHealthy/ping) or needs a command to fail instantly

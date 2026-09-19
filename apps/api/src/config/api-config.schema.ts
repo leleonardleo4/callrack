@@ -30,6 +30,12 @@ export const apiConfigSchema = baseEnvSchema.extend({
   RATE_LIMIT_MAX: z.coerce.number().int().positive().default(300), // requests per window, per client IP
   RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(60_000),
 
+  // Set only when REDIS_URL points at a keyspace shared with unrelated
+  // applications (see @callrack/redis's createRedisClient) - left unset,
+  // no prefix is applied at all, matching every environment's behavior
+  // before this existed.
+  REDIS_KEY_PREFIX: z.string().optional(),
+
   // Provider configuration (Phase 3). Only real, currently-used settings -
   // no invented credentials for providers that don't require them.
   OPENALEX_MAILTO: z.string().email().optional(),
