@@ -14,14 +14,56 @@
 # `@callrack/db`'s `prisma generate` postinstall once its node_modules are
 # reshaped by `pnpm deploy`'s isolation.
 #
-# `runtime` and `migrator` intentionally do NOT share a node_modules layer:
-# `migrator` needs the `prisma` CLI (a devDependency of `@callrack/db`),
-# `runtime` must never ship devDependencies at all, so each gets its own
-# independently-derived install rather than one image trying to serve both.
+# Three independent install stages feed the two final images - deliberately
+# not shared, because `runtime` must never ship devDependencies and
+# `migrator` needs `prisma` (a devDependency of `@callrack/db`), so no
+# single node_modules tree could be correct for both:
+#   - `assemble`         full install, all 5 pruned packages, compiles the API
+#   - `deps-for-runtime` prod-only install, only what `runtime` ships
+#   - `migrator-deps`    full install of `@callrack/db` ALONE (its own
+#                        `turbo prune`, not @callrack/api's) - never pulls in
+#                        @nestjs/cli, @swc/core, or any other apps/api-only
+#                        devDependency migrator has no use for
+#
+# `migrator` is built from `migrator-deps` only - it never depends on
+# `assemble` and therefore never waits on (or ships) a Nest build.
 
 ARG NODE_MAJOR=22-alpine
 
-FROM node:${NODE_MAJOR} AS toolchain
+# Pinned to the runner's own architecture ($BUILDPLATFORM, a buildx-provided
+# arg), never the requested target one - everything derived from this stage
+# does real work (pnpm install, prisma generate, nest build). Verified this
+# is safe for every generated/native artifact actually produced here, not
+# assumed:
+#   - Prisma 7 + @prisma/adapter-pg (this repo's driver-adapter setup) has no
+#     `binaryTargets`/`previewFeatures` in schema.prisma and generates a
+#     SINGLE `query_compiler_fast_bg.wasm` per client - confirmed by
+#     inspecting the actual generated output, no per-arch
+#     `libquery_engine-<platform>.so.node` files exist anywhere. WASM is
+#     interpreted identically on any host CPU, so generating it on
+#     $BUILDPLATFORM and running it on a different $TARGETPLATFORM is safe.
+#   - the `prisma` CLI itself (used by `migrator`) bundles its own
+#     per-datasource wasm engines directly in the npm package - also
+#     architecture-independent, also never something this Dockerfile
+#     "builds" per-arch.
+#   - zero native Node addons anywhere in the resolved tree - confirmed by
+#     searching the entire installed pnpm store for `binding.gyp` (the
+#     universal marker of a compiled addon): no matches. `pg` (this repo's
+#     Postgres driver) is pure JS; `pg-native` is not installed.
+#   - `@swc/core`/`esbuild` (used only to compile TS during `assemble`
+#     /`migrator-deps`, never present in the final `runtime` image since
+#     that install is `--prod`) do ship per-platform native binaries, but
+#     only to run the compiler itself on $BUILDPLATFORM - their output
+#     (plain compiled JS) carries no architecture information forward.
+# Without this pin, building for a non-native target (e.g. arm64 on a
+# GitHub-hosted amd64 runner) ran the ENTIRE install+compile step under QEMU
+# emulation - confirmed directly: an arm64 build took 30+ minutes on the
+# same steps that finish in a couple of minutes natively. Only `runtime`/
+# `migrator` below - which just COPY already-built, platform-independent
+# files - actually need to target the real requested platform, and copying
+# files between stages built for different platforms is always safe (no ELF
+# binaries involved).
+FROM --platform=$BUILDPLATFORM node:${NODE_MAJOR} AS toolchain
 RUN corepack enable
 WORKDIR /workspace
 
@@ -29,6 +71,15 @@ WORKDIR /workspace
 FROM toolchain AS slice
 COPY . .
 RUN npx turbo prune @callrack/api --docker
+
+# --- slice-db: only @callrack/db - what `migrator` actually needs -----------
+# @callrack/db has no workspace dependencies of its own, so this prune drops
+# apps/api, @callrack/config, @callrack/redis, and @callrack/types entirely -
+# confirmed by running it against this repo: the pruned tree contains only
+# packages/db and the root manifest/lockfile.
+FROM toolchain AS slice-db
+COPY . .
+RUN npx turbo prune @callrack/db --docker
 
 # --- assemble: full (dev-included) install, generate, compile ---------------
 FROM toolchain AS assemble
@@ -57,11 +108,47 @@ RUN pnpm --filter=@callrack/api... build
 # Starts fresh from the same pruned json/lockfile rather than pruning
 # `assemble`'s node_modules in place, so a stray devDependency can never
 # leak into the runtime image through directory reuse.
+#
+# Also runs its OWN `prisma generate`, not just `assemble`'s: this
+# node_modules tree - not assemble's - is what `runtime` actually ships
+# (see the `runtime` stage below), and `@prisma/client`'s package code
+# resolves its generated output (`.prisma/client/...`, the wasm query
+# compiler) via a bare `require('.prisma/client/...')` scoped to wherever
+# THIS install's own pnpm store landed it. A `--ignore-scripts` install
+# never runs that generation step, so without this, `runtime` would ship a
+# `@prisma/client` with the real npm package but no generated output behind
+# it - confirmed by reproducing this exact install in isolation and
+# checking for `.prisma/client` in its pnpm store: it does not exist until
+# generate runs against it specifically. Copying `packages/db`'s source
+# from `assemble` afterwards does NOT fix this, because that source
+# directory only carries a symlink into ITS OWN pnpm store, not the
+# generated files themselves.
 FROM toolchain AS deps-for-runtime
 ENV CI=true
 COPY --from=slice /workspace/out/json/ .
 RUN --mount=type=cache,id=callrack-pnpm-store,target=/root/.local/share/pnpm/store \
     pnpm install --prod --frozen-lockfile --ignore-scripts
+COPY --from=slice /workspace/out/full/packages/db/prisma ./packages/db/prisma
+COPY --from=slice /workspace/out/full/packages/db/prisma.config.ts ./packages/db/prisma.config.ts
+RUN pnpm --filter=@callrack/db run db:generate
+
+# --- migrator-deps: full install of @callrack/db ALONE, nothing else -------
+# `prisma migrate deploy` does not read the generated Prisma Client at all -
+# confirmed by inspecting the installed `prisma` CLI package directly: it
+# bundles its own per-datasource `query_compiler_fast_bg.<engine>.wasm` and
+# `prisma_schema_build_bg.wasm` files, entirely separate from whatever
+# `@prisma/client` generates for the app. The only references to
+# `@prisma/client` inside the CLI bundle are template metadata for the
+# `prisma generate` subcommand itself, never touched by `migrate deploy`.
+# So this stage skips `db:generate` entirely - there is nothing for it to
+# produce that this image's one command actually reads.
+FROM toolchain AS migrator-deps
+ENV CI=true
+COPY --from=slice-db /workspace/out/json/ .
+RUN --mount=type=cache,id=callrack-pnpm-store,target=/root/.local/share/pnpm/store \
+    pnpm install --frozen-lockfile --ignore-scripts
+COPY --from=slice-db /workspace/out/full/packages/db/prisma ./packages/db/prisma
+COPY --from=slice-db /workspace/out/full/packages/db/prisma.config.ts ./packages/db/prisma.config.ts
 
 # --- runtime: the long-lived API process -------------------------------------
 FROM node:${NODE_MAJOR} AS runtime
@@ -105,12 +192,16 @@ ENV NODE_ENV=production
 RUN addgroup --system --gid 1001 svc \
   && adduser --system --uid 1001 --ingroup svc svc
 
-# Needs the *full* (dev-included) tree from `assemble` - the Prisma CLI
-# itself is a devDependency of @callrack/db and has no place in `runtime`.
-COPY --from=assemble --chown=svc:svc /workspace/node_modules ./node_modules
-COPY --from=assemble --chown=svc:svc /workspace/package.json ./package.json
-COPY --from=assemble --chown=svc:svc /workspace/pnpm-workspace.yaml ./pnpm-workspace.yaml
-COPY --from=assemble --chown=svc:svc /workspace/packages/db ./packages/db
+# From `migrator-deps`, never `assemble` - this image never needs (and must
+# never wait on) the Nest build. `migrator-deps` is its own `turbo prune`
+# scoped to @callrack/db alone, so this node_modules tree carries the
+# `prisma` CLI (a devDependency of @callrack/db) without pulling in any of
+# apps/api's own devDependencies (@nestjs/cli, @swc/core, etc.) the way
+# reusing `assemble`'s tree would have.
+COPY --from=migrator-deps --chown=svc:svc /workspace/node_modules ./node_modules
+COPY --from=migrator-deps --chown=svc:svc /workspace/package.json ./package.json
+COPY --from=migrator-deps --chown=svc:svc /workspace/pnpm-workspace.yaml ./pnpm-workspace.yaml
+COPY --from=migrator-deps --chown=svc:svc /workspace/packages/db ./packages/db
 
 USER svc
 

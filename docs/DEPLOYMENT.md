@@ -601,14 +601,49 @@ actually deployed anything.
 **`.github/workflows/ship.yml`** - the real deploy pipeline (§8b's
 migrator image, the OCI edge VM, `deploy/promote.sh`), covered fully in
 `deploy/README.md`. Manual `workflow_dispatch` only, never on push/PR:
-`preflight` (re-runs the same quality gate against whatever ref was
-dispatched) → `forge` (matrix-builds `runtime`/`migrator` × `amd64`/`arm64`
-- four parallel jobs, so one architecture's failure never hides behind
-the other's pass) → `publish` (stitches each image's two arch-specific
-tags into one multi-arch manifest) → `rollout` (gated by the `production`
-GitHub Environment - configure a required reviewer there so a real deploy
-always needs an explicit human approval, on top of the workflow itself
-never triggering automatically).
+
+- **`preflight`**: install (`--frozen-lockfile`, strict - this pipeline
+  ships exactly the locked dependency graph, nothing looser) → generate
+  Prisma client → `migrate deploy` against a CI Postgres → lint → typecheck
+  → test. No `pnpm build` here - `apps/api/Dockerfile`'s own `assemble`
+  stage is the only compilation whose output actually ships, and `nest
+  build` (default `tsc` builder, no `swc` builder configured) type-checks
+  as part of emitting, which `pnpm typecheck` has already done in this same
+  job. Running it again would recompile the same source into output
+  nothing downstream reads.
+- **`forge`**: one job per image - `runtime`, `migrator` - each asking
+  buildx for `linux/amd64,linux/arm64` in a single invocation, pushing the
+  finished multi-arch manifest directly (no per-arch job, no separate
+  stitching step). `apps/api/Dockerfile`'s install/compile stages are
+  pinned to `$BUILDPLATFORM`, so each image's expensive work runs exactly
+  once regardless of how many target platforms are requested. `runtime`
+  and `migrator` no longer share a stage graph at all: `migrator` builds
+  from its own `migrator-deps` stage (a `turbo prune` scoped to
+  `@callrack/db` alone), never from `assemble`, so it never waits on or
+  ships the Nest build, and never pulls in `apps/api`-only devDependencies
+  (`@nestjs/cli`, `@swc/core`, etc.). Layer caching is `type=gha`, scoped
+  separately per image (`callrack-runtime`, `callrack-migrator`) so one
+  image's cache can never overwrite the other's.
+- **`publish`**: verification only - `imagetools inspect` confirms both
+  architectures actually landed in the tag `forge` pushed. Nothing here
+  builds or stitches anything.
+- **`rollout`**: gated by the `production` GitHub Environment - configure a
+  required reviewer there so a real deploy always needs an explicit human
+  approval, on top of the workflow itself never triggering automatically.
+
+`apps/api/Dockerfile` itself has three independent install stages feeding
+the two final images, since no single node_modules tree could be correct
+for both (`runtime` must never ship devDependencies; `migrator` needs the
+`prisma` CLI, a devDependency of `@callrack/db`): `assemble` (full install,
+all 5 pruned packages, compiles the API), `deps-for-runtime` (prod-only
+install, what `runtime` actually ships), and `migrator-deps` (full install
+of `@callrack/db` alone). `deps-for-runtime` also runs its own `prisma
+generate` - not just `assemble`'s - because `@prisma/client`'s generated
+output lives inside whichever install's own pnpm store actually produced
+it, and `runtime` ships `deps-for-runtime`'s node_modules, not
+`assemble`'s; `migrator-deps` skips `generate` entirely, since `prisma
+migrate deploy` reads the `prisma` CLI's own bundled per-datasource wasm
+engines, never the app's generated client.
 
 ## 28. Database migration deployment
 

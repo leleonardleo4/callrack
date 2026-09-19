@@ -54,8 +54,11 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 22, cache: pnpm }
 
+      # Strict on purpose: this pipeline is validating (and about to ship)
+      # the exact dependency graph the lockfile describes. `=false` here
+      # would silently let a drifted lockfile through.
       - name: Install workspace
-        run: pnpm install --frozen-lockfile=false
+        run: pnpm install --frozen-lockfile
 
       - name: Generate Prisma client
         run: pnpm --filter @callrack/db run db:generate
@@ -71,29 +74,50 @@ jobs:
       - name: Test suite
         run: pnpm test
 
-      - name: Compile every workspace target
-        run: pnpm build
-
+      # No `pnpm build` here on purpose: apps/api/Dockerfile's own `assemble`
+      # stage is the only compilation whose output actually ships (via
+      # `forge` below), and `nest build` uses the default tsc builder (no
+      # `builder: "swc"` in apps/api/nest-cli.json) - meaning it type-checks
+      # on top of emitting, which `pnpm typecheck` above has already done.
+      # Running it here a second time would recompile the same source into
+      # output nothing downstream reads, just to duplicate a check that
+      # already ran.
       - name: Derive the release tag for this run
         id: tag
         run: echo "value=$(git rev-parse --short=12 HEAD)" >> "$GITHUB_OUTPUT"
 
   # ---------------------------------------------------------------------
-  # One matrix cell per (image, cpu architecture) pair. Building each arch
-  # in its own job - instead of one `docker buildx build --platform a,b`
-  # invocation - means an arm64 failure surfaces on its own line and never
-  # blocks the amd64 artifact (or vice versa) from finishing and being
-  # available for inspection.
+  # One job per image (not per image x arch). apps/api/Dockerfile pins its
+  # install/compile stages to $BUILDPLATFORM, so that work only has a
+  # reason to run once per image regardless of how many target platforms
+  # are requested; asking buildx for both platforms in the same invocation
+  # (rather than one job per arch, each redoing that work from zero on its
+  # own runner) is what actually collects that saving. `runtime`'s stage
+  # graph is the expensive one (pnpm install, prisma generate, nest build);
+  # `migrator`'s (`migrator-deps`) is deliberately cheaper - a plain install
+  # scoped to @callrack/db alone, no generate, no Nest build, since
+  # `prisma migrate deploy` needs neither. Only the final COPY-only stage
+  # runs twice, once per arch, which costs seconds even under QEMU since
+  # nothing there is compiled. Pushing straight to a single multi-platform
+  # tag also means there's no separate manifest-list to stitch together
+  # afterwards - buildx does that as part of `push: true` here.
+  #
+  # `cache-from`/`cache-to: type=gha` (scoped per image so `runtime` and
+  # `migrator` can never overwrite each other's cache) is what actually
+  # persists layers across separate runs of this workflow - GitHub Actions
+  # gives every job a fresh runner VM, so the Dockerfile's own
+  # `--mount=type=cache` pnpm store mount has no cross-run effect here; it
+  # only helps someone iterating on `docker build` locally, where the same
+  # daemon's cache survives between invocations.
   # ---------------------------------------------------------------------
   forge:
-    name: Forge ${{ matrix.image }} / ${{ matrix.cpu }}
+    name: Forge ${{ matrix.image }}
     needs: preflight
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         image: [runtime, migrator]
-        cpu: [amd64, arm64]
     steps:
       - uses: actions/checkout@v4
 
@@ -108,23 +132,25 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push the ${{ matrix.cpu }} layer
+      - name: Build and push ${{ matrix.image }} (amd64 + arm64 in one manifest)
         uses: docker/build-push-action@v6
         with:
           context: .
           file: apps/api/Dockerfile
           target: ${{ matrix.image }}
-          platforms: linux/${{ matrix.cpu }}
+          platforms: linux/amd64,linux/arm64
           push: true
-          tags: >-
-            ${{ env.IMAGE_REPO }}:${{ matrix.image }}-${{ needs.preflight.outputs.release_ref }}-${{ matrix.cpu }}
+          cache-from: type=gha,scope=callrack-${{ matrix.image }}
+          cache-to: type=gha,scope=callrack-${{ matrix.image }},mode=max
+          tags: ${{ env.IMAGE_REPO }}:${{ matrix.image }}-${{ needs.preflight.outputs.release_ref }}
 
   # ---------------------------------------------------------------------
-  # Stitches each image's two per-arch tags into one multi-arch manifest,
-  # which is the reference the server's own promote.sh actually asks for.
+  # `forge` already pushed one multi-arch tag per image - nothing left to
+  # stitch. This only double-checks both architectures actually landed in
+  # it before `rollout` is allowed to pull it onto the edge VM.
   # ---------------------------------------------------------------------
   publish:
-    name: Publish multi-arch manifests
+    name: Verify multi-arch manifests
     needs: [preflight, forge]
     runs-on: ubuntu-latest
     steps:
@@ -134,18 +160,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Combine per-arch layers into one tag, per image
-        run: |
-          set -euo pipefail
-          ref="${{ needs.preflight.outputs.release_ref }}"
-          for image in runtime migrator; do
-            docker buildx imagetools create \
-              --tag "${IMAGE_REPO}:${image}-${ref}" \
-              "${IMAGE_REPO}:${image}-${ref}-amd64" \
-              "${IMAGE_REPO}:${image}-${ref}-arm64"
-          done
-
-      - name: Confirm both architectures actually landed in the manifest
+      - name: Confirm both architectures landed in each tag
         run: |
           set -euo pipefail
           ref="${{ needs.preflight.outputs.release_ref }}"
