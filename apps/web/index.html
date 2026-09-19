@@ -9,10 +9,7 @@
       crawler (https://facilitator.goplausible.xyz/guide/discovery): it
       fetches this page once, parses only the first 128 KB, and times out
       after 4 seconds, so this block stays near the top of <head>, and every
-      value here is real (no fabricated logo/image references). There is no
-      dedicated PNG yet for `apple-touch-icon`/`og:image`/`twitter:card`, so
-      those are intentionally omitted rather than pointed at something that
-      doesn't exist; add them here once a real asset exists.
+      value here is real (no fabricated logo/image references).
     -->
     <title>Callrack - pay-per-use information API, paid per request in USDC</title>
     <meta
@@ -30,6 +27,13 @@
       content="Pay-per-use information capabilities, paid per request in USDC on Algorand via x402. No accounts, no API keys, no subscriptions."
     />
     <meta property="og:url" content="https://callrack.xyz" />
+    <meta property="og:image" content="https://callrack.xyz/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Callrack - call information, pay only when you use it." />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="https://callrack.xyz/og-image.png" />
 
     <link rel="icon" href="favicon.ico" type="image/x-icon" />
     <link rel="alternate icon" href="/favicon.png" />

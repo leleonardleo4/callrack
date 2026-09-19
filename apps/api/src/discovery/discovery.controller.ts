@@ -10,6 +10,7 @@ import { buildAgentCard, type AgentCardDocument } from './agent-card.builder.js'
 import { buildAgentManifest, type AgentManifestDocument } from './agent-manifest.builder.js';
 import { buildLlmsTxt } from './llms-txt.builder.js';
 import { buildAgentsMd } from './agents-md.builder.js';
+import { buildRootPage } from './root-page.builder.js';
 
 /**
  * Free, unpaid discovery/agent-file endpoints - never in the Capability
@@ -30,6 +31,12 @@ export class DiscoveryController {
     private readonly x402Config: X402ConfigService,
     private readonly apiConfig: ApiConfigService,
   ) {}
+
+  @Get()
+  @Header('Content-Type', 'text/html; charset=utf-8')
+  root(@Req() req: FastifyRequest): string {
+    return buildRootPage(resolveRequestOrigin(req));
+  }
 
   @Get('.well-known/x402')
   wellKnownX402(@Req() req: FastifyRequest): WellKnownX402Document {

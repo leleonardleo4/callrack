@@ -28,6 +28,35 @@ describe('Discovery endpoints (E2E)', () => {
     await app.close();
   });
 
+  describe('GET /', () => {
+    it('returns 200 text/html with real OG image metadata and links, not a placeholder', async () => {
+      const response = await app.inject({ method: 'GET', url: '/' });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.headers['content-type']).toContain('text/html');
+      expect(response.payload).toContain('og:image');
+      expect(response.payload).toContain('/og-image.png');
+      expect(response.payload).toContain('/v1/capabilities');
+      expect(response.payload).toContain('/docs');
+      assertNoPlaceholderText(response.payload);
+    });
+
+    it('is a plain index, not an application - no client-side script tags', async () => {
+      const response = await app.inject({ method: 'GET', url: '/' });
+      expect(response.payload).not.toContain('<script');
+    });
+  });
+
+  describe('GET /og-image.png', () => {
+    it('serves the real OG image referenced by GET /', async () => {
+      const response = await app.inject({ method: 'GET', url: '/og-image.png' });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.headers['content-type']).toBe('image/png');
+      expect(response.rawPayload.length).toBeGreaterThan(0);
+    });
+  });
+
   describe('GET /.well-known/x402', () => {
     it('returns 200 application/json with a valid, non-placeholder document', async () => {
       const response = await app.inject({ method: 'GET', url: '/.well-known/x402' });

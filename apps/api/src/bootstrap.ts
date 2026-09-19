@@ -6,6 +6,8 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import fastifyHelmet from '@fastify/helmet';
 import fastifyCors from '@fastify/cors';
 import fastifyRateLimit from '@fastify/rate-limit';
+import fastifyStatic from '@fastify/static';
+import path from 'node:path';
 
 import { AppModule } from './app/app.module.js';
 import { ApiConfigService } from './config/api-config.service.js';
@@ -94,6 +96,30 @@ export async function createApp(): Promise<NestFastifyApplication> {
     ) => {
       reply.header(REQUEST_ID_RESPONSE_HEADER, req.id);
       done();
+    },
+  );
+
+  // 1b. Serve the one real static asset the API has (the OG/social-share
+  // image `GET /` embeds - see root-page.builder.ts) directly from disk.
+  // `wildcard: false` makes this plugin scan `public/` once at startup and
+  // register a route for each file it actually finds, rather than the
+  // default catch-all `/*` route - which, at prefix `/`, would otherwise
+  // intercept every request in the app before Nest's own router ever saw
+  // it. `index: false` is redundant given there's no index.html here, but
+  // states outright that this is one asset, never a website.
+  //
+  // `__dirname`, not `fileURLToPath(import.meta.url)`: apps/api/package.json
+  // has no `type: "module"`, so this package compiles to CommonJS (NodeNext
+  // resolution honors the nearest package.json, not the workspace root's
+  // own `type: "module"`) - `import.meta` isn't valid there. `__dirname`
+  // resolves identically in both places `public/` needs to be found from:
+  // `src/` in dev, `dist/` once built - both direct siblings of `public/`.
+  await app.register(
+    fastifyStatic as unknown as FastifyPluginAsync<import('@fastify/static').FastifyStaticOptions>,
+    {
+      root: path.join(__dirname, '..', 'public'),
+      wildcard: false,
+      index: false,
     },
   );
 
