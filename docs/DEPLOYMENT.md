@@ -85,6 +85,7 @@ request.
 | `TESTNET_REFUND_MNEMONIC` / `MAINNET_REFUND_MNEMONIC` | No, but see below | Enables automatic on-chain refunds for the active network - see §8b |
 | Provider vars (`OPENALEX_MAILTO`, `COINGECKO_API_KEY`, etc.) | No | Optional; see root `.env.example` |
 | `VITE_API_BASE_URL` (web, build-time) | Yes | `https://api.callrack.xyz` for a production web build |
+| `VITE_NETWORK` (web, build-time) | Yes | `testnet` or `mainnet` - must match this API deployment's own `NETWORK` above; sets which network the wallet connect flow defaults to |
 
 **Secrets management.** Set these through the hosting platform's own
 secret/environment-variable store (every mainstream host - container
@@ -511,14 +512,19 @@ a static host, not containerized.
 ## 23. Web production build
 
 ```bash
-VITE_API_BASE_URL=https://api.callrack.xyz pnpm --filter @callrack/web build
+VITE_API_BASE_URL=https://api.callrack.xyz VITE_NETWORK=mainnet pnpm --filter @callrack/web build
 ```
 
 - `apps/web/src/config/env.ts` reads `VITE_API_BASE_URL` at build time;
   falls back to `http://localhost:3000` only when unset (dev).
-- No other `VITE_`-prefixed variable exists in this codebase, and none is
-  needed - there is no private API key or wallet secret to accidentally
-  expose (remember: anything `VITE_`-prefixed ships in the public bundle).
+- `VITE_NETWORK` (`testnet` | `mainnet`, default `testnet`) sets which
+  network `wallet/manager.ts`'s `WalletManager` defaults new connections
+  to - keep it equal to whatever `NETWORK` this build's API deployment
+  actually runs (§7), never left at the default after a Mainnet cutover.
+- No other `VITE_`-prefixed variable exists in this codebase besides
+  `VITE_WALLETCONNECT_PROJECT_ID` (optional, §6) - there is no private API
+  key or wallet secret to accidentally expose (remember: anything
+  `VITE_`-prefixed ships in the public bundle).
 - `og:url`/canonical metadata already point at `https://callrack.xyz`
   (`index.html`); no hardcoded `localhost` reference outside the
   documented dev-only fallback above.
@@ -654,8 +660,8 @@ pipeline/release step, once per deploy, before new instances start, never
 ## 29–30. Deployment steps
 
 1. **Build**: `pnpm install && pnpm build` (or `docker build -f apps/api/Dockerfile -t callrack-api .`
-   for the API specifically); `VITE_API_BASE_URL=https://api.callrack.xyz pnpm --filter @callrack/web build`
-   for web.
+   for the API specifically); `VITE_API_BASE_URL=https://api.callrack.xyz VITE_NETWORK=mainnet pnpm --filter @callrack/web build`
+   for web (§23).
 2. **Configure secrets**: set every variable in §2's table in the target
    environment's secret store (host's dashboard/CLI, or the GitHub
    Environment's secrets for the `deploy` workflow).

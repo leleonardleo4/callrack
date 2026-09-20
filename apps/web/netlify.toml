@@ -38,6 +38,11 @@
   # variables instead (Site configuration -> Environment variables) -
   # deliberately not committed here.
   VITE_API_BASE_URL = "https://api.callrack.xyz"
+  # Must match api.callrack.xyz's own NETWORK env var - sets which network
+  # wallet/manager.ts's WalletManager defaults new connections to. Set
+  # explicitly (not left to VITE_NETWORK's own testnet default) so a future
+  # Mainnet cutover can't be missed here.
+  VITE_NETWORK = "testnet"
 
 # This app is a client-side-routed SPA (react-router's createBrowserRouter,
 # not server-rendered), so Netlify has no file on disk for any route but

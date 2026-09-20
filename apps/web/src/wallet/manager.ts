@@ -1,10 +1,11 @@
-import { NetworkId, WalletManager, type WalletAdapterConfig } from '@txnlab/use-wallet-react';
+import { WalletManager, type WalletAdapterConfig } from '@txnlab/use-wallet-react';
 import { defly } from '@txnlab/use-wallet-defly';
 import { exodus } from '@txnlab/use-wallet-exodus';
 import { lute } from '@txnlab/use-wallet-lute';
 import { pera } from '@txnlab/use-wallet-pera';
 import { walletConnect } from '@txnlab/use-wallet-walletconnect';
-import { WALLETCONNECT_PROJECT_ID } from '@/config/env';
+import { NETWORK, WALLETCONNECT_PROJECT_ID } from '@/config/env';
+import { toUseWalletNetworkId } from '@/wallet/network';
 
 /**
  * The one place the Playground's supported wallets are configured. Each
@@ -43,14 +44,16 @@ function buildWallets(): WalletAdapterConfig[] {
  * client lazily), so mounting this everywhere - including in tests - never
  * makes a real network/QR/deep-link connection by itself.
  *
- * `defaultNetwork` starts at Testnet, matching the Callrack API's own
- * default; the Playground syncs this to the API's *actual* live network
- * (from `GET /v1/capabilities`) once known - see `useNetworkSync`. This
- * manager's `activeNetwork` is never the source of truth for what a payment
- * actually settles on; that's always the live x402 challenge (see
+ * `defaultNetwork` comes from `config/env.ts`'s `NETWORK` (the
+ * `VITE_NETWORK` build-time env var) - the operator sets this to whichever
+ * network the deployed API (`API_BASE_URL`) actually runs, the same way
+ * `API_BASE_URL` itself is configured; never a runtime toggle and never
+ * inferred from the live `GET /v1/capabilities` response. This manager's
+ * `activeNetwork` is never the source of truth for what a payment actually
+ * settles on; that's always the live x402 challenge (see
  * `wallet/payment-signer.ts`).
  */
 export const walletManager = new WalletManager({
   wallets: buildWallets(),
-  defaultNetwork: NetworkId.TESTNET,
+  defaultNetwork: toUseWalletNetworkId(NETWORK),
 });
