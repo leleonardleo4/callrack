@@ -435,11 +435,11 @@ email would be worse than omitting the file) or `.well-known/mcp.json` (no
 MCP server exists in this project). Both return a plain 404, not a fake
 manifest.
 
-Every paid route's Mainnet payment option also carries the
-`x402-global-challenge` tag required by the 2026 Algorand Global x402
-Challenge, **only when `NETWORK=mainnet`**, in the route's x402 `extra`
-field - Testnet traffic is never part of the competition/leaderboard, so
-Testnet routes never carry this tag:
+Every paid route's payment option also carries the `x402-global-challenge`
+tag required by the 2026 Algorand Global x402 Challenge, on every network
+(Testnet included), in the route's x402 `extra` field - the facilitator's
+own dashboard/discovery classification keys off this tag rather than the
+network alone:
 
 ```json
 { "accepts": [{ "...": "...", "extra": { "tag": "x402-global-challenge", "feePayer": "..." } }] }
@@ -460,7 +460,7 @@ This repository does not claim metadata updates propagate immediately.
 **Local declaration vs. real Bazaar visibility.** Running locally proves the
 *declaration* is correct - the 402 response really does carry a valid
 `extensions.bazaar` block, a well-formed `x402-merchant` extension, the
-Mainnet-only challenge tag, and the right schemas (see
+challenge tag, and the right schemas (see
 `apps/api/test/x402/x402.e2e.spec.ts` and `apps/api/test/discovery/discovery.e2e.spec.ts`).
 It does **not** prove Callrack is listed in the actual GoPlausible Bazaar
 catalog - that requires a public HTTPS deployment on Mainnet and a real

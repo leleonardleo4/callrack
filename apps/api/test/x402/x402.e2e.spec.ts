@@ -132,11 +132,11 @@ describe('x402 Payment Protection (E2E)', () => {
       ['/v1/weather', { latitude: 6.5244, longitude: 3.3792 }],
       ['/v1/academic/search', { query: 'test' }],
       ['/v1/research', { query: 'renewable energy investment in Africa' }],
-    ])('never carries the x402-global-challenge tag on Testnet for %s', async (path, payload) => {
+    ])('carries the x402-global-challenge tag on Testnet for %s', async (path, payload) => {
       const response = await app.inject({ method: 'POST', url: path, payload });
       expect(response.statusCode).toBe(402);
       const requirements = firstRequirementsFrom402(response);
-      expect(requirements.extra?.tag).toBeUndefined();
+      expect(requirements.extra?.tag).toBe('x402-global-challenge');
     });
 
     it.each([

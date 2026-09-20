@@ -116,14 +116,14 @@ describe('buildX402RoutesConfig', () => {
     expect(buildX402RoutesConfig([], ACTIVE)).toEqual({});
   });
 
-  it('never attaches the x402-global-challenge tag on Testnet - only real, settled Mainnet traffic is Challenge traffic', () => {
+  it('attaches the x402-global-challenge tag to every route\'s payment extra on Testnet', () => {
     const routes = buildX402RoutesConfig(realCapabilities(), ACTIVE) as Record<
       string,
       { accepts: { extra?: Record<string, unknown> } }
     >;
     expect(X402_GLOBAL_CHALLENGE_TAG).toBe('x402-global-challenge');
     for (const [key, route] of Object.entries(routes)) {
-      expect(route.accepts.extra, `expected no extra (and so no challenge tag) on Testnet route ${key}`).toBeUndefined();
+      expect(route.accepts.extra?.tag, `expected challenge tag on Testnet route ${key}`).toBe(X402_GLOBAL_CHALLENGE_TAG);
     }
   });
 

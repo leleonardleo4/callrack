@@ -175,14 +175,14 @@ resource server / route config / discovery code).
 ## 7. Mainnet challenge tag
 
 `X402_GLOBAL_CHALLENGE_TAG = 'x402-global-challenge'`
-(`x402-route-config.builder.ts`) is merged into each route's
-`accepts.extra.tag` - **only when `active.network === 'mainnet'`**. This is
-in the payment-requirement `extra` field the x402 scheme actually signs
-over, not the Bazaar/`x402-merchant`/`.well-known` metadata layers, and not
-anywhere in API response bodies - exactly the structure the prompt
-requires and nowhere else. A Testnet-configured deployment (`NETWORK=testnet`)
-never adds this key at all; there is no separate "competition mode" flag to
-forget to turn off.
+(`x402-route-config.builder.ts`) is merged into every route's
+`accepts.extra.tag`, on every network (Testnet included). This is in the
+payment-requirement `extra` field the x402 scheme actually signs over, not
+the Bazaar/`x402-merchant`/`.well-known` metadata layers, and not anywhere
+in API response bodies - exactly the structure the prompt requires and
+nowhere else. There is no separate "competition mode" flag - the tag is
+unconditional, so a Testnet deployment attributes its settled traffic the
+same way a Mainnet deployment does.
 
 ## 8. Database production safety
 
