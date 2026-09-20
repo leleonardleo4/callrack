@@ -87,7 +87,8 @@ describe('Request Validation (E2E)', () => {
     expect(response.statusCode).toBe(400);
     const body = JSON.parse(response.payload);
     expect(body.error.code).toBe(ApiErrorCode.VALIDATION_ERROR);
-    expect(body.error.message).toBe('Request validation failed.');
+    expect(body.error.message).toContain('name must be a string');
+    expect(body.error.message).toContain('count must not be less than 1');
     expect(body.error.details.fields).toBeDefined();
     expect(body.error.details.fields.name).toBeDefined();
     expect(body.error.details.fields.count).toBeDefined();

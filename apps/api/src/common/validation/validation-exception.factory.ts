@@ -18,9 +18,14 @@ export function createValidationException(errors: ValidationError[]): BadRequest
 
   extractErrors(errors);
 
+  // Surface the actual constraint violations in `message` itself (e.g.
+  // "maxSources must not be less than 3") rather than a generic string that
+  // forces callers to dig into `details.fields` to learn what went wrong.
+  const message = Object.values(formattedFields).flat().join('; ') || 'Request validation failed.';
+
   return new BadRequestException({
     code: ApiErrorCode.VALIDATION_ERROR,
-    message: 'Request validation failed.',
+    message,
     details: {
       fields: formattedFields,
     },
