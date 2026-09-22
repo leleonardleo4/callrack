@@ -54,10 +54,37 @@
 #
 # Safe against the GoPlausible x402 discovery guide's own SPA-catch-all
 # warning (an HTML body on a .well-known/.txt path counts as a miss):
-# public/.well-known/agent.json, llms.txt, and agents.md are real files
-# Vite copies into dist/ as-is, and Netlify always matches an actual file
-# on disk before falling through to a redirect rule - confirmed via
-# Netlify's own documented precedence, not assumed.
+# public/.well-known/agent.json, llms.txt, agents.md, and ai-plugin.json are
+# real files Vite copies into dist/ as-is, and Netlify always matches an
+# actual file on disk before falling through to a redirect rule - confirmed
+# via Netlify's own documented precedence, not assumed.
+#
+# These three are transparent proxies (status = 200 to an absolute URL),
+# not redirects - Netlify's edge fetches and serves api.callrack.xyz's own
+# response body/headers under this domain, so callrack.xyz never duplicates
+# (and can never go stale relative to) the API's live resource list/agent
+# card/MCP manifest. `force = true` per Netlify's own guidance for proxy
+# rules. Must stay ABOVE the SPA catch-all below - first-match-wins, and
+# the catch-all would otherwise swallow these paths as "file absent" per
+# the guide's own SPA-trap warning.
+[[redirects]]
+  from = "/.well-known/x402"
+  to = "https://api.callrack.xyz/.well-known/x402"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/.well-known/agent-card.json"
+  to = "https://api.callrack.xyz/.well-known/agent-card.json"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/.well-known/mcp.json"
+  to = "https://api.callrack.xyz/.well-known/mcp.json"
+  status = 200
+  force = true
+
 [[redirects]]
   from = "/*"
   to = "/index.html"

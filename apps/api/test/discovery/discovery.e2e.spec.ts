@@ -207,14 +207,41 @@ describe('Discovery endpoints (E2E)', () => {
     });
   });
 
-  describe('no unimplemented discovery files are faked', () => {
-    it('does not publish ai-plugin.json (no real contact email exists in project config)', async () => {
-      const response = await app.inject({ method: 'GET', url: '/.well-known/ai-plugin.json' });
-      expect(response.statusCode).toBe(404);
+  describe('GET /.well-known/mcp.json', () => {
+    it('returns 200 application/json with one tool per real capability, truthfully non-live transport', async () => {
+      const response = await app.inject({ method: 'GET', url: '/.well-known/mcp.json' });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.headers['content-type']).toContain('application/json');
+      const body = JSON.parse(response.payload);
+
+      expect(body.name).toBe('Callrack');
+      // "http" only - never "stdio"/"sse", which would claim a live MCP
+      // session this API does not offer.
+      expect(body.transport).toEqual({ type: 'http', url: expect.stringContaining('http') });
+      expect(body.tools).toHaveLength(CAPABILITY_METADATA.length);
+      expect(body.tools.map((t: { name: string }) => t.name).sort()).toEqual(
+        CAPABILITY_METADATA.map((c) => c.id).sort(),
+      );
+      assertNoPlaceholderText(JSON.stringify(body));
     });
 
-    it('does not publish mcp.json (no MCP server implementation exists)', async () => {
+    it('gives every tool a real inputSchema and a real HTTP endpoint - never a fabricated MCP call', async () => {
       const response = await app.inject({ method: 'GET', url: '/.well-known/mcp.json' });
+      const body = JSON.parse(response.payload);
+
+      const weather = body.tools.find((t: { name: string }) => t.name === 'weather');
+      expect(weather.inputSchema.type).toBe('object');
+      expect(weather.inputSchema.properties.latitude).toBeDefined();
+      expect(weather.endpoint).toEqual({ method: 'POST', url: expect.stringContaining('/v1/weather') });
+      // PRICE_WEATHER=0.015 in the test env.
+      expect(weather.price).toEqual({ amount: '0.015', currency: 'USDC' });
+    });
+  });
+
+  describe('no unimplemented discovery files are faked', () => {
+    it('does not publish ai-plugin.json on the API domain (published on callrack.xyz instead, with a real contact email)', async () => {
+      const response = await app.inject({ method: 'GET', url: '/.well-known/ai-plugin.json' });
       expect(response.statusCode).toBe(404);
     });
   });
@@ -238,6 +265,7 @@ describe('Discovery endpoints remain free even with x402 installed (E2E)', () =>
     '/.well-known/x402',
     '/.well-known/agent-card.json',
     '/.well-known/agent.json',
+    '/.well-known/mcp.json',
     '/llms.txt',
     '/agents.md',
     '/openapi.json',

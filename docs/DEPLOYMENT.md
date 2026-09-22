@@ -541,19 +541,36 @@ fallback so they always return real content:
 | `/.well-known/x402` | `application/json` |
 | `/.well-known/agent-card.json` | `application/json` |
 | `/.well-known/agent.json` | `application/json` |
+| `/.well-known/mcp.json` | `application/json` - MCP tool-manifest shape, **not a live MCP server** (§6 of the root README - `transport.type` is truthfully `"http"`) |
 | `/llms.txt` | `text/plain` |
 | `/agents.md` | `text/markdown` |
 | `/openapi.json` | `application/json` |
 
-Also served by the **web app** as physical static files
-(`apps/web/public/`) for `callrack.xyz`-domain enrichment crawling:
-`.well-known/agent.json`, `llms.txt`, `agents.md`, favicon. Verified
-locally (packaged production API build) that all six API-side paths above
-return `200` with the documented content type. Most static hosts serve a
-real file before falling back to the SPA's `index.html`, so this is
-typically automatic - **re-verify this specifically** once `callrack.xyz`
-is deployed to whichever static host is chosen (fetch each path and
-confirm it's the real file, not `index.html`).
+**Also required on `callrack.xyz`** (the web app's own domain): per
+`facilitator.goplausible.xyz/guide/discovery`, the facilitator's six
+discovery badges (x402 Discovery, A2A Agent Card, Agent Manifest, AI
+Plugin, MCP Manifest, llms.txt) are read **only from the root of the
+declared `x402-merchant.website`** (`callrack.xyz`, see §6/§33 of the root
+README) - `api.callrack.xyz` having them is not enough on its own.
+
+| Path | Source on `callrack.xyz` |
+|---|---|
+| `/.well-known/x402` | Netlify proxy (`netlify.toml`, `status = 200` to an absolute URL) → `api.callrack.xyz`'s own live response - never a static duplicate |
+| `/.well-known/agent-card.json` | Netlify proxy → `api.callrack.xyz`'s own live response, same reasoning |
+| `/.well-known/agent.json` | Static file (`apps/web/public/.well-known/agent.json`) |
+| `/.well-known/ai-plugin.json` | Static file, real `contact_email: info@callrack.xyz` (already used for `OPENALEX_MAILTO`/`CROSSREF_MAILTO`) |
+| `/.well-known/mcp.json` | Netlify proxy → `api.callrack.xyz`'s own live response - carries real prices/schemas, proxied for the same never-stale reason as `x402`/`agent-card.json` |
+| `/llms.txt` | Static file, defers to `api.callrack.xyz/llms.txt` |
+| `/agents.md` | Static file, defers to `api.callrack.xyz/agents.md` |
+
+Verified locally (packaged production API build) that all seven API-side
+paths above return `200` with the documented content type. Most static
+hosts serve a real file before falling back to the SPA's `index.html`, so
+the three non-proxied web-root files are typically automatic - **re-verify
+this specifically** once `callrack.xyz` is deployed (fetch each of the six
+web-root paths and confirm it's real content, not `index.html`, and that
+the three proxies actually return the API's JSON rather than a redirect
+response).
 
 ## 25. Production API docs
 

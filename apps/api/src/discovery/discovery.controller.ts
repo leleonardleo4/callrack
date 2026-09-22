@@ -2,12 +2,14 @@ import { Controller, Get, Header, Req, VERSION_NEUTRAL } from '@nestjs/common';
 import { ApiExcludeController } from '@nestjs/swagger';
 import type { FastifyRequest } from 'fastify';
 import { CapabilityRegistryService } from '../capabilities/capability-registry.service.js';
+import { CapabilityRequestSchemaService } from '../capabilities/capability-request-schema.service.js';
 import { ApiConfigService } from '../config/api-config.service.js';
 import { X402ConfigService } from '../config/x402-config.service.js';
 import { resolveRequestOrigin } from './request-origin.util.js';
 import { buildWellKnownX402, type WellKnownX402Document } from './well-known-x402.builder.js';
 import { buildAgentCard, type AgentCardDocument } from './agent-card.builder.js';
 import { buildAgentManifest, type AgentManifestDocument } from './agent-manifest.builder.js';
+import { buildMcpManifest, type McpManifestDocument } from './mcp-manifest.builder.js';
 import { buildLlmsTxt } from './llms-txt.builder.js';
 import { buildAgentsMd } from './agents-md.builder.js';
 import { buildRootPage } from './root-page.builder.js';
@@ -30,6 +32,7 @@ export class DiscoveryController {
     private readonly registry: CapabilityRegistryService,
     private readonly x402Config: X402ConfigService,
     private readonly apiConfig: ApiConfigService,
+    private readonly requestSchemas: CapabilityRequestSchemaService,
   ) {}
 
   @Get()
@@ -51,6 +54,11 @@ export class DiscoveryController {
   @Get('.well-known/agent.json')
   agentManifest(@Req() req: FastifyRequest): AgentManifestDocument {
     return buildAgentManifest(resolveRequestOrigin(req));
+  }
+
+  @Get('.well-known/mcp.json')
+  mcpManifest(@Req() req: FastifyRequest): McpManifestDocument {
+    return buildMcpManifest(this.registry.list(), this.requestSchemas, resolveRequestOrigin(req), this.apiConfig.version);
   }
 
   @Get('llms.txt')

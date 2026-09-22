@@ -10,11 +10,19 @@
  * `logo` points at the real, official Callrack brand asset
  * (`apps/web/public/favicon.png`) - never a fabricated URL.
  */
+/**
+ * Order matters here beyond cosmetics: the facilitator's own merchant page
+ * renders `categories[0]` as the single primary badge next to the merchant
+ * name (confirmed directly against the live listing) - everything after
+ * index 0 is secondary/searchable only. "information" leads because that's
+ * Callrack's actual identity ("pay-per-use information infrastructure"),
+ * not the generic, easily-confused-with-"it's-just-an-API" "api" tag.
+ */
 export const CALLRACK_MERCHANT_INFO = {
   name: 'Callrack',
   website: 'https://callrack.xyz',
   logo: 'https://callrack.xyz/favicon.png',
-  categories: ['api', 'information', 'algorand', 'x402'],
+  categories: ['information', 'algorand', 'x402', 'api'],
 } as const;
 
 /**

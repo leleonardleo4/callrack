@@ -1,0 +1,16 @@
+{
+  "schema_version": "v1",
+  "name_for_human": "Callrack",
+  "name_for_model": "callrack",
+  "description_for_human": "Pay-per-use information infrastructure - research, news, market data, weather, geocoding, and knowledge lookups, paid per request in USDC on Algorand via x402. No accounts, no API keys.",
+  "description_for_model": "Callrack exposes paid HTTP capabilities (academic/news search, crypto/fx rates, weather, geocoding, holidays, Wikidata knowledge search, US Census data, and composite research/verify/evidence/compare endpoints) under api.callrack.xyz. Every call requires x402 payment: an unpaid request returns HTTP 402 with a PAYMENT-REQUIRED header naming the exact price, network, and payTo address; pay that exact amount in USDC on the named Algorand network, then retry the same request with a PAYMENT-SIGNATURE header. Always trust the live 402 response's price over any cached or example value. Full machine-readable capability list: https://api.callrack.xyz/llms.txt. OpenAPI schema: https://api.callrack.xyz/openapi.json.",
+  "auth": {
+    "type": "none"
+  },
+  "api": {
+    "type": "openapi",
+    "url": "https://api.callrack.xyz/openapi.json"
+  },
+  "logo_url": "https://callrack.xyz/favicon.png",
+  "contact_email": "info@callrack.xyz"
+}

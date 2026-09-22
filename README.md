@@ -398,7 +398,7 @@ control:
       "name": "Callrack",
       "website": "https://callrack.xyz",
       "logo": "https://callrack.xyz/favicon.png",
-      "categories": ["api", "information", "algorand", "x402"]
+      "categories": ["information", "algorand", "x402", "api"]
     },
     "schema": { "...": "JSON Schema describing the info object above" }
   }
@@ -409,12 +409,28 @@ control:
 **not** `api.callrack.xyz` (where the paid routes actually live) - the guide
 resolves the enrichment-crawl origin from `x402-merchant.website` when
 present, so this is what points the facilitator's HTML/well-known crawl at
-the right place. `apps/web`'s `index.html` carries the corresponding root
-page metadata (title, description, `og:*`, `theme-color`, favicon - every
-value points at something that actually exists in this repo; nothing is
-fabricated), and ships static `.well-known/agent.json`, `llms.txt`, and
-`agents.md` files that defer to `api.callrack.xyz` for the live,
-never-stale capability list rather than duplicating prices on two domains.
+the right place, and per `facilitator.goplausible.xyz/guide/discovery`, the
+facilitator's six discovery-badge files (x402 Discovery, A2A Agent Card,
+Agent Manifest, AI Plugin, MCP Manifest, llms.txt) are read **only from the
+root of that declared origin** - never from `api.callrack.xyz` directly,
+even though that's where the real paid routes and most of these files also
+live. `apps/web`'s `index.html` carries the corresponding root page
+metadata (title, description, `og:*`, `theme-color`, favicon - every value
+points at something that actually exists in this repo; nothing is
+fabricated), and ships:
+
+- Static `.well-known/agent.json`, `llms.txt`, `agents.md`, and
+  `.well-known/ai-plugin.json` files - real content (including the real
+  `info@callrack.xyz` contact address already used for
+  `OPENALEX_MAILTO`/`CROSSREF_MAILTO`), deferring to `api.callrack.xyz` for
+  the live, never-stale capability list rather than duplicating prices on
+  two domains.
+- `.well-known/x402` and `.well-known/agent-card.json` as **transparent
+  Netlify proxies** (`apps/web/netlify.toml`) to their `api.callrack.xyz`
+  originals, not static copies - these two carry real resource/pricing
+  data that would otherwise go stale on a second domain, so the web root
+  serves the API's own live response body/headers directly instead of
+  duplicating it.
 
 **Discovery files on `api.callrack.xyz`** (`apps/api/src/discovery/`,
 registered *before* any SPA fallback so they always return real content,
@@ -427,13 +443,31 @@ never `index.html`):
 | `/.well-known/agent.json` | `application/json` | Generic manifest: name, description, url, documentation, and the x402/Algorand/USDC payment block |
 | `/llms.txt` | `text/plain` | Markdown starting `# Callrack`; explains the pay-per-request model, current capabilities and prices, how to pay, and links to `/openapi.json` and `/agents.md` |
 | `/agents.md` | `text/markdown` | Operating instructions for agents already integrating Callrack: the 402 → pay → retry flow, and the rule that a live 402 response is always authoritative over any hardcoded price |
+| `/.well-known/mcp.json` | `application/json` | MCP tool-manifest-shaped description of every capability (name, description, `inputSchema` from the same reflection `GET /v1/capabilities` uses) - **not a live MCP server**: `transport.type` is truthfully `"http"`, and every "tool" carries its real HTTP `endpoint`/`price` rather than being invocable over an actual MCP stdio/SSE session |
 | `/openapi.json` | `application/json` | The same Swagger/OpenAPI document `/docs` renders, at the conventional root path agent tooling looks for - `/docs` is unaffected |
 
-Callrack does **not** publish `.well-known/ai-plugin.json` (no real contact
-email exists in project config to put in one - publishing a fabricated
-email would be worse than omitting the file) or `.well-known/mcp.json` (no
-MCP server exists in this project). Both return a plain 404, not a fake
-manifest.
+**Discovery files on `callrack.xyz`** (`apps/web/public/`, plus two
+`netlify.toml` proxies) - this is the origin the facilitator actually reads
+all six discovery badges from, per `x402-merchant.website`:
+
+| Path | Source | Purpose |
+| --- | --- | --- |
+| `/.well-known/x402` | Netlify proxy → `api.callrack.xyz` | Same live resource/pricing document as the API's own - never duplicated |
+| `/.well-known/agent-card.json` | Netlify proxy → `api.callrack.xyz` | Same A2A agent card as the API's own - never duplicated |
+| `/.well-known/agent.json` | Static file | Generic manifest, pointing `documentation` at `api.callrack.xyz/llms.txt` |
+| `/.well-known/ai-plugin.json` | Static file | Real `contact_email: info@callrack.xyz` (the same address already used for `OPENALEX_MAILTO`/`CROSSREF_MAILTO`), `api.url` pointing at the real OpenAPI document |
+| `/.well-known/mcp.json` | Netlify proxy → `api.callrack.xyz` | Same MCP tool-manifest document as the API's own - carries real prices/schemas, so it's proxied (never duplicated) exactly like `x402`/`agent-card.json` |
+| `/llms.txt` | Static file | Defers to `api.callrack.xyz/llms.txt` for the live capability list rather than duplicating prices |
+| `/agents.md` | Static file | Defers to `api.callrack.xyz/agents.md` the same way |
+
+**`mcp.json` is a manifest, not a live server.** There is no MCP
+stdio/SSE transport anywhere in this project an MCP client could actually
+open a session against - `transport.type` in the document is truthfully
+`"http"`, and every "tool" is really the same x402-paid REST endpoint the
+rest of this API already serves, described in MCP's tool shape purely so
+an MCP-aware agent can discover and construct a valid request. This
+mirrors how other real facilitator merchants (e.g. Validex) publish this
+exact badge - never a fabricated live transport.
 
 Every paid route's payment option also carries the `x402-global-challenge`
 tag required by the 2026 Algorand Global x402 Challenge, on every network
