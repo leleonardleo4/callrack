@@ -15,6 +15,16 @@ const PROVIDER_SLUG = 'knowledge.wikimedia';
 const DEFAULT_LANGUAGE = 'en';
 
 /**
+ * Same reasoning and value as GDELT_TIMEOUT_MS/GDELT_RETRY in
+ * gdelt.provider.ts: no fallback provider, so it keeps one retry, but
+ * ProviderHttpClient's own 10s/2-retries default (~30s worst case) leaves
+ * too little headroom before an x402 payment settlement attempt runs into
+ * the signed transaction's ~30-40s validity window.
+ */
+const WIKIMEDIA_TIMEOUT_MS = 6_000;
+const WIKIMEDIA_RETRY = { maxAttempts: 1 } as const;
+
+/**
  * Wikidata entity-search adapter. Wikimedia policy requires a descriptive
  * User-Agent identifying the client, so it's sent on every request.
  */
@@ -37,8 +47,8 @@ export class WikimediaProvider extends BaseProviderAdapter implements KnowledgeP
       new ProviderHttpClient({
         providerSlug: PROVIDER_SLUG,
         baseUrl: config.wikimediaBaseUrl,
-        timeoutMs: options?.timeoutMs,
-        retry: options?.retry,
+        timeoutMs: options?.timeoutMs ?? WIKIMEDIA_TIMEOUT_MS,
+        retry: options?.retry ?? WIKIMEDIA_RETRY,
         headers: { 'user-agent': config.wikimediaUserAgent },
       }),
     );

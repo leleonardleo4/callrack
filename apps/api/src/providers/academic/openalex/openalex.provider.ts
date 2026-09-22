@@ -19,6 +19,29 @@ import type { OpenAlexWork, OpenAlexWorksResponse } from './openalex.types.js';
 
 const PROVIDER_SLUG = 'academic.openalex';
 
+/**
+ * Tighter than ProviderHttpClient's own 10s/2-retries default. OpenAlex is
+ * the PRIMARY of a fallback chain (see AcademicService.search's
+ * runWithFallback(openAlex, crossref)) - when it's slow/unreachable,
+ * retrying it 3 times at 10s each (~30s worst case) before ever trying
+ * Crossref was measured, via a real settled Testnet payment, to push
+ * /v1/compare and /v1/evidence past the ~30-40s validity window of the
+ * x402 payment transaction the client already signed - the capability
+ * computes a correct result, but the payment can no longer settle
+ * ("txn dead") by the time it's attempted. Failing OpenAlex fast and
+ * falling through to Crossref keeps total academic-search latency low
+ * enough to leave real headroom for payment settlement.
+ *
+ * No retry here (maxAttempts: 0): OpenAlex is either reachable and fast,
+ * or - as observed repeatedly in real testing - reliably slow/unreachable
+ * for the whole request, in which case retrying it just burns another 5s
+ * before falling through to Crossref anyway. Crossref (the fallback, no
+ * further fallback of its own) keeps one retry instead - see
+ * crossref.provider.ts.
+ */
+const OPENALEX_TIMEOUT_MS = 5_000;
+const OPENALEX_RETRY = { maxAttempts: 0 } as const;
+
 @Injectable()
 export class OpenAlexProvider extends BaseProviderAdapter implements AcademicProvider {
   readonly metadata: ProviderMetadata = defineProviderMetadata({
@@ -39,8 +62,8 @@ export class OpenAlexProvider extends BaseProviderAdapter implements AcademicPro
       new ProviderHttpClient({
         providerSlug: PROVIDER_SLUG,
         baseUrl: 'https://api.openalex.org',
-        timeoutMs: options?.timeoutMs,
-        retry: options?.retry,
+        timeoutMs: options?.timeoutMs ?? OPENALEX_TIMEOUT_MS,
+        retry: options?.retry ?? OPENALEX_RETRY,
       }),
     );
     this.mailto = config.openAlexMailto;

@@ -190,10 +190,11 @@ describe('Academic Capability (E2E)', () => {
     });
 
     it('falls back to Crossref when OpenAlex is unavailable, preserving the actual source', async () => {
-      // OpenAlex's shared HTTP client retries a 503 twice (3 attempts total)
-      // before giving up and letting the service fall back to Crossref.
+      // OpenAlex makes exactly one attempt (no retry - see
+      // openalex.provider.ts's OPENALEX_RETRY) before falling back to
+      // Crossref, which itself retries once (crossref.provider.ts's
+      // CROSSREF_RETRY) before succeeding.
       stubFetchSequence([
-        jsonResponse(503, {}),
         jsonResponse(503, {}),
         jsonResponse(503, {}),
         jsonResponse(200, RAW_CROSSREF_WORK),

@@ -11,7 +11,22 @@ import {
 } from './errors.js';
 import type { ApiErrorResponse, ApiSuccessResponse } from './types.js';
 
-const DEFAULT_TIMEOUT_MS = 30_000;
+// Covers the ENTIRE 402 -> sign -> paid-retry cycle as one client-observed
+// call (see `request()` below - a single AbortController spans both the
+// unpaid probe and the paid retry that @x402/fetch's wrapFetchWithPayment
+// drives internally), not just one HTTP round trip. Composite capabilities
+// (/v1/compare, /v1/evidence, /v1/verify, /v1/research) fan out to multiple
+// external providers in parallel and wait for the slowest - academic
+// search alone can take up to ~20s cold (OpenAlex's own 10s timeout,
+// falling back to Crossref's own 10s timeout - see
+// apps/api/src/providers/common/provider-http-client.ts). 30s left too
+// little headroom on a slow-but-successful call. This alone does NOT fix
+// the separate, more serious "txn dead" settlement failure these same
+// capabilities can hit when the handler runs long enough to outlive the
+// signed payment transaction's own validity window - that's a real gap
+// between "handler took too long" and "payment settled too late," not a
+// client-side timeout, and needs its own fix.
+const DEFAULT_TIMEOUT_MS = 60_000;
 
 export interface CallrackHttpClientOptions {
   readonly baseUrl: string;

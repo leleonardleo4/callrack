@@ -12,6 +12,22 @@ import type { GdeltArticleListResponse, GdeltTimelineResponse } from './gdelt.ty
 
 const PROVIDER_SLUG = 'news.gdelt';
 
+/**
+ * Tighter than ProviderHttpClient's own 10s/2-retries default, for the
+ * same reason as academic/openalex.provider.ts's OPENALEX_TIMEOUT_MS: a
+ * single slow provider on the ProviderHttpClient default (up to ~30s
+ * worst case across 3 attempts) can push /v1/compare, /v1/evidence, and
+ * friends past the ~30-40s validity window of the x402 payment
+ * transaction the client already signed, causing settlement to fail
+ * ("txn dead") even though the capability computed a correct result.
+ * GDELT has no fallback provider (unlike academic's OpenAlex->Crossref
+ * chain), so it keeps one retry rather than zero - real-world testing
+ * showed GDELT can be slow to respond even though DNS/TCP/TLS connect
+ * fine (not a network-reachability failure, a genuinely slow response).
+ */
+const GDELT_TIMEOUT_MS = 6_000;
+const GDELT_RETRY = { maxAttempts: 1 } as const;
+
 @Injectable()
 export class GdeltProvider extends BaseProviderAdapter implements NewsProvider {
   readonly metadata: ProviderMetadata = defineProviderMetadata({
@@ -31,8 +47,8 @@ export class GdeltProvider extends BaseProviderAdapter implements NewsProvider {
       new ProviderHttpClient({
         providerSlug: PROVIDER_SLUG,
         baseUrl: 'https://api.gdeltproject.org/api/v2/doc/',
-        timeoutMs: options?.timeoutMs,
-        retry: options?.retry,
+        timeoutMs: options?.timeoutMs ?? GDELT_TIMEOUT_MS,
+        retry: options?.retry ?? GDELT_RETRY,
       }),
     );
   }
