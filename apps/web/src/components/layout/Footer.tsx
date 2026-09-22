@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Logo } from '@/components/Logo';
+import { API_BASE_URL } from '@/config/env';
 
 const PRODUCT_LINKS = [
   { to: '/capabilities', label: 'Capabilities' },
@@ -7,14 +8,19 @@ const PRODUCT_LINKS = [
   { to: '/playground', label: 'Playground' },
 ] as const;
 
-const RESOURCE_LINKS = [
-  { href: '/openapi.json', label: 'OpenAPI spec' },
-  { href: '/llms.txt', label: 'llms.txt' },
-  { href: '/agents.md', label: 'agents.md' },
-  { href: 'https://facilitator.goplausible.xyz', label: 'GoPlausible facilitator' },
-] as const;
-
 export function Footer(): React.JSX.Element {
+  // These three are served by the API (api.callrack.xyz), never this web
+  // app's own domain - a relative href here would 404 since callrack.xyz
+  // and api.callrack.xyz are separate domains/deployments. Built off
+  // API_BASE_URL, same as DocsPage.tsx's /docs link, so this also works
+  // correctly against a local dev API (http://localhost:3000).
+  const RESOURCE_LINKS = [
+    { href: `${API_BASE_URL}/openapi.json`, label: 'OpenAPI spec' },
+    { href: `${API_BASE_URL}/llms.txt`, label: 'llms.txt' },
+    { href: `${API_BASE_URL}/agents.md`, label: 'agents.md' },
+    { href: 'https://facilitator.goplausible.xyz', label: 'GoPlausible facilitator' },
+  ] as const;
+
   return (
     <footer className="border-t border-inkline">
       <div className="mx-auto flex max-w-(--page-max-width) flex-col gap-10 px-4 py-12 sm:px-6 md:flex-row md:justify-between">

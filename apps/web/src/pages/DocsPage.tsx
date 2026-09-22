@@ -54,7 +54,7 @@ export function DocsPage(): React.JSX.Element {
             ))}
           </ul>
           <a
-            href="/openapi.json"
+            href={`${API_BASE_URL}/openapi.json`}
             target="_blank"
             rel="noreferrer"
             className="mt-6 block text-sm text-frosted-lilac hover:underline"
@@ -277,8 +277,8 @@ function AgentsSection(): React.JSX.Element {
         <li>Receive information: use the response as input to the agent's next step.</li>
       </ol>
       <p>
-        See <a href="/agents.md" target="_blank" rel="noreferrer" className="text-frosted-lilac hover:underline">/agents.md</a>{' '}
-        and <a href="/llms.txt" target="_blank" rel="noreferrer" className="text-frosted-lilac hover:underline">/llms.txt</a>{' '}
+        See <a href={`${API_BASE_URL}/agents.md`} target="_blank" rel="noreferrer" className="text-frosted-lilac hover:underline">/agents.md</a>{' '}
+        and <a href={`${API_BASE_URL}/llms.txt`} target="_blank" rel="noreferrer" className="text-frosted-lilac hover:underline">/llms.txt</a>{' '}
         for the machine-readable versions of this same guidance.
       </p>
     </DocSection>
