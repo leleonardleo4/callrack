@@ -1,4 +1,4 @@
-import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { NestFastifyApplication } from '@nestjs/platform-fastify';
 import { createApp } from '../../src/bootstrap.js';
 import { jsonResponse, stubFetchAlways, stubFetchSequence } from '../providers/mock-fetch.js';
@@ -44,6 +44,7 @@ describe('News Capability (E2E)', () => {
       expect(response.headers['x-request-id']).toBe('e2e-news-search-1');
       const body = JSON.parse(response.payload);
       expect(body.meta.requestId).toBe('e2e-news-search-1');
+      expect(body.meta.source).toBe('news.gdelt');
       expect(body.meta.attribution).toContain('GDELT');
       expect(body.data.results[0]).toMatchObject({ title: 'Example headline', url: 'https://example.com/article' });
     });
@@ -144,5 +145,67 @@ describe('News Capability (E2E)', () => {
 
       expect(response.statusCode).toBe(502);
     }, 10_000);
+  });
+
+  describe('POST /v1/news/search - fallback chain', () => {
+    // A fresh app per test: ProviderCooldownService is a singleton for the
+    // app's lifetime, and one test's failure would otherwise put GDELT on
+    // cooldown for the next test, silently changing which provider gets
+    // called first.
+    let fallbackApp: NestFastifyApplication;
+
+    beforeEach(async () => {
+      process.env.CURRENTS_API_KEY = 'test-key';
+      fallbackApp = await createApp();
+      await fallbackApp.init();
+      await fallbackApp.getHttpAdapter().getInstance().ready();
+    });
+
+    afterEach(async () => {
+      await fallbackApp.close();
+      delete process.env.CURRENTS_API_KEY;
+    });
+
+    it('falls back to Currents API when GDELT is unavailable, end to end', async () => {
+      stubFetchSequence([
+        jsonResponse(429, {}), // GDELT - no Retry-After, so not retried internally (consumes exactly one call)
+        jsonResponse(200, {
+          status: 'ok',
+          news: [{ title: 'Fallback headline', url: 'https://example.com/fallback', published: '2026-01-01T00:00:00Z' }],
+        }), // Currents
+      ]);
+
+      const response = await fallbackApp.inject({
+        method: 'POST',
+        url: '/v1/news/search',
+        payload: { query: 'x' },
+      });
+
+      expect(response.statusCode).toBe(200);
+      const body = JSON.parse(response.payload);
+      expect(body.meta.source).toBe('news.currents');
+      expect(body.data.results[0]).toMatchObject({ title: 'Fallback headline', url: 'https://example.com/fallback' });
+    });
+
+    it('falls back to Currents API when GDELT returns an empty result', async () => {
+      stubFetchSequence([
+        jsonResponse(200, { articles: [] }), // GDELT - empty
+        jsonResponse(200, {
+          status: 'ok',
+          news: [{ title: 'Non-empty fallback', url: 'https://example.com/non-empty', published: '2026-01-01T00:00:00Z' }],
+        }), // Currents
+      ]);
+
+      const response = await fallbackApp.inject({
+        method: 'POST',
+        url: '/v1/news/search',
+        payload: { query: 'zzz-empty-primary' },
+      });
+
+      expect(response.statusCode).toBe(200);
+      const body = JSON.parse(response.payload);
+      expect(body.meta.source).toBe('news.currents');
+      expect(body.data.results[0]?.title).toBe('Non-empty fallback');
+    });
   });
 });

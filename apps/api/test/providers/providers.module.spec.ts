@@ -4,6 +4,11 @@ import { ProvidersModule } from '../../src/providers/providers.module.js';
 import { OpenAlexProvider } from '../../src/providers/academic/openalex/openalex.provider.js';
 import { CrossrefProvider } from '../../src/providers/academic/crossref/crossref.provider.js';
 import { GdeltProvider } from '../../src/providers/news/gdelt/gdelt.provider.js';
+import { CurrentsProvider } from '../../src/providers/news/currents/currents.provider.js';
+import { NewsDataProvider } from '../../src/providers/news/newsdata/newsdata.provider.js';
+import { TheNewsApiProvider } from '../../src/providers/news/thenewsapi/thenewsapi.provider.js';
+import { GNewsProvider } from '../../src/providers/news/gnews/gnews.provider.js';
+import { MediastackProvider } from '../../src/providers/news/mediastack/mediastack.provider.js';
 import { CoinGeckoProvider } from '../../src/providers/crypto/coingecko/coingecko.provider.js';
 import { FrankfurterProvider } from '../../src/providers/fx/frankfurter/frankfurter.provider.js';
 import { OpenMeteoProvider } from '../../src/providers/weather/openmeteo/openmeteo.provider.js';
@@ -17,6 +22,11 @@ const EXPECTED_SLUGS = [
   'academic.openalex',
   'academic.crossref',
   'news.gdelt',
+  'news.currents',
+  'news.newsdata',
+  'news.thenewsapi',
+  'news.gnews',
+  'news.mediastack',
   'crypto.coingecko',
   'fx.frankfurter',
   'weather.openmeteo',
@@ -36,6 +46,11 @@ describe('ProvidersModule', () => {
       new OpenAlexProvider(config, NO_RETRY_OPTIONS),
       new CrossrefProvider(config, NO_RETRY_OPTIONS),
       new GdeltProvider(NO_RETRY_OPTIONS),
+      new CurrentsProvider(config, NO_RETRY_OPTIONS),
+      new NewsDataProvider(config, NO_RETRY_OPTIONS),
+      new TheNewsApiProvider(config, NO_RETRY_OPTIONS),
+      new GNewsProvider(config, NO_RETRY_OPTIONS),
+      new MediastackProvider(config, NO_RETRY_OPTIONS),
       new CoinGeckoProvider(config, NO_RETRY_OPTIONS),
       new FrankfurterProvider(NO_RETRY_OPTIONS),
       new OpenMeteoProvider(config, NO_RETRY_OPTIONS),

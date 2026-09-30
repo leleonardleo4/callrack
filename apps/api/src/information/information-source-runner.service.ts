@@ -65,7 +65,7 @@ export class InformationSourceRunnerService {
           return { source, status: data.results.length > 0 ? 'success' : 'empty', evidence: academicToEvidence(data, retrievedAt) };
         }
         case 'news': {
-          const data = await this.news.search({ query, limit }, `${requestId}:news`);
+          const { data } = await this.news.search({ query, limit }, `${requestId}:news`);
           return { source, status: data.results.length > 0 ? 'success' : 'empty', evidence: newsToEvidence(data, retrievedAt) };
         }
         case 'knowledge': {

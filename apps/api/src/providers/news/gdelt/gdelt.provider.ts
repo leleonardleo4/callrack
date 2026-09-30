@@ -30,6 +30,9 @@ const GDELT_RETRY = { maxAttempts: 1 } as const;
 
 @Injectable()
 export class GdeltProvider extends BaseProviderAdapter implements NewsProvider {
+  /** No API key required - always usable, unlike the fallback providers in providers/news/{currents,newsdata,thenewsapi,gnews,mediastack}/. */
+  readonly isConfigured = true;
+
   readonly metadata: ProviderMetadata = defineProviderMetadata({
     slug: PROVIDER_SLUG,
     name: 'GDELT',

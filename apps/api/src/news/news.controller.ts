@@ -1,8 +1,8 @@
 import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import type { ApiSuccessResponse } from '../common/http/api-response.interface.js';
+import type { ApiSuccessMeta, ApiSuccessResponse } from '../common/http/api-response.interface.js';
 import { RequestContext } from '../common/request-context/request-context.js';
-import { NewsService } from './news.service.js';
+import { NewsService, type NewsCapabilityOutcome } from './news.service.js';
 import { NewsSearchRequestDto } from './dto/news-search-request.dto.js';
 import { NewsTrendsRequestDto } from './dto/news-trends-request.dto.js';
 import type { NewsSearchResponseData, NewsTrendsResponseData } from './news-response.types.js';
@@ -16,7 +16,9 @@ export class NewsController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Search news articles',
-    description: 'Searches recent news coverage via GDELT.',
+    description:
+      'Searches recent news coverage via GDELT, automatically falling back to Currents API, NewsData.io, ' +
+      'TheNewsAPI, GNews, or mediastack (whichever have a configured key) if GDELT is unavailable or rate-limited.',
   })
   @ApiBody({ type: NewsSearchRequestDto })
   @ApiResponse({
@@ -48,6 +50,7 @@ export class NewsController {
           type: 'object',
           properties: {
             requestId: { type: 'string', example: 'req_1a2b3c...' },
+            source: { type: 'string', example: 'news.gdelt', description: 'Slug of whichever provider actually served this result.' },
             attribution: { type: 'string', example: 'News data provided by the GDELT Project (gdeltproject.org)' },
           },
         },
@@ -60,8 +63,8 @@ export class NewsController {
   @ApiResponse({ status: 504, description: 'The upstream provider timed out.' })
   async search(@Body() dto: NewsSearchRequestDto): Promise<ApiSuccessResponse<NewsSearchResponseData>> {
     const requestId = RequestContext.requestId ?? 'unknown';
-    const data = await this.newsService.search(dto, requestId);
-    return { data, meta: this.buildMeta(requestId) };
+    const outcome = await this.newsService.search(dto, requestId);
+    return { data: outcome.data, meta: this.buildMeta(requestId, outcome) };
   }
 
   @Post('trends')
@@ -97,6 +100,7 @@ export class NewsController {
           type: 'object',
           properties: {
             requestId: { type: 'string', example: 'req_1a2b3c...' },
+            source: { type: 'string', example: 'news.gdelt', description: 'Slug of whichever provider actually served this result.' },
             attribution: { type: 'string', example: 'News data provided by the GDELT Project (gdeltproject.org)' },
           },
         },
@@ -111,12 +115,15 @@ export class NewsController {
     @Body() dto: NewsTrendsRequestDto,
   ): Promise<ApiSuccessResponse<NewsTrendsResponseData>> {
     const requestId = RequestContext.requestId ?? 'unknown';
-    const data = await this.newsService.getTrends(dto, requestId);
-    return { data, meta: this.buildMeta(requestId) };
+    const outcome = await this.newsService.getTrends(dto, requestId);
+    return { data: outcome.data, meta: this.buildMeta(requestId, outcome) };
   }
 
-  private buildMeta(requestId: string): { requestId: string; attribution?: string } {
-    const attribution = this.newsService.getAttribution();
-    return attribution ? { requestId, attribution } : { requestId };
+  private buildMeta(requestId: string, outcome: Pick<NewsCapabilityOutcome<unknown>, 'providerSlug' | 'attribution'>): ApiSuccessMeta {
+    return {
+      requestId,
+      source: outcome.providerSlug,
+      ...(outcome.attribution ? { attribution: outcome.attribution } : {}),
+    };
   }
 }

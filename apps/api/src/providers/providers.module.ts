@@ -1,9 +1,14 @@
 import { Module, type OnModuleInit } from '@nestjs/common';
-import { ProviderConfigService } from './common/index.js';
+import { ProviderConfigService, ProviderCooldownService } from './common/index.js';
 import { ProviderRegistry } from './provider-registry.service.js';
 import { OpenAlexProvider } from './academic/openalex/openalex.provider.js';
 import { CrossrefProvider } from './academic/crossref/crossref.provider.js';
 import { GdeltProvider } from './news/gdelt/gdelt.provider.js';
+import { CurrentsProvider } from './news/currents/currents.provider.js';
+import { NewsDataProvider } from './news/newsdata/newsdata.provider.js';
+import { TheNewsApiProvider } from './news/thenewsapi/thenewsapi.provider.js';
+import { GNewsProvider } from './news/gnews/gnews.provider.js';
+import { MediastackProvider } from './news/mediastack/mediastack.provider.js';
 import { CoinGeckoProvider } from './crypto/coingecko/coingecko.provider.js';
 import { FrankfurterProvider } from './fx/frankfurter/frankfurter.provider.js';
 import { OpenMeteoProvider } from './weather/openmeteo/openmeteo.provider.js';
@@ -21,10 +26,16 @@ import { CensusProvider } from './government/census/census.provider.js';
 @Module({
   providers: [
     ProviderConfigService,
+    ProviderCooldownService,
     ProviderRegistry,
     OpenAlexProvider,
     CrossrefProvider,
     GdeltProvider,
+    CurrentsProvider,
+    NewsDataProvider,
+    TheNewsApiProvider,
+    GNewsProvider,
+    MediastackProvider,
     CoinGeckoProvider,
     FrankfurterProvider,
     OpenMeteoProvider,
@@ -35,10 +46,16 @@ import { CensusProvider } from './government/census/census.provider.js';
   ],
   exports: [
     ProviderConfigService,
+    ProviderCooldownService,
     ProviderRegistry,
     OpenAlexProvider,
     CrossrefProvider,
     GdeltProvider,
+    CurrentsProvider,
+    NewsDataProvider,
+    TheNewsApiProvider,
+    GNewsProvider,
+    MediastackProvider,
     CoinGeckoProvider,
     FrankfurterProvider,
     OpenMeteoProvider,
@@ -54,6 +71,11 @@ export class ProvidersModule implements OnModuleInit {
     private readonly openAlex: OpenAlexProvider,
     private readonly crossref: CrossrefProvider,
     private readonly gdelt: GdeltProvider,
+    private readonly currents: CurrentsProvider,
+    private readonly newsData: NewsDataProvider,
+    private readonly theNewsApi: TheNewsApiProvider,
+    private readonly gNews: GNewsProvider,
+    private readonly mediastack: MediastackProvider,
     private readonly coinGecko: CoinGeckoProvider,
     private readonly frankfurter: FrankfurterProvider,
     private readonly openMeteo: OpenMeteoProvider,
@@ -68,6 +90,11 @@ export class ProvidersModule implements OnModuleInit {
       this.openAlex,
       this.crossref,
       this.gdelt,
+      this.currents,
+      this.newsData,
+      this.theNewsApi,
+      this.gNews,
+      this.mediastack,
       this.coinGecko,
       this.frankfurter,
       this.openMeteo,

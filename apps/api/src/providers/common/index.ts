@@ -5,3 +5,5 @@ export * from './provider.utils.js';
 export * from './provider-http-client.js';
 export * from './provider-retry.js';
 export * from './provider-config.service.js';
+export * from './provider-cooldown.service.js';
+export * from './provider-fallback.js';

@@ -26,6 +26,26 @@ export class ProviderConfigService {
     return this.configService.raw.CENSUS_API_KEY;
   }
 
+  get currentsApiKey(): string | undefined {
+    return this.configService.raw.CURRENTS_API_KEY;
+  }
+
+  get newsDataApiKey(): string | undefined {
+    return this.configService.raw.NEWSDATA_API_KEY;
+  }
+
+  get theNewsApiToken(): string | undefined {
+    return this.configService.raw.THENEWSAPI_API_TOKEN;
+  }
+
+  get gNewsApiKey(): string | undefined {
+    return this.configService.raw.GNEWS_API_KEY;
+  }
+
+  get mediastackApiKey(): string | undefined {
+    return this.configService.raw.MEDIASTACK_API_KEY;
+  }
+
   get openMeteoBaseUrl(): string {
     return this.configService.raw.OPEN_METEO_BASE_URL;
   }

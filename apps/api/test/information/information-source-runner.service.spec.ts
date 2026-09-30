@@ -19,7 +19,10 @@ const ACADEMIC_RESULT = {
   results: [{ id: 'w1', title: 'x', authors: [], publicationYear: null, doi: null, url: null, journal: null, citations: null, openAccess: false, source: 'openalex' }],
   meta: { count: 1 },
 };
-const NEWS_RESULT = { results: [{ title: 'x', url: 'https://example.test', source: null, publishedAt: null, language: null, country: null }] };
+const NEWS_RESULT = {
+  data: { results: [{ title: 'x', url: 'https://example.test', source: null, publishedAt: null, language: null, country: null }] },
+  providerSlug: 'news.gdelt',
+};
 const KNOWLEDGE_RESULT = { results: [{ id: 'Q1', name: 'x', description: null, url: 'https://example.test', source: 'wikimedia' }] };
 
 describe('InformationSourceRunnerService', () => {

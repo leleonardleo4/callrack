@@ -65,6 +65,11 @@ function buildService(overrides: {
 const ACADEMIC_RESULT = { results: [{ id: 'w1', title: 'x', authors: [], publicationYear: null, doi: null, url: null, journal: null, citations: null, openAccess: false, source: 'openalex' }], meta: { count: 1 } };
 const NEWS_RESULT = { results: [{ title: 'x', url: 'https://example.test', source: null, publishedAt: null, language: null, country: null }] };
 const KNOWLEDGE_RESULT = { results: [{ id: 'Q1', name: 'x', description: null, url: 'https://example.test', source: 'wikimedia' }] };
+
+/** NewsService.search now returns { data, providerSlug, attribution? } rather than the bare data. */
+function newsOutcome(data: typeof NEWS_RESULT) {
+  return { data, providerSlug: 'news.gdelt' };
+}
 const CENSUS_RESULT = { dataset: 'acs/acs1', year: 2021, columns: ['NAME'], rows: [{ NAME: 'California' }] };
 
 describe('ResearchService', () => {
@@ -76,7 +81,7 @@ describe('ResearchService', () => {
     const academic = fakeAcademic();
     academic.search.mockResolvedValue(ACADEMIC_RESULT);
     const news = fakeNews();
-    news.search.mockResolvedValue(NEWS_RESULT);
+    news.search.mockResolvedValue(newsOutcome(NEWS_RESULT));
     const knowledge = fakeKnowledge();
     knowledge.search.mockResolvedValue(KNOWLEDGE_RESULT);
     const census = fakeCensus();
@@ -105,7 +110,7 @@ describe('ResearchService', () => {
     const academic = fakeAcademic();
     academic.search.mockResolvedValue({ results: [], meta: { count: 0 } });
     const news = fakeNews();
-    news.search.mockResolvedValue(NEWS_RESULT);
+    news.search.mockResolvedValue(newsOutcome(NEWS_RESULT));
     const knowledge = fakeKnowledge();
     knowledge.search.mockResolvedValue(KNOWLEDGE_RESULT);
     const service = buildService({ academic, news, knowledge });
@@ -120,7 +125,7 @@ describe('ResearchService', () => {
     const academic = fakeAcademic();
     academic.search.mockResolvedValue(ACADEMIC_RESULT);
     const news = fakeNews();
-    news.search.mockResolvedValue(NEWS_RESULT);
+    news.search.mockResolvedValue(newsOutcome(NEWS_RESULT));
     const knowledge = fakeKnowledge();
     knowledge.search.mockRejectedValue(new GatewayTimeoutException({ code: 'PROVIDER_TIMEOUT', message: 'timed out' }));
     const service = buildService({ academic, news, knowledge });
@@ -215,7 +220,7 @@ describe('ResearchService', () => {
     const academic = fakeAcademic();
     academic.search.mockResolvedValue(ACADEMIC_RESULT);
     const news = fakeNews();
-    news.search.mockResolvedValue(NEWS_RESULT);
+    news.search.mockResolvedValue(newsOutcome(NEWS_RESULT));
     const knowledge = fakeKnowledge();
     knowledge.search.mockResolvedValue(KNOWLEDGE_RESULT);
     const service = buildService({ academic, news, knowledge });
@@ -241,7 +246,7 @@ describe('ResearchService', () => {
       order.push('news:start');
       await new Promise((resolve) => setTimeout(resolve, 5));
       order.push('news:end');
-      return NEWS_RESULT;
+      return newsOutcome(NEWS_RESULT);
     });
     const knowledge = fakeKnowledge();
     knowledge.search.mockResolvedValue(KNOWLEDGE_RESULT);
@@ -259,7 +264,7 @@ describe('ResearchService', () => {
     const academic = fakeAcademic();
     academic.search.mockResolvedValue(ACADEMIC_RESULT);
     const news = fakeNews();
-    news.search.mockResolvedValue(NEWS_RESULT);
+    news.search.mockResolvedValue(newsOutcome(NEWS_RESULT));
     const knowledge = fakeKnowledge();
     knowledge.search.mockResolvedValue(KNOWLEDGE_RESULT);
     const tracking = fakeTracking();
@@ -279,7 +284,7 @@ describe('ResearchService', () => {
     const academic = fakeAcademic();
     academic.search.mockResolvedValue(ACADEMIC_RESULT);
     const news = fakeNews();
-    news.search.mockResolvedValue(NEWS_RESULT);
+    news.search.mockResolvedValue(newsOutcome(NEWS_RESULT));
     const knowledge = fakeKnowledge();
     knowledge.search.mockResolvedValue(KNOWLEDGE_RESULT);
     const service = buildService({ academic, news, knowledge });
@@ -294,7 +299,7 @@ describe('ResearchService', () => {
     const academic = fakeAcademic();
     academic.search.mockResolvedValue(ACADEMIC_RESULT);
     const news = fakeNews();
-    news.search.mockResolvedValue(NEWS_RESULT);
+    news.search.mockResolvedValue(newsOutcome(NEWS_RESULT));
     const knowledge = fakeKnowledge();
     knowledge.search.mockResolvedValue(KNOWLEDGE_RESULT);
     const service = buildService({ academic, news, knowledge });
@@ -309,7 +314,7 @@ describe('ResearchService', () => {
     const academic = fakeAcademic();
     academic.search.mockResolvedValue(ACADEMIC_RESULT);
     const news = fakeNews();
-    news.search.mockResolvedValue(NEWS_RESULT);
+    news.search.mockResolvedValue(newsOutcome(NEWS_RESULT));
     const service = buildService({ academic, news });
 
     await service.research(dto({ sources: ['academic', 'news'] }), 'req_1');
@@ -322,7 +327,7 @@ describe('ResearchService', () => {
     const academic = fakeAcademic();
     academic.search.mockResolvedValue(ACADEMIC_RESULT);
     const news = fakeNews();
-    news.search.mockResolvedValue(NEWS_RESULT);
+    news.search.mockResolvedValue(newsOutcome(NEWS_RESULT));
     const knowledge = fakeKnowledge();
     knowledge.search.mockResolvedValue(KNOWLEDGE_RESULT);
     const service = buildService({ academic, news, knowledge });
@@ -338,7 +343,7 @@ describe('ResearchService', () => {
       const academic = fakeAcademic();
       academic.search.mockResolvedValue(ACADEMIC_RESULT);
       const news = fakeNews();
-      news.search.mockResolvedValue(NEWS_RESULT);
+      news.search.mockResolvedValue(newsOutcome(NEWS_RESULT));
       const knowledge = fakeKnowledge();
       knowledge.search.mockResolvedValue(KNOWLEDGE_RESULT);
       const service = buildService({ academic, news, knowledge });
@@ -386,7 +391,7 @@ describe('ResearchService', () => {
       const academic = fakeAcademic();
       academic.search.mockResolvedValue(ACADEMIC_RESULT);
       const news = fakeNews();
-      news.search.mockResolvedValue({ results: [] });
+      news.search.mockResolvedValue(newsOutcome({ results: [] }));
       const knowledge = fakeKnowledge();
       knowledge.search.mockRejectedValue(new GatewayTimeoutException({ code: 'PROVIDER_TIMEOUT', message: 'timed out' }));
       const service = buildService({ academic, news, knowledge });
@@ -402,9 +407,11 @@ describe('ResearchService', () => {
 
     it('detects a disagreement when two sources describe the same-titled subject differently', async () => {
       const news = fakeNews();
-      news.search.mockResolvedValue({
-        results: [{ title: 'Lagos', url: 'https://a.test', source: 'a.test', publishedAt: null, language: null, country: null }],
-      });
+      news.search.mockResolvedValue(
+        newsOutcome({
+          results: [{ title: 'Lagos', url: 'https://a.test', source: 'a.test', publishedAt: null, language: null, country: null }],
+        }),
+      );
       const knowledge = fakeKnowledge();
       knowledge.search.mockResolvedValue({
         results: [{ id: 'Q8673', name: 'Lagos', description: 'city in Nigeria', url: 'https://wikidata.test/Q8673', source: 'wikimedia' }],
@@ -424,7 +431,7 @@ describe('ResearchService', () => {
       const academic = fakeAcademic();
       academic.search.mockResolvedValue(ACADEMIC_RESULT);
       const news = fakeNews();
-      news.search.mockResolvedValue(NEWS_RESULT);
+      news.search.mockResolvedValue(newsOutcome(NEWS_RESULT));
       const knowledge = fakeKnowledge();
       knowledge.search.mockResolvedValue(KNOWLEDGE_RESULT);
       const service = buildService({ academic, news, knowledge });

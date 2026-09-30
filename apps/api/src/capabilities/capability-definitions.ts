@@ -159,12 +159,16 @@ export const CAPABILITY_METADATA: readonly CapabilityMetadata[] = [
     id: 'news.search',
     name: 'News Search',
     description:
-      'Search recent news coverage via GDELT and return normalized articles with titles, URLs, source domains, ' +
-      'publish dates, languages, and countries.',
+      'Search recent news coverage via GDELT (falling back to Currents API, NewsData.io, TheNewsAPI, GNews, or ' +
+      'mediastack if GDELT is unavailable or rate-limited) and return normalized articles with titles, URLs, ' +
+      'source domains, publish dates, languages, and countries.',
     category: 'news',
     method: 'POST',
     path: '/v1/news/search',
-    provider: { kind: 'provider', slugs: ['news.gdelt'] },
+    provider: {
+      kind: 'provider',
+      slugs: ['news.gdelt', 'news.currents', 'news.newsdata', 'news.thenewsapi', 'news.gnews', 'news.mediastack'],
+    },
     priceKey: 'PRICE_NEWS_SEARCH',
     cache: { ttlSeconds: CACHE_TTL_SECONDS.NEWS_SEARCH },
     status: 'active',
@@ -187,6 +191,7 @@ export const CAPABILITY_METADATA: readonly CapabilityMetadata[] = [
         },
         meta: {
           requestId: 'req_1a2b3c...',
+          source: 'news.gdelt',
           attribution: 'News data provided by the GDELT Project (gdeltproject.org)',
         },
       },
@@ -213,7 +218,11 @@ export const CAPABILITY_METADATA: readonly CapabilityMetadata[] = [
           },
           meta: {
             type: 'object',
-            properties: { requestId: { type: 'string' }, attribution: { type: 'string' } },
+            properties: {
+              requestId: { type: 'string' },
+              source: { type: 'string', description: 'Slug of whichever provider actually served this result.' },
+              attribution: { type: 'string' },
+            },
           },
         },
         required: ['data', 'meta'],
@@ -225,7 +234,8 @@ export const CAPABILITY_METADATA: readonly CapabilityMetadata[] = [
     name: 'News Trends',
     description:
       'Return normalized daily news-coverage volume for a topic, entity, or event via GDELT as a time series ' +
-      'of dated volume points.',
+      'of dated volume points. No fallback - none of the other configured news providers offer a native trends ' +
+      'endpoint.',
     category: 'news',
     method: 'POST',
     path: '/v1/news/trends',
@@ -241,6 +251,7 @@ export const CAPABILITY_METADATA: readonly CapabilityMetadata[] = [
         data: { term: 'renewable energy', points: [{ date: '20260101', volume: 12.3 }] },
         meta: {
           requestId: 'req_1a2b3c...',
+          source: 'news.gdelt',
           attribution: 'News data provided by the GDELT Project (gdeltproject.org)',
         },
       },
@@ -261,7 +272,11 @@ export const CAPABILITY_METADATA: readonly CapabilityMetadata[] = [
           },
           meta: {
             type: 'object',
-            properties: { requestId: { type: 'string' }, attribution: { type: 'string' } },
+            properties: {
+              requestId: { type: 'string' },
+              source: { type: 'string', description: 'Slug of whichever provider actually served this result.' },
+              attribution: { type: 'string' },
+            },
           },
         },
         required: ['data', 'meta'],

@@ -158,6 +158,26 @@ integration tests to actually execute.
 x402-specific test commands (mocked facilitator, and a real Testnet smoke
 test) are covered in [`X402.md`](X402.md#running-the-x402-test-suite).
 
+### Live provider smoke tests
+
+```bash
+pnpm test:providers
+```
+
+Runs `apps/api/test/providers/smoke/providers.smoke.spec.ts` against every
+provider's *real* upstream API - unlike `pnpm test`, this makes live network
+calls and is never run as part of CI or the default suite. Use it after
+adding or rotating any provider API key to confirm it actually works.
+
+A provider that needs a key but has none configured (e.g. any of the five
+`/v1/news/search` fallback providers - `CURRENTS_API_KEY`,
+`NEWSDATA_API_KEY`, `THENEWSAPI_API_TOKEN`, `GNEWS_API_KEY`,
+`MEDIASTACK_API_KEY` - or `CENSUS_API_KEY`) is skipped rather than failed;
+its slug is logged under "skipping (no API key configured)". This test file
+loads the root `.env` itself (`loadRootEnv()` from `@callrack/config`) since,
+unlike the real app's `main.ts`, nothing in `vitest.smoke.config.ts` does
+that automatically.
+
 ---
 
 ## 📜 Development Conventions

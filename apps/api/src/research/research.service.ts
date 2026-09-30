@@ -199,7 +199,7 @@ export class ResearchService {
         );
       case 'news':
         return this.runSource(
-          () => this.news.search({ query: dto.query, limit }, `${requestId}:news`),
+          async () => (await this.news.search({ query: dto.query, limit }, `${requestId}:news`)).data,
           (data) => data.results.length > 0,
         );
       case 'knowledge':

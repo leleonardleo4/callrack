@@ -42,6 +42,17 @@ export const apiConfigSchema = baseEnvSchema.extend({
   COINGECKO_API_KEY: z.string().optional(),
   CENSUS_API_KEY: z.string().optional(),
 
+  // News fallback providers. GDELT (the primary news provider) needs no key;
+  // these are additional providers /v1/news/search falls back to when GDELT
+  // is unavailable or rate-limited. Each is optional - a provider without a
+  // configured key is simply left out of the fallback chain, never a startup
+  // failure (same convention as the keys above).
+  CURRENTS_API_KEY: z.string().optional(),
+  NEWSDATA_API_KEY: z.string().optional(),
+  THENEWSAPI_API_TOKEN: z.string().optional(),
+  GNEWS_API_KEY: z.string().optional(),
+  MEDIASTACK_API_KEY: z.string().optional(),
+
   // Self-hostable in production; default to the public hosted service for
   // local development.
   OPEN_METEO_BASE_URL: z.string().url().default('https://api.open-meteo.com'),
